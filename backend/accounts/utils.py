@@ -85,8 +85,8 @@ def send_otp_bale(phone_number, otp_code):
         from decouple import config
         
         # Get Bale credentials
-        client_id = config('BALE_CLIENT_ID', default=None)
-        client_secret = config('BALE_CLIENT_SECRET', default=None)
+        client_id = config('BALE_USERNAME', default=None)
+        client_secret = config('BALE_PASSWORD', default=None)
         
         if not client_id or not client_secret:
             logger.warning("Bale credentials not configured")
@@ -129,7 +129,8 @@ def send_otp_bale(phone_number, otp_code):
         otp_response = requests.post(otp_url, json=otp_data, headers=headers, timeout=10)
         otp_response.raise_for_status()
         
-        logger.info(f"OTP sent to {phone_number} via Bale Messenger")
+        logger.info(f"✅ OTP sent to {phone_number} via Bale Messenger: {otp_code}")
+        print(f"\n{'='*50}\n✅ Bale OTP SENT\n🔐 CODE: {otp_code}\n📱 Phone: {phone_number}\n{'='*50}\n")
         return True
         
     except requests.exceptions.Timeout:
@@ -155,9 +156,10 @@ def send_otp_sms(phone_number, otp_code):
         api_key = config('KAVENEGAR_API_KEY', default=None)
         sender = config('KAVENEGAR_SENDER', default='10004346')
         
-        if not api_key:
+        if not api_key or api_key == 'your-kavenegar-api-key':
             logger.warning("Kavenegar API key not configured - logging OTP instead")
-            logger.info(f"OTP for {phone_number}: {otp_code}")
+            logger.info(f"⚠️ OTP for {phone_number}: {otp_code}")
+            print(f"\n{'='*50}\n🔐 OTP CODE: {otp_code}\n📱 Phone: {phone_number}\n{'='*50}\n")
             return True
         
         # Send SMS using Kavenegar SDK
@@ -177,7 +179,8 @@ def send_otp_sms(phone_number, otp_code):
     except Exception as e:
         logger.error(f"Failed to send OTP SMS to {phone_number}: {str(e)}")
         # In development, log the OTP for testing
-        logger.info(f"OTP for {phone_number}: {otp_code}")
+        logger.info(f"⚠️ OTP for {phone_number}: {otp_code}")
+        print(f"\n{'='*50}\n🔐 OTP CODE: {otp_code}\n📱 Phone: {phone_number}\n❌ Error: {str(e)}\n{'='*50}\n")
         return False
 
 

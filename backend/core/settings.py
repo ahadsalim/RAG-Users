@@ -364,6 +364,17 @@ LOGGING = {
 # os.makedirs(BASE_DIR / 'logs', exist_ok=True)
 
 # ===========================
+# SMS & Messaging Configuration
+# ===========================
+# Kavenegar (SMS)
+KAVENEGAR_API_KEY = config('KAVENEGAR_API_KEY', default='')
+KAVENEGAR_SENDER = config('KAVENEGAR_SENDER', default='')
+
+# Bale Messenger (OTP)
+BALE_USERNAME = config('BALE_USERNAME', default='')
+BALE_PASSWORD = config('BALE_PASSWORD', default='')
+
+# ===========================
 # Jazzmin Admin Configuration
 # ===========================
 JAZZMIN_SETTINGS = {
@@ -371,11 +382,11 @@ JAZZMIN_SETTINGS = {
     "site_title": "مشاور هوشمند کسب و کار",
     "site_header": "مشاور هوشمند کسب و کار",
     "site_brand": "مشاور هوشمند",
-    "site_logo": None,
-    "login_logo": None,
+    "site_logo": "images/logo-small.png",
+    "login_logo": "images/logo-medium.png",
     "login_logo_dark": None,
-    "site_logo_classes": "img-circle",
-    "site_icon": None,
+    "site_logo_classes": "img-fluid",
+    "site_icon": "images/favicon.ico",
     "welcome_sign": "خوش آمدید به پنل مدیریت",
     "copyright": "مشاور هوشمند کسب و کار © 2024",
     "search_model": "auth.User",

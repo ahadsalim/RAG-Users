@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import toast from 'react-hot-toast'
@@ -23,25 +23,9 @@ export default function LoginPage() {
   const [otpCode, setOtpCode] = useState('')
   const [otpSent, setOtpSent] = useState(false)
   const [isLoadingOtp, setIsLoadingOtp] = useState(false)
-  const [otpMethod, setOtpMethod] = useState<'sms' | 'bale'>('bale') // Default to Bale
+  const [otpMethod, setOtpMethod] = useState<'sms' | 'bale'>('sms') // Default to SMS
   const [otpTimer, setOtpTimer] = useState(0)
   const [canResend, setCanResend] = useState(true)
-  
-  // Timer countdown effect
-  useEffect(() => {
-    if (otpTimer > 0) {
-      const interval = setInterval(() => {
-        setOtpTimer(prev => {
-          if (prev <= 1) {
-            setCanResend(true)
-            return 0
-          }
-          return prev - 1
-        })
-      }, 1000)
-      return () => clearInterval(interval)
-    }
-  }, [otpTimer])
   
   // Send OTP for real users
   const handleSendOtp = async (e: any) => {
@@ -574,11 +558,6 @@ export default function LoginPage() {
                 <p style={{...styles.label, fontSize: '12px', marginTop: '8px'}}>
                   کد 6 رقمی ارسال شده از طریق {otpMethod === 'bale' ? '📱 پیام‌رسان بله' : '💬 پیامک'} به {phoneNumber} را وارد کنید
                 </p>
-                {otpTimer > 0 && (
-                  <p style={{...styles.label, fontSize: '14px', marginTop: '8px', textAlign: 'center', fontWeight: 'bold'}}>
-                    ⏱️ زمان باقیمانده: {Math.floor(otpTimer / 60)}:{(otpTimer % 60).toString().padStart(2, '0')}
-                  </p>
-                )}
               </div>
             )}
 
@@ -601,64 +580,43 @@ export default function LoginPage() {
             </button>
             
             {otpSent && (
-              <>
-                {otpTimer === 0 && canResend && (
-                  <button
-                    type="button"
-                    onClick={handleSendOtp}
-                    style={{
-                      ...styles.submitBtn,
-                      marginTop: '10px',
-                      background: theme === 'light'
-                        ? 'linear-gradient(135deg, #48bb78 0%, #38a169 100%)'
-                        : 'linear-gradient(135deg, #48bb78 0%, #38a169 100%)',
-                    }}
-                  >
-                    ارسال مجدد کد تایید
-                  </button>
-                )}
-                <button
-                  type="button"
-                  onClick={() => { setOtpSent(false); setOtpCode(''); setOtpTimer(0); setCanResend(true) }}
-                  style={{...styles.link, textAlign: 'center', display: 'block', marginTop: '10px'}}
-                >
-                  تغییر شماره موبایل
-                </button>
-              </>
+              <button
+                type="button"
+                onClick={() => { setOtpSent(false); setOtpCode('') }}
+                style={{...styles.link, textAlign: 'center', display: 'block', marginTop: '10px'}}
+              >
+                تغییر شماره موبایل
+              </button>
             )}
           </form>
         )}
 
 
         <div style={styles.links}>
-          {userType === 'legal' && (
-            <Link
-              href="/auth/forgot-password"
-              style={styles.link}
-              onMouseOver={(e) => {
-                e.currentTarget.style.borderBottom = '1px solid currentColor'
-              }}
-              onMouseOut={(e) => {
-                e.currentTarget.style.borderBottom = '1px solid transparent'
-              }}
-            >
-              فراموشی رمز عبور
-            </Link>
-          )}
-          {userType === 'legal' && (
-            <Link
-              href="/auth/register"
-              style={styles.link}
-              onMouseOver={(e) => {
-                e.currentTarget.style.borderBottom = '1px solid currentColor'
-              }}
-              onMouseOut={(e) => {
-                e.currentTarget.style.borderBottom = '1px solid transparent'
-              }}
-            >
-              ثبت‌نام شرکت
-            </Link>
-          )}
+          <Link
+            href="/auth/forgot-password"
+            style={styles.link}
+            onMouseOver={(e) => {
+              e.currentTarget.style.borderBottom = '1px solid currentColor'
+            }}
+            onMouseOut={(e) => {
+              e.currentTarget.style.borderBottom = '1px solid transparent'
+            }}
+          >
+            فراموشی رمز عبور
+          </Link>
+          <Link
+            href="/auth/register"
+            style={styles.link}
+            onMouseOver={(e) => {
+              e.currentTarget.style.borderBottom = '1px solid currentColor'
+            }}
+            onMouseOut={(e) => {
+              e.currentTarget.style.borderBottom = '1px solid transparent'
+            }}
+          >
+            ثبت‌نام
+          </Link>
         </div>
       </div>
     </div>

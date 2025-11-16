@@ -6,11 +6,15 @@ import { Providers } from '@/components/providers'
 const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
-  title: 'پلتفرم مشاور',
+  title: 'مشاور هوشمند کسب و کار',
   description: 'سیستم مشاوره حقوقی و کسب‌وکار مبتنی بر هوش مصنوعی',
   keywords: 'مشاوره حقوقی، هوش مصنوعی، چت‌بات، مشاور',
-  authors: [{ name: 'Moshavereh Platform' }],
+  authors: [{ name: 'مشاور هوشمند کسب و کار' }],
   viewport: 'width=device-width, initial-scale=1',
+  icons: {
+    icon: '/favicon.ico',
+    apple: '/logo-small.png',
+  },
 }
 
 export default function RootLayout({
