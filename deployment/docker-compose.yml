@@ -42,12 +42,16 @@ services:
       - app_network
     healthcheck:
       test: >
-        sh -c "redis-cli 
-        $$([ -n \"$$REDIS_PASSWORD\" ] && echo \"-a $$REDIS_PASSWORD\" || echo \"\") 
-        ping || exit 1"
+        sh -c '
+        if [ -n "$REDIS_PASSWORD" ]; then
+          redis-cli -a "$REDIS_PASSWORD" ping | grep -q PONG
+        else
+          redis-cli ping | grep -q PONG
+        fi'
       interval: 10s
       timeout: 5s
       retries: 5
+      start_period: 5s
 
   # RabbitMQ Message Broker
   rabbitmq:
