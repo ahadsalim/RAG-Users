@@ -368,16 +368,16 @@ LOGGING = {
 # ===========================
 JAZZMIN_SETTINGS = {
     # Title
-    "site_title": "پنل مدیریت مشاور",
-    "site_header": "پنل مدیریت مشاور",
-    "site_brand": "مشاور",
+    "site_title": "مشاور هوشمند کسب و کار",
+    "site_header": "مشاور هوشمند کسب و کار",
+    "site_brand": "مشاور هوشمند",
     "site_logo": None,
     "login_logo": None,
     "login_logo_dark": None,
     "site_logo_classes": "img-circle",
     "site_icon": None,
-    "welcome_sign": "خوش آمدید",
-    "copyright": "مشاور - سیستم مشاوره هوشمند",
+    "welcome_sign": "خوش آمدید به پنل مدیریت",
+    "copyright": "مشاور هوشمند کسب و کار © 2024",
     "search_model": "auth.User",
     "user_avatar": None,
     
@@ -398,14 +398,25 @@ JAZZMIN_SETTINGS = {
     "navigation_expanded": True,
     "hide_apps": [],
     "hide_models": [],
-    "order_with_respect_to": ["auth", "accounts", "chat", "subscriptions", "payments"],
+    "order_with_respect_to": ["accounts", "admin_panel", "chat", "subscriptions", "payments", "notifications", "analytics"],
     
     # Icons
     "icons": {
         "auth": "fas fa-users-cog",
         "auth.user": "fas fa-user",
         "auth.Group": "fas fa-users",
+        "accounts": "fas fa-users",
         "accounts.User": "fas fa-user-circle",
+        "accounts.Organization": "fas fa-building",
+        "accounts.UserSession": "fas fa-laptop",
+        "accounts.OrganizationInvitation": "fas fa-envelope",
+        "accounts.AuditLog": "fas fa-history",
+        "admin_panel": "fas fa-user-shield",
+        "admin_panel.Role": "fas fa-user-tag",
+        "admin_panel.AdminUser": "fas fa-user-shield",
+        "admin_panel.AdminAction": "fas fa-clipboard-list",
+        "admin_panel.AdminDashboardWidget": "fas fa-th",
+        "admin_panel.AdminNotification": "fas fa-bell",
         "chat.Conversation": "fas fa-comments",
         "chat.Message": "fas fa-comment",
         "subscriptions.Subscription": "fas fa-crown",

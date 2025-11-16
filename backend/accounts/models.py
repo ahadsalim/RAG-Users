@@ -102,8 +102,8 @@ class Organization(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
     
     class Meta:
-        verbose_name = _('Organization')
-        verbose_name_plural = _('Organizations')
+        verbose_name = _('سازمان')
+        verbose_name_plural = _('سازمان‌ها')
         ordering = ['-created_at']
     
     def __str__(self):
@@ -114,13 +114,13 @@ class User(AbstractUser):
     """Custom User model with extended fields"""
     
     USER_TYPE_CHOICES = [
-        ('individual', _('Individual')),
-        ('business', _('Business')),
+        ('individual', _('فردی')),
+        ('business', _('تجاری')),
     ]
     
     LANGUAGE_CHOICES = [
-        ('fa', _('Persian')),
-        ('en', _('English')),
+        ('fa', _('فارسی')),
+        ('en', _('انگلیسی')),
     ]
     
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
@@ -129,34 +129,35 @@ class User(AbstractUser):
     username = models.CharField(max_length=150, blank=True, null=True, unique=True)
     
     # Override email to allow null/blank for phone-only users
-    email = models.EmailField(unique=True, blank=True, null=True, verbose_name=_('Email Address'))
+    email = models.EmailField(unique=True, blank=True, null=True, verbose_name=_('ایمیل'))
     phone_number = models.CharField(
         max_length=15, 
         unique=True,
         validators=[phone_validator],
-        verbose_name=_('Phone Number')
+        verbose_name=_('شماره موبایل')
     )
-    phone_verified = models.BooleanField(default=False)
-    email_verified = models.BooleanField(default=False)
+    phone_verified = models.BooleanField(default=False, verbose_name=_('موبایل تایید شده'))
+    email_verified = models.BooleanField(default=False, verbose_name=_('ایمیل تایید شده'))
     
     # Profile Information
-    avatar = models.ImageField(upload_to='avatars/', blank=True, null=True)
-    bio = models.TextField(blank=True, max_length=500)
-    user_type = models.CharField(max_length=20, choices=USER_TYPE_CHOICES, default='individual')
+    avatar = models.ImageField(upload_to='avatars/', blank=True, null=True, verbose_name=_('تصویر پروفایل'))
+    bio = models.TextField(blank=True, max_length=500, verbose_name=_('بیوگرافی'))
+    user_type = models.CharField(max_length=20, choices=USER_TYPE_CHOICES, default='individual', verbose_name=_('نوع کاربر'))
     
     # Legal/Business Information
     national_id = models.CharField(
         max_length=10, 
         blank=True, 
         validators=[national_id_validator],
-        verbose_name=_('National ID')
+        verbose_name=_('کد ملی')
     )
-    national_id_verified = models.BooleanField(default=False)
-    company_name = models.CharField(max_length=255, blank=True)
+    national_id_verified = models.BooleanField(default=False, verbose_name=_('کد ملی تایید شده'))
+    company_name = models.CharField(max_length=255, blank=True, verbose_name=_('نام شرکت'))
     economic_code = models.CharField(
         max_length=14, 
         blank=True, 
-        validators=[economic_code_validator]
+        validators=[economic_code_validator],
+        verbose_name=_('کد اقتصادی')
     )
     
     # Organization
@@ -165,56 +166,59 @@ class User(AbstractUser):
         on_delete=models.SET_NULL, 
         null=True, 
         blank=True,
-        related_name='members'
+        related_name='members',
+        verbose_name=_('سازمان')
     )
     organization_role = models.CharField(
         max_length=20,
         choices=[
-            ('owner', _('Owner')),
-            ('admin', _('Admin')),
-            ('member', _('Member')),
+            ('owner', _('مالک')),
+            ('admin', _('مدیر')),
+            ('member', _('عضو')),
         ],
-        blank=True
+        blank=True,
+        verbose_name=_('نقش در سازمان')
     )
     
     # Settings & Preferences
-    language = models.CharField(max_length=5, choices=LANGUAGE_CHOICES, default='fa')
-    timezone = models.CharField(max_length=50, default='Asia/Tehran')
-    currency = models.CharField(max_length=3, default='IRR')
+    language = models.CharField(max_length=5, choices=LANGUAGE_CHOICES, default='fa', verbose_name=_('زبان'))
+    timezone = models.CharField(max_length=50, default='Asia/Tehran', verbose_name=_('منطقه زمانی'))
+    currency = models.CharField(max_length=3, default='IRR', verbose_name=_('واحد پول'))
     
     # Chat Context/Memory
     chat_context = models.JSONField(
         default=dict,
         blank=True,
-        help_text=_('User preferences and context for chat interactions')
+        verbose_name=_('زمینه گفتگو'),
+        help_text=_('تنظیمات و زمینه کاربر برای تعاملات چت')
     )
     
     # 2FA
-    two_factor_enabled = models.BooleanField(default=False)
-    totp_secret = models.CharField(max_length=32, blank=True)
-    backup_codes = models.JSONField(default=list, blank=True)
+    two_factor_enabled = models.BooleanField(default=False, verbose_name=_('احراز هویت دو مرحله‌ای فعال'))
+    totp_secret = models.CharField(max_length=32, blank=True, verbose_name=_('کلید TOTP'))
+    backup_codes = models.JSONField(default=list, blank=True, verbose_name=_('کدهای پشتیبان'))
     
     # Session Management
-    max_concurrent_sessions = models.IntegerField(default=3)
+    max_concurrent_sessions = models.IntegerField(default=3, verbose_name=_('حداکثر نشست‌های همزمان'))
     
     # Security
-    last_password_change = models.DateTimeField(null=True, blank=True)
-    failed_login_attempts = models.IntegerField(default=0)
-    locked_until = models.DateTimeField(null=True, blank=True)
+    last_password_change = models.DateTimeField(null=True, blank=True, verbose_name=_('آخرین تغییر رمز عبور'))
+    failed_login_attempts = models.IntegerField(default=0, verbose_name=_('تلاش‌های ناموفق ورود'))
+    locked_until = models.DateTimeField(null=True, blank=True, verbose_name=_('قفل تا'))
     
     # API Access
-    api_key = models.CharField(max_length=64, blank=True, null=True, unique=True)
-    api_key_created_at = models.DateTimeField(null=True, blank=True)
+    api_key = models.CharField(max_length=64, blank=True, null=True, unique=True, verbose_name=_('کلید API'))
+    api_key_created_at = models.DateTimeField(null=True, blank=True, verbose_name=_('تاریخ ایجاد کلید API'))
     
     # Timestamps
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
-    last_seen = models.DateTimeField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name=_('تاریخ ایجاد'))
+    updated_at = models.DateTimeField(auto_now=True, verbose_name=_('تاریخ به‌روزرسانی'))
+    last_seen = models.DateTimeField(null=True, blank=True, verbose_name=_('آخرین بازدید'))
     
     # Notifications
-    email_notifications = models.BooleanField(default=True)
-    sms_notifications = models.BooleanField(default=True)
-    push_notifications = models.BooleanField(default=True)
+    email_notifications = models.BooleanField(default=True, verbose_name=_('اعلان‌های ایمیل'))
+    sms_notifications = models.BooleanField(default=True, verbose_name=_('اعلان‌های پیامکی'))
+    push_notifications = models.BooleanField(default=True, verbose_name=_('اعلان‌های پوش'))
     
     # Use custom manager
     objects = CustomUserManager()
@@ -223,11 +227,18 @@ class User(AbstractUser):
     REQUIRED_FIELDS = []
     
     class Meta:
-        verbose_name = _('User')
-        verbose_name_plural = _('Users')
+        verbose_name = _('کاربر')
+        verbose_name_plural = _('کاربران')
         ordering = ['-created_at']
     
     def __str__(self):
+        """Display user's full name, or last name, or phone number"""
+        if self.first_name and self.last_name:
+            return f"{self.first_name} {self.last_name}"
+        elif self.first_name:
+            return self.first_name
+        elif self.last_name:
+            return self.last_name
         return self.phone_number or self.email or str(self.id)
     
     def generate_totp_secret(self):
@@ -320,8 +331,8 @@ class UserSession(models.Model):
     
     class Meta:
         ordering = ['-last_activity']
-        verbose_name = _('User Session')
-        verbose_name_plural = _('User Sessions')
+        verbose_name = _('نشست کاربر')
+        verbose_name_plural = _('نشست‌های کاربران')
     
     def __str__(self):
         return f"{self.user.email} - {self.device_name or 'Unknown Device'}"
@@ -355,6 +366,8 @@ class OrganizationInvitation(models.Model):
     class Meta:
         unique_together = ['organization', 'email']
         ordering = ['-created_at']
+        verbose_name = _('دعوت‌نامه سازمان')
+        verbose_name_plural = _('دعوت‌نامه‌های سازمان')
     
     def __str__(self):
         return f"Invitation for {self.email} to {self.organization.name}"
@@ -392,6 +405,8 @@ class AuditLog(models.Model):
     
     class Meta:
         ordering = ['-timestamp']
+        verbose_name = _('لاگ عملیات')
+        verbose_name_plural = _('لاگ‌های عملیات')
         indexes = [
             models.Index(fields=['user', '-timestamp']),
             models.Index(fields=['action', '-timestamp']),
