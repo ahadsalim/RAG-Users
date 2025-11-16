@@ -69,9 +69,9 @@ generate_jwt_secret() {
     openssl rand -base64 64 | tr -d "=+/" | head -c 64
 }
 
-# Escape values for safe use in sed replacement (handles '|' and '&')
+# Escape values for safe use in sed replacement (handles '&', '|', and '/')
 escape_sed_replacement() {
-    printf '%s' "$1" | sed 's/[&|]/\\&/g'
+    printf '%s' "$1" | sed 's/[&|/]/\\&/g'
 }
 
 # ============================================
@@ -245,22 +245,14 @@ if [ ! -f "$ENV_FILE" ]; then
             print_info "Using 'localhost' as the default domain."
         fi
         
-        read -p "Admin email (used for SSL and notifications): " ADMIN_EMAIL
-        if [ -z "$ADMIN_EMAIL" ]; then
-            ADMIN_EMAIL="admin@${DOMAIN_NAME}"
-        fi
+        # Set default admin email based on domain (used for NPM configuration)
+        ADMIN_EMAIL="admin@${DOMAIN_NAME}"
         
-        # Ask for JWT Secret Key (to match central system)
+        # Auto-generate JWT Secret Key
         echo ""
-        print_info "JWT secret configuration"
-        echo "⚠️  This key MUST match the central system JWT secret."
-        read -p "Enter JWT_SECRET_KEY (press Enter to auto-generate): " JWT_SECRET
-        if [ -z "$JWT_SECRET" ]; then
-            JWT_SECRET=$(generate_jwt_secret)
-            print_info "JWT secret key generated."
-        else
-            print_success "Using the provided JWT secret key."
-        fi
+        print_info "Generating JWT secret key..."
+        JWT_SECRET=$(generate_jwt_secret)
+        print_success "JWT secret key generated (64 characters)."
         
         # Ask for RAG Core configuration
         echo ""
@@ -374,11 +366,10 @@ fi
 print_info ""
 print_info "⚠️  Please make sure the following values are correctly set in ${ENV_FILE}:"
 echo "  1. DOMAIN (your domain)"
-echo "  2. ADMIN_EMAIL (admin email)"
-echo "  3. RAG_CORE_BASE_URL and RAG_CORE_API_KEY (central system API)"
-echo "  4. Email settings"
-echo "  5. Payment gateways (e.g. Zarinpal/Stripe)"
-echo "  6. SMS (Kavenegar) and Bale messenger settings"
+echo "  2. RAG_CORE_BASE_URL and RAG_CORE_API_KEY (central system API)"
+echo "  3. Email settings (SMTP configuration)"
+echo "  4. Payment gateways (e.g. Zarinpal/Stripe)"
+echo "  5. SMS (Kavenegar) and Bale messenger settings"
 echo ""
 read -p "Have you reviewed and confirmed these values? (y/n): " -r
 if [[ ! $REPLY =~ ^[Yy]$ ]]; then
