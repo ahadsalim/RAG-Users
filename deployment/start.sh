@@ -470,6 +470,18 @@ if ! docker-compose up -d --no-deps backend; then
 fi
 sleep 20
 
+# Start Celery services
+print_info "Starting Celery worker and beat..."
+docker-compose up -d celery_worker celery_beat
+
+# Fix celerybeat volume permissions
+print_info "Fixing Celery Beat volume permissions..."
+CELERY_VOLUME_PATH=$(docker volume inspect deployment_celerybeat_schedule --format '{{.Mountpoint}}' 2>/dev/null)
+if [ -n "$CELERY_VOLUME_PATH" ]; then
+    chown -R 1000:1000 "$CELERY_VOLUME_PATH" 2>/dev/null || print_warning "Could not set celerybeat permissions (may need manual fix)"
+    print_success "Celery Beat permissions configured"
+fi
+
 # Run migrations
 print_info "Running database migrations..."
 if docker-compose exec -T backend python manage.py migrate --noinput 2>&1; then
@@ -488,25 +500,46 @@ else
 fi
 
 # Create superuser
-print_info "Ensuring Django admin user exists..."
-ADMIN_PASS=$(grep DJANGO_ADMIN_PASSWORD "$ENV_FILE" | cut -d'=' -f2)
-ADMIN_EMAIL_FROM_ENV=$(grep ADMIN_EMAIL "$ENV_FILE" | cut -d'=' -f2)
-if docker-compose exec -T backend python manage.py shell -c "
-from django.contrib.auth import get_user_model
-User = get_user_model()
-if not User.objects.filter(username='admin').exists():
-    User.objects.create_superuser('admin', '${ADMIN_EMAIL_FROM_ENV}', '${ADMIN_PASS}')
-    print('Superuser created')
+print_info "Creating superadmin user..."
+DOMAIN_NAME=$(grep '^DOMAIN=' "$ENV_FILE" | cut -d'=' -f2)
+if docker-compose exec -T backend python manage.py shell << 'PYEOF' 2>&1; then
+from accounts.models import User
+
+# ایجاد کاربر superadmin با موبایل و ایمیل
+user, created = User.objects.get_or_create(
+    phone_number='09121082690',
+    defaults={
+        'email': 'superadmin@tejarat.chat',
+        'first_name': 'Super',
+        'last_name': 'Admin',
+        'is_staff': True,
+        'is_superuser': True,
+        'is_active': True,
+        'phone_verified': True,
+        'email_verified': True,
+    }
+)
+
+if created:
+    user.set_password('admin123')
+    user.save()
+    print('✓ Superadmin created: 09121082690 | superadmin@tejarat.chat')
 else:
-    print('Superuser already exists')
-" 2>&1; then
-    print_success "Django admin user configured"
+    print('✓ Superadmin already exists: 09121082690 | superadmin@tejarat.chat')
+
+print(f'  Login credentials:')
+print(f'  - Frontend (mobile): 09121082690 + OTP/Password')
+print(f'  - Backend (email): superadmin@tejarat.chat / admin123')
+PYEOF
+    print_success "Superadmin user configured"
 else
-    print_warning "Could not create superuser automatically. You can create it later with:"
+    print_warning "Could not create superadmin automatically. You can create it later with:"
     print_info "  cd $DEPLOYMENT_DIR && docker-compose exec backend python manage.py createsuperuser"
 fi
 
-# Simple RAG Core connectivity check
+# Start remaining services
+print_info "Starting frontend and Nginx Proxy Manager..."
+docker-compose up -d frontend nginx_proxy_manager
 
 print_success "All services have been started."
 

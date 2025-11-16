@@ -44,6 +44,7 @@ INSTALLED_APPS = [
     
     # Local apps
     'accounts',
+    'admin_panel',
     'subscriptions',
     'payments',
     'chat',
@@ -162,6 +163,12 @@ AUTH_PASSWORD_VALIDATORS = [
 
 # Custom User Model
 AUTH_USER_MODEL = 'accounts.User'
+
+# Authentication Backends
+AUTHENTICATION_BACKENDS = [
+    'accounts.backends.PhoneOrEmailBackend',  # Custom backend for phone/email login
+    'django.contrib.auth.backends.ModelBackend',  # Fallback to default
+]
 
 # Internationalization
 LANGUAGE_CODE = 'fa-ir'

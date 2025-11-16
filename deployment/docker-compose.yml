@@ -192,9 +192,10 @@ services:
       CELERY_BROKER_URL: amqp://${RABBITMQ_USER:-app}:${RABBITMQ_PASSWORD:-secure_password_123}@rabbitmq:5672//
     volumes:
       - ../backend:/app
+      - celerybeat_schedule:/app/schedule
     networks:
       - app_network
-    command: celery -A core beat -l info
+    command: celery -A core beat -l info --schedule=/app/schedule/celerybeat-schedule
 
   # Next.js Frontend
   frontend:
@@ -283,6 +284,7 @@ volumes:
   postgres_data:
   redis_data:
   rabbitmq_data:
+  celerybeat_schedule:
   static_files:
   media_files:
   npm_data:
