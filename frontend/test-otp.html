@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="fa">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>تست OTP</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 500px;
+            margin: 50px auto;
+            padding: 20px;
+        }
+        input, button {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            font-size: 16px;
+        }
+        button {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+        #result {
+            margin-top: 20px;
+            padding: 10px;
+            background: #f0f0f0;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+    <h2>تست OTP</h2>
+    
+    <input type="tel" id="phone" placeholder="شماره موبایل" value="09121082690" maxlength="11">
+    <button onclick="sendOTP()">ارسال کد</button>
+    
+    <input type="text" id="otp" placeholder="کد 6 رقمی" maxlength="6">
+    <button onclick="verifyOTP()">تایید کد</button>
+    
+    <div id="result"></div>
+
+    <script>
+        const API_URL = 'https://admin.tejarat.chat';
+        
+        async function sendOTP() {
+            const phone = document.getElementById('phone').value;
+            const resultDiv = document.getElementById('result');
+            
+            resultDiv.innerHTML = 'در حال ارسال...';
+            
+            try {
+                const response = await fetch(`${API_URL}/api/v1/auth/send-otp/`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        phone_number: phone
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    resultDiv.innerHTML = `✅ ${data.message}`;
+                    resultDiv.style.background = '#d4edda';
+                } else {
+                    resultDiv.innerHTML = `❌ ${data.message}`;
+                    resultDiv.style.background = '#f8d7da';
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `❌ خطا: ${error.message}`;
+                resultDiv.style.background = '#f8d7da';
+                console.error('Error:', error);
+            }
+        }
+        
+        async function verifyOTP() {
+            const phone = document.getElementById('phone').value;
+            const otp = document.getElementById('otp').value;
+            const resultDiv = document.getElementById('result');
+            
+            resultDiv.innerHTML = 'در حال تایید...';
+            
+            try {
+                const response = await fetch(`${API_URL}/api/v1/auth/verify-otp/`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        phone_number: phone,
+                        otp_code: otp
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    resultDiv.innerHTML = `✅ ${data.message}<br>Access Token: ${data.access.substring(0, 20)}...`;
+                    resultDiv.style.background = '#d4edda';
+                } else {
+                    resultDiv.innerHTML = `❌ ${data.message}`;
+                    resultDiv.style.background = '#f8d7da';
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `❌ خطا: ${error.message}`;
+                resultDiv.style.background = '#f8d7da';
+                console.error('Error:', error);
+            }
+        }
+    </script>
+</body>
+</html>

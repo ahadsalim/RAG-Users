@@ -1,0 +1,174 @@
+from django.contrib import admin
+from django.utils.html import format_html
+from .models import (
+    NotificationTemplate, Notification, NotificationPreference,
+    DeviceToken, NotificationLog
+)
+
+
+@admin.register(NotificationTemplate)
+class NotificationTemplateAdmin(admin.ModelAdmin):
+    list_display = ['name', 'code', 'category', 'default_priority', 'is_active', 'channels_display', 'created_at']
+    list_filter = ['category', 'default_priority', 'is_active', 'created_at']
+    search_fields = ['name', 'code', 'title_template', 'body_template']
+    readonly_fields = ['created_at', 'updated_at']
+    
+    fieldsets = (
+        ('اطلاعات پایه', {
+            'fields': ('code', 'name', 'description', 'category')
+        }),
+        ('محتوای قالب', {
+            'fields': ('title_template', 'body_template')
+        }),
+        ('قالب‌های مخصوص', {
+            'fields': ('email_subject_template', 'email_html_template', 'sms_template'),
+            'classes': ('collapse',)
+        }),
+        ('تنظیمات', {
+            'fields': ('channels', 'default_priority', 'is_active', 'require_confirmation')
+        }),
+        ('اقدام', {
+            'fields': ('action_url', 'action_text')
+        }),
+        ('متادیتا', {
+            'fields': ('metadata', 'created_at', 'updated_at'),
+            'classes': ('collapse',)
+        }),
+    )
+    
+    def channels_display(self, obj):
+        if obj.channels:
+            return ', '.join(obj.channels)
+        return '-'
+    channels_display.short_description = 'کانال‌ها'
+
+
+class NotificationLogInline(admin.TabularInline):
+    model = NotificationLog
+    extra = 0
+    readonly_fields = ['channel', 'status', 'recipient', 'sent_at', 'error_message']
+    can_delete = False
+    
+    def has_add_permission(self, request, obj=None):
+        return False
+
+
+@admin.register(Notification)
+class NotificationAdmin(admin.ModelAdmin):
+    list_display = ['title', 'user', 'category', 'priority', 'is_read', 'channels_display', 'sent_status', 'created_at']
+    list_filter = ['category', 'priority', 'is_read', 'created_at', 'sent_via_email', 'sent_via_sms', 'sent_via_push']
+    search_fields = ['title', 'body', 'user__email']
+    readonly_fields = ['created_at', 'read_at', 'confirmed_at']
+    inlines = [NotificationLogInline]
+    
+    fieldsets = (
+        ('گیرنده', {
+            'fields': ('user', 'template')
+        }),
+        ('محتوا', {
+            'fields': ('title', 'body', 'category', 'priority')
+        }),
+        ('اقدام', {
+            'fields': ('action_url', 'action_text')
+        }),
+        ('وضعیت ارسال', {
+            'fields': ('channels', 'sent_via_email', 'sent_via_sms', 'sent_via_push', 'sent_via_in_app')
+        }),
+        ('وضعیت خواندن', {
+            'fields': ('is_read', 'read_at', 'is_confirmed', 'confirmed_at')
+        }),
+        ('اطلاعات اضافی', {
+            'fields': ('metadata', 'error_log', 'created_at', 'expires_at'),
+            'classes': ('collapse',)
+        }),
+    )
+    
+    def channels_display(self, obj):
+        if obj.channels:
+            return ', '.join(obj.channels)
+        return '-'
+    channels_display.short_description = 'کانال‌ها'
+    
+    def sent_status(self, obj):
+        statuses = []
+        if obj.sent_via_email:
+            statuses.append('📧')
+        if obj.sent_via_sms:
+            statuses.append('💬')
+        if obj.sent_via_push:
+            statuses.append('🔔')
+        if obj.sent_via_in_app:
+            statuses.append('📱')
+        return ' '.join(statuses) if statuses else '-'
+    sent_status.short_description = 'ارسال شده'
+    
+    actions = ['mark_as_read', 'mark_as_unread']
+    
+    def mark_as_read(self, request, queryset):
+        from django.utils import timezone
+        count = queryset.update(is_read=True, read_at=timezone.now())
+        self.message_user(request, f'{count} اعلان به عنوان خوانده شده علامت‌گذاری شد.')
+    mark_as_read.short_description = 'علامت‌گذاری به عنوان خوانده شده'
+    
+    def mark_as_unread(self, request, queryset):
+        count = queryset.update(is_read=False, read_at=None)
+        self.message_user(request, f'{count} اعلان به عنوان خوانده نشده علامت‌گذاری شد.')
+    mark_as_unread.short_description = 'علامت‌گذاری به عنوان خوانده نشده'
+
+
+@admin.register(NotificationPreference)
+class NotificationPreferenceAdmin(admin.ModelAdmin):
+    list_display = ['user', 'email_enabled', 'sms_enabled', 'push_enabled', 'in_app_enabled', 'quiet_hours_enabled']
+    list_filter = ['email_enabled', 'sms_enabled', 'push_enabled', 'in_app_enabled']
+    search_fields = ['user__email']
+    
+    fieldsets = (
+        ('کاربر', {
+            'fields': ('user',)
+        }),
+        ('کانال‌ها', {
+            'fields': ('email_enabled', 'sms_enabled', 'push_enabled', 'in_app_enabled')
+        }),
+        ('دسته‌بندی‌ها', {
+            'fields': (
+                'system_notifications', 'payment_notifications', 'subscription_notifications',
+                'chat_notifications', 'account_notifications', 'security_notifications',
+                'marketing_notifications', 'support_notifications'
+            )
+        }),
+        ('ساعات سکوت', {
+            'fields': ('quiet_hours_enabled', 'quiet_hours_start', 'quiet_hours_end')
+        }),
+        ('خلاصه روزانه', {
+            'fields': ('digest_enabled', 'digest_time')
+        }),
+        ('سفارشی', {
+            'fields': ('custom_preferences',),
+            'classes': ('collapse',)
+        }),
+    )
+
+
+@admin.register(DeviceToken)
+class DeviceTokenAdmin(admin.ModelAdmin):
+    list_display = ['user', 'device_type', 'device_name', 'is_active', 'last_used_at', 'created_at']
+    list_filter = ['device_type', 'is_active', 'created_at']
+    search_fields = ['user__email', 'device_name', 'token']
+    readonly_fields = ['created_at', 'updated_at', 'last_used_at']
+    
+    fields = ['user', 'token', 'device_type', 'device_name', 'is_active', 'last_used_at', 'created_at', 'updated_at']
+
+
+@admin.register(NotificationLog)
+class NotificationLogAdmin(admin.ModelAdmin):
+    list_display = ['notification', 'channel', 'recipient', 'status', 'sent_at', 'retry_count']
+    list_filter = ['channel', 'status', 'created_at']
+    search_fields = ['notification__title', 'recipient']
+    readonly_fields = ['created_at', 'sent_at', 'delivered_at']
+    
+    fields = [
+        'notification', 'channel', 'status', 'recipient',
+        'provider_message_id', 'provider_response',
+        'error_message', 'retry_count',
+        'created_at', 'sent_at', 'delivered_at'
+    ]

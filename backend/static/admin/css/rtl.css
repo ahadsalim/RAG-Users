@@ -1,0 +1,202 @@
+/* RTL Support for Django Admin with Jazzmin */
+
+body {
+    direction: rtl;
+    text-align: right;
+}
+
+/* Navbar */
+.navbar-nav {
+    flex-direction: row-reverse;
+}
+
+.navbar-brand {
+    margin-right: 0;
+    margin-left: 1rem;
+}
+
+/* Sidebar */
+.sidebar {
+    right: 0;
+    left: auto;
+}
+
+.main-sidebar {
+    right: 0;
+    left: auto;
+}
+
+.content-wrapper {
+    margin-right: 250px;
+    margin-left: 0;
+}
+
+.sidebar .nav-sidebar .nav-item > .nav-link {
+    text-align: right;
+}
+
+.sidebar .nav-sidebar .nav-link > .right {
+    float: left;
+    margin-left: 0;
+    margin-right: 10px;
+}
+
+.sidebar .nav-treeview {
+    padding-right: 1rem;
+    padding-left: 0;
+}
+
+/* Forms */
+.form-group label {
+    text-align: right;
+}
+
+.form-control {
+    text-align: right;
+}
+
+.checkbox, .radio {
+    padding-right: 20px;
+    padding-left: 0;
+}
+
+.checkbox input[type="checkbox"],
+.radio input[type="radio"] {
+    margin-right: -20px;
+    margin-left: 0;
+}
+
+/* Tables */
+.table th,
+.table td {
+    text-align: right;
+}
+
+/* Buttons */
+.btn-group > .btn:first-child {
+    border-radius: 0 4px 4px 0;
+}
+
+.btn-group > .btn:last-child {
+    border-radius: 4px 0 0 4px;
+}
+
+/* Cards */
+.card-body {
+    text-align: right;
+}
+
+/* Breadcrumbs */
+.breadcrumb-item + .breadcrumb-item::before {
+    content: "←";
+    padding-left: 0.5rem;
+    padding-right: 0.5rem;
+}
+
+/* Icons */
+.nav-icon {
+    margin-left: 10px;
+    margin-right: 0;
+}
+
+/* Pagination */
+.pagination .page-item:first-child .page-link {
+    border-radius: 0 4px 4px 0;
+}
+
+.pagination .page-item:last-child .page-link {
+    border-radius: 4px 0 0 4px;
+}
+
+/* Dropdown */
+.dropdown-menu {
+    left: auto;
+    right: 0;
+}
+
+/* User Panel */
+.user-panel .info {
+    padding-right: 10px;
+    padding-left: 0;
+}
+
+/* Alerts */
+.alert-dismissible .close {
+    left: 0;
+    right: auto;
+}
+
+/* Input Groups */
+.input-group > .form-control:not(:last-child) {
+    border-radius: 0 4px 4px 0;
+}
+
+.input-group > .form-control:not(:first-child) {
+    border-radius: 4px 0 0 4px;
+}
+
+/* Custom Select */
+select.form-control {
+    background-position: left 0.75rem center;
+}
+
+/* Django specific */
+.object-tools {
+    float: left;
+}
+
+.submit-row {
+    text-align: left;
+}
+
+.submit-row a.deletelink {
+    float: left;
+}
+
+/* Float utilities */
+.float-right {
+    float: left !important;
+}
+
+.float-left {
+    float: right !important;
+}
+
+.text-right {
+    text-align: left !important;
+}
+
+.text-left {
+    text-align: right !important;
+}
+
+/* Margin and Padding RTL */
+.mr-auto {
+    margin-left: auto !important;
+    margin-right: 0 !important;
+}
+
+.ml-auto {
+    margin-right: auto !important;
+    margin-left: 0 !important;
+}
+
+/* Sidebar collapsed */
+@media (max-width: 991.98px) {
+    .content-wrapper {
+        margin-right: 0;
+    }
+}
+
+body:not(.sidebar-mini-md):not(.sidebar-mini-xs):not(.layout-top-nav) .content-wrapper,
+body:not(.sidebar-mini-md):not(.sidebar-mini-xs):not(.layout-top-nav) .main-footer,
+body:not(.sidebar-mini-md):not(.sidebar-mini-xs):not(.layout-top-nav) .main-header {
+    margin-right: 250px;
+    margin-left: 0;
+}
+
+.sidebar-collapse .content-wrapper,
+.sidebar-collapse .main-footer,
+.sidebar-collapse .main-header {
+    margin-right: 0;
+}

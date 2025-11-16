@@ -1,0 +1,286 @@
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:16-alpine
+    container_name: app_postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${DB_NAME:-app_db}
+      POSTGRES_USER: ${DB_USER:-app_user}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-secure_password_123}
+      POSTGRES_INITDB_ARGS: "--encoding=UTF8 --locale=en_US.utf8"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "127.0.0.1:5432:5432"  # Only accessible from localhost
+    networks:
+      - app_network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-app_user}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Redis Cache & Session Store
+  redis:
+    image: redis:7-alpine
+    container_name: app_redis
+    restart: unless-stopped
+    command: >
+      sh -c "redis-server 
+      --appendonly yes 
+      --maxmemory 256mb 
+      --maxmemory-policy allkeys-lru
+      $$([ -n \"$$REDIS_PASSWORD\" ] && echo \"--requirepass $$REDIS_PASSWORD\" || echo \"\")"
+    environment:
+      REDIS_PASSWORD: ${REDIS_PASSWORD:-}
+    volumes:
+      - redis_data:/data
+    ports:
+      - "127.0.0.1:6379:6379"  # Only accessible from localhost
+    networks:
+      - app_network
+    healthcheck:
+      test: >
+        sh -c "redis-cli 
+        $$([ -n \"$$REDIS_PASSWORD\" ] && echo \"-a $$REDIS_PASSWORD\" || echo \"\") 
+        ping || exit 1"
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # RabbitMQ Message Broker
+  rabbitmq:
+    image: rabbitmq:3-management-alpine
+    container_name: app_rabbitmq
+    restart: unless-stopped
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER:-app}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD:-secure_password_123}
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    ports:
+      - "127.0.0.1:5672:5672"   # AMQP - Only from localhost
+      - "127.0.0.1:15672:15672" # Management UI - Only from localhost
+    networks:
+      - app_network
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Django Backend
+  backend:
+    build:
+      context: ../backend
+      dockerfile: ../deployment/Dockerfile.backend
+    container_name: app_backend
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    environment:
+      # Database
+      DB_NAME: ${DB_NAME:-app_db}
+      DB_USER: ${DB_USER:-app_user}
+      DB_PASSWORD: ${DB_PASSWORD:-secure_password_123}
+      DB_HOST: postgres
+      DB_PORT: 5432
+      # Redis
+      REDIS_PASSWORD: ${REDIS_PASSWORD:-}
+      REDIS_URL: ${REDIS_URL:-redis://redis:6379/0}
+      CACHE_URL: ${CACHE_URL:-redis://redis:6379/1}
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      # RabbitMQ
+      CELERY_BROKER_URL: amqp://${RABBITMQ_USER:-app}:${RABBITMQ_PASSWORD:-secure_password_123}@rabbitmq:5672//
+      # Django
+      SECRET_KEY: ${SECRET_KEY:-django-insecure-w)rw6j5bfnwl$$woa=)i3dgw6bv#*x(y0gew3n7ado3-jj=(yk6}
+      DEBUG: ${DEBUG:-false}
+      ALLOWED_HOSTS: ${ALLOWED_HOSTS:-localhost,127.0.0.1,app.example.com}
+      # RAG Core
+      RAG_CORE_BASE_URL: ${RAG_CORE_BASE_URL:-https://api.example.com}
+      RAG_CORE_API_KEY: ${RAG_CORE_API_KEY}
+      # Email
+      EMAIL_HOST: ${EMAIL_HOST:-smtp.gmail.com}
+      EMAIL_PORT: ${EMAIL_PORT:-587}
+      EMAIL_HOST_USER: ${EMAIL_HOST_USER}
+      EMAIL_HOST_PASSWORD: ${EMAIL_HOST_PASSWORD}
+      # Payment
+      ZARINPAL_MERCHANT_ID: ${ZARINPAL_MERCHANT_ID}
+      STRIPE_PUBLIC_KEY: ${STRIPE_PUBLIC_KEY}
+      STRIPE_SECRET_KEY: ${STRIPE_SECRET_KEY}
+      # SMS (Kavenegar)
+      KAVENEGAR_API_KEY: ${KAVENEGAR_API_KEY}
+      KAVENEGAR_SENDER: ${KAVENEGAR_SENDER}
+      # Bale Messenger
+      BALE_USERNAME: ${BALE_USERNAME}
+      BALE_PASSWORD: ${BALE_PASSWORD}
+    volumes:
+      - ../backend:/app
+      - static_files:/app/staticfiles
+      - media_files:/app/media
+    expose:
+      - "8000"  # Only exposed to docker network, not host
+    networks:
+      - app_network
+    command: >
+      sh -c "
+        python manage.py migrate --noinput &&
+        python manage.py collectstatic --noinput &&
+        daphne -b 0.0.0.0 -p 8000 core.asgi:application
+      "
+
+  # Celery Worker
+  celery_worker:
+    build:
+      context: ../backend
+      dockerfile: ../deployment/Dockerfile.backend
+    container_name: app_celery_worker
+    restart: unless-stopped
+    depends_on:
+      - backend
+      - rabbitmq
+      - redis
+    environment:
+      # Same as backend
+      DB_NAME: ${DB_NAME:-app_db}
+      DB_USER: ${DB_USER:-app_user}
+      DB_PASSWORD: ${DB_PASSWORD:-secure_password_123}
+      DB_HOST: postgres
+      DB_PORT: 5432
+      REDIS_PASSWORD: ${REDIS_PASSWORD:-}
+      REDIS_URL: ${REDIS_URL:-redis://redis:6379/0}
+      CACHE_URL: ${CACHE_URL:-redis://redis:6379/1}
+      CELERY_BROKER_URL: amqp://${RABBITMQ_USER:-app}:${RABBITMQ_PASSWORD:-secure_password_123}@rabbitmq:5672//
+    volumes:
+      - ../backend:/app
+    networks:
+      - app_network
+    command: celery -A core worker -l info
+
+  # Celery Beat Scheduler
+  celery_beat:
+    build:
+      context: ../backend
+      dockerfile: ../deployment/Dockerfile.backend
+    container_name: app_celery_beat
+    restart: unless-stopped
+    depends_on:
+      - backend
+      - rabbitmq
+      - redis
+    environment:
+      # Same as backend
+      DB_NAME: ${DB_NAME:-app_db}
+      DB_USER: ${DB_USER:-app_user}
+      DB_PASSWORD: ${DB_PASSWORD:-secure_password_123}
+      DB_HOST: postgres
+      DB_PORT: 5432
+      REDIS_PASSWORD: ${REDIS_PASSWORD:-}
+      REDIS_URL: ${REDIS_URL:-redis://redis:6379/0}
+      CACHE_URL: ${CACHE_URL:-redis://redis:6379/1}
+      CELERY_BROKER_URL: amqp://${RABBITMQ_USER:-app}:${RABBITMQ_PASSWORD:-secure_password_123}@rabbitmq:5672//
+    volumes:
+      - ../backend:/app
+    networks:
+      - app_network
+    command: celery -A core beat -l info
+
+  # Next.js Frontend
+  frontend:
+    build:
+      context: ../frontend
+      dockerfile: ../deployment/Dockerfile.frontend
+    container_name: app_frontend
+    restart: unless-stopped
+    depends_on:
+      - backend
+    environment:
+      NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:8000}
+      NEXT_PUBLIC_WS_URL: ${NEXT_PUBLIC_WS_URL:-ws://localhost:8000}
+      BACKEND_URL: ${BACKEND_URL:-https://admin.tejarat.chat}
+    expose:
+      - "3000"  # Only exposed to docker network, not host
+    networks:
+      - app_network
+    volumes:
+      - ../frontend:/app
+      - /app/node_modules
+      - /app/.next
+
+  # Nginx Proxy Manager Database
+  npm_db:
+    image: mariadb:10.11
+    container_name: app_npm_db
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${NPM_DB_PASSWORD:-npm_password}
+      MYSQL_DATABASE: nginxproxymanager
+      MYSQL_USER: npm
+      MYSQL_PASSWORD: ${NPM_DB_PASSWORD:-npm_password}
+    volumes:
+      - npm_mysql_data:/var/lib/mysql
+    networks:
+      - app_network
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      start_period: 10s
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  # Nginx Proxy Manager
+  nginx_proxy_manager:
+    image: jc21/nginx-proxy-manager:latest
+    container_name: app_npm
+    restart: unless-stopped
+    depends_on:
+      npm_db:
+        condition: service_healthy
+      backend:
+        condition: service_started
+      frontend:
+        condition: service_started
+    ports:
+      - "80:80"      # HTTP
+      - "443:443"    # HTTPS
+      - "81:81"      # Admin Panel
+    environment:
+      DB_MYSQL_HOST: npm_db
+      DB_MYSQL_PORT: 3306
+      DB_MYSQL_USER: npm
+      DB_MYSQL_PASSWORD: ${NPM_DB_PASSWORD:-npm_password}
+      DB_MYSQL_NAME: nginxproxymanager
+      DISABLE_IPV6: 'true'
+    volumes:
+      - npm_data:/data
+      - npm_letsencrypt:/etc/letsencrypt
+      - static_files:/static:ro
+      - media_files:/media:ro
+    networks:
+      - app_network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:81/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+networks:
+  app_network:
+    driver: bridge
+
+volumes:
+  postgres_data:
+  redis_data:
+  rabbitmq_data:
+  static_files:
+  media_files:
+  npm_data:
+  npm_mysql_data:
+  npm_letsencrypt:
