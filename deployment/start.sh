@@ -48,30 +48,30 @@ print_header() {
     echo -e "${BLUE}========================================${NC}"
 }
 
-# Generate complex password
+# Generate complex password (alphanumeric only - safe for URLs and configs)
 generate_password() {
-    openssl rand -base64 32 | tr -d "=+/" | cut -c1-32
+    tr -dc 'A-Za-z0-9' < /dev/urandom | head -c 32
 }
 
-# Generate very strong password for critical services
+# Generate very strong password for critical services (alphanumeric only)
 generate_strong_password() {
-    openssl rand -base64 48 | tr -d "=+/" | head -c 48
+    tr -dc 'A-Za-z0-9' < /dev/urandom | head -c 48
 }
 
-# Generate Django secret key
+# Generate Django secret key (alphanumeric + safe special chars)
 generate_django_secret() {
     python3 -c 'from django.core.management.utils import get_random_secret_key; print(get_random_secret_key())' 2>/dev/null || \
-    openssl rand -base64 64 | tr -d "=+/" | cut -c1-64
+    tr -dc 'A-Za-z0-9!@#%^*-_' < /dev/urandom | head -c 64
 }
 
-# Generate JWT secret key
+# Generate JWT secret key (alphanumeric only for maximum compatibility)
 generate_jwt_secret() {
-    openssl rand -base64 64 | tr -d "=+/" | head -c 64
+    tr -dc 'A-Za-z0-9' < /dev/urandom | head -c 64
 }
 
-# Escape values for safe use in sed replacement (handles '&', '|', and '/')
+# Escape values for safe use in sed replacement (handles '&' and other special chars)
 escape_sed_replacement() {
-    printf '%s' "$1" | sed 's/[&|/]/\\&/g'
+    printf '%s' "$1" | sed 's/[&]/\\&/g'
 }
 
 # ============================================
@@ -308,7 +308,7 @@ if [ ! -f "$ENV_FILE" ]; then
         CACHE_URL_SED=$(escape_sed_replacement "redis://:${REDIS_PASSWORD}@redis:6379/1")
         ALLOWED_HOSTS_SED=$(escape_sed_replacement "localhost,127.0.0.1,${DOMAIN_NAME}")
 
-        # Update .env file with generated and provided values (using escaped variants)
+        # Update .env file with generated and provided values
         sed -i "s|DOMAIN=.*|DOMAIN=${DOMAIN_NAME_SED}|g" "$ENV_FILE"
         sed -i "s|ADMIN_EMAIL=.*|ADMIN_EMAIL=${ADMIN_EMAIL_SED}|g" "$ENV_FILE"
         sed -i "s|DB_NAME=.*|DB_NAME=${DB_NAME_SED}|g" "$ENV_FILE"
