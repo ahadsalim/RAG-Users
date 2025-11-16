@@ -158,13 +158,26 @@ clear_cache() {
     print_header "Clearing Cache"
     cd "$DEPLOYMENT_DIR"
     
-    print_info "Clearing Django cache..."
-    docker-compose exec backend python manage.py shell -c "from django.core.cache import cache; cache.clear(); print('Cache cleared')"
+    print_info "Clearing Django cache (OTP, sessions, etc)..."
+    docker-compose exec -T backend python manage.py shell << 'PYEOF'
+from django.core.cache import cache
+cache.clear()
+print("✅ Django cache cleared successfully!")
+PYEOF
     
     print_info "Flushing Redis..."
-    docker-compose exec redis redis-cli FLUSHALL
+    if [ -f "$ENV_FILE" ]; then
+        source "$ENV_FILE"
+        if [ -n "$REDIS_PASSWORD" ]; then
+            docker-compose exec redis redis-cli -a "$REDIS_PASSWORD" FLUSHALL
+        else
+            docker-compose exec redis redis-cli FLUSHALL
+        fi
+    else
+        docker-compose exec redis redis-cli FLUSHALL
+    fi
     
-    print_success "All caches cleared"
+    print_success "All caches cleared (OTP rate limits reset)"
 }
 
 collect_static() {

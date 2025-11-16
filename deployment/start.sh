@@ -285,6 +285,16 @@ if [ ! -f "$ENV_FILE" ]; then
         read -p "BALE_USERNAME (leave empty if you don't have it yet): " BALE_USERNAME
         read -p "BALE_PASSWORD (leave empty if you don't have it yet): " BALE_PASSWORD
         
+        # Ask for Backend URL configuration
+        echo ""
+        print_info "Backend URL configuration"
+        DEFAULT_BACKEND_URL="https://admin.${DOMAIN_NAME}"
+        read -p "BACKEND_URL [${DEFAULT_BACKEND_URL}]: " BACKEND_URL
+        if [ -z "$BACKEND_URL" ]; then
+            BACKEND_URL="$DEFAULT_BACKEND_URL"
+        fi
+        print_success "Backend URL set to: ${BACKEND_URL}"
+        
         # Generate secure passwords
         print_info "Generating secure passwords..."
         DB_NAME="app_db"
@@ -360,6 +370,10 @@ if [ ! -f "$ENV_FILE" ]; then
         if [ -n "$BALE_PASSWORD" ]; then
             BALE_PASSWORD_SED=$(escape_sed_replacement "$BALE_PASSWORD")
             sed -i "s|BALE_PASSWORD=.*|BALE_PASSWORD=${BALE_PASSWORD_SED}|g" "$ENV_FILE"
+        fi
+        if [ -n "$BACKEND_URL" ]; then
+            BACKEND_URL_SED=$(escape_sed_replacement "$BACKEND_URL")
+            sed -i "s|BACKEND_URL=.*|BACKEND_URL=${BACKEND_URL_SED}|g" "$ENV_FILE"
         fi
         
         print_success ".env file created with secure passwords."
