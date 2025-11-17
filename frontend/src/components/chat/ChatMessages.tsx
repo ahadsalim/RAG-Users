@@ -35,11 +35,11 @@ export function ChatMessages({ messages, isLoading, isTyping }: ChatMessagesProp
       <div
         key={message.id}
         className={clsx(
-          'group py-8 px-4 md:px-8',
-          isUser ? 'bg-white dark:bg-gray-800' : 'bg-gray-50 dark:bg-gray-900'
+          'group py-6',
+          isUser ? 'bg-white dark:bg-gray-950' : 'bg-gray-50 dark:bg-gray-900'
         )}
       >
-        <div className="max-w-4xl mx-auto">
+        <div className="w-full">
           <div className="flex gap-4">
             {/* Avatar - Simple Text Based */}
             <div className={clsx(
@@ -187,64 +187,28 @@ export function ChatMessages({ messages, isLoading, isTyping }: ChatMessagesProp
   
   if (messages.length === 0 && !isLoading) {
     return (
-      <div className="flex-1 flex items-center justify-center">
-        <div className="text-center max-w-2xl mx-auto p-8">
-          <div className="text-6xl mb-4">✨</div>
-          <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-2">
-            دستیار هوشمند حقوقی مشاور
+      <div className="flex-1 flex items-center justify-center py-12">
+        <div className="text-center w-full px-4">
+          <div className="text-6xl mb-6">💬</div>
+          <h2 className="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-4">
+            چت جدید
           </h2>
-          <p className="text-gray-600 dark:text-gray-400 mb-8">
-            سوالات حقوقی خود را بپرسید و پاسخ‌های دقیق و مستند دریافت کنید
+          <p className="text-lg text-gray-600 dark:text-gray-400">
+            سوال خود را بپرسید...
           </p>
-          
-          {/* Suggestions */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <button className="text-right p-4 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
-              <h3 className="font-medium text-gray-900 dark:text-gray-100 mb-1">
-                قوانین کار
-              </h3>
-              <p className="text-sm text-gray-600 dark:text-gray-400">
-                "حقوق و مزایای کارگران در قرارداد موقت چیست؟"
-              </p>
-            </button>
-            <button className="text-right p-4 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
-              <h3 className="font-medium text-gray-900 dark:text-gray-100 mb-1">
-                ثبت شرکت
-              </h3>
-              <p className="text-sm text-gray-600 dark:text-gray-400">
-                "مراحل ثبت شرکت با مسئولیت محدود را توضیح بده"
-              </p>
-            </button>
-            <button className="text-right p-4 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
-              <h3 className="font-medium text-gray-900 dark:text-gray-100 mb-1">
-                قراردادها
-              </h3>
-              <p className="text-sm text-gray-600 dark:text-gray-400">
-                "نکات مهم در تنظیم قرارداد اجاره تجاری"
-              </p>
-            </button>
-            <button className="text-right p-4 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
-              <h3 className="font-medium text-gray-900 dark:text-gray-100 mb-1">
-                مالیات
-              </h3>
-              <p className="text-sm text-gray-600 dark:text-gray-400">
-                "معافیت‌های مالیاتی شرکت‌های دانش‌بنیان"
-              </p>
-            </button>
-          </div>
         </div>
       </div>
     )
   }
   
   return (
-    <div className="flex-1">
+    <div className="w-full">
       {messages.map(renderMessage)}
       
       {/* Loading indicator */}
       {isLoading && (
-        <div className="py-8 px-4 md:px-8 bg-gray-50 dark:bg-gray-900">
-          <div className="max-w-4xl mx-auto">
+        <div className="py-6 bg-gray-50 dark:bg-gray-900">
+          <div className="w-full">
             <div className="flex gap-4">
               <div className="flex-shrink-0 w-8 h-8 rounded-full bg-green-100 dark:bg-green-900 flex items-center justify-center">
                 <span className="text-sm">✨</span>
