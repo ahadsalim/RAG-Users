@@ -11,7 +11,7 @@ import logging
 from .models import Conversation, Message
 from .core_service import core_service
 from accounts.models import AuditLog
-from rest_framework_simplejwt.tokens import AccessToken
+from accounts.tokens import CustomAccessToken
 
 logger = logging.getLogger('app')
 
@@ -445,7 +445,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
     def get_jwt_token(self):
         """دریافت JWT token برای کاربر"""
         try:
-            token = AccessToken.for_user(self.user)
+            token = CustomAccessToken.for_user(self.user)
             return str(token)
         except Exception as e:
             logger.error(f"Error generating JWT token: {str(e)}")

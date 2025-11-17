@@ -6,6 +6,7 @@ import { useChatStore } from '@/store/chat'
 import { useAuthStore } from '@/store/auth'
 import { Conversation } from '@/types/chat'
 import clsx from 'clsx'
+import SettingsModal from '@/components/SettingsModal'
 
 interface ChatSidebarProps {
   isOpen: boolean
@@ -22,6 +23,7 @@ export function ChatSidebar({
 }: ChatSidebarProps) {
   const [searchQuery, setSearchQuery] = useState('')
   const [showArchived, setShowArchived] = useState(false)
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false)
   const { conversations, loadConversations, loadConversation, deleteConversation } = useChatStore()
   const { user, logout } = useAuthStore()
   
@@ -194,7 +196,10 @@ export function ChatSidebar({
           
           {/* Actions */}
           <div className="space-y-0.5">
-            <button className="w-full flex items-center gap-2 px-2 py-1.5 hover:bg-gray-800 rounded transition-colors text-sm">
+            <button 
+              onClick={() => setIsSettingsOpen(true)}
+              className="w-full flex items-center gap-2 px-2 py-1.5 hover:bg-gray-800 rounded transition-colors text-sm"
+            >
               <span className="text-gray-400 text-xs">⚙️</span>
               <span>تنظیمات</span>
             </button>
@@ -208,6 +213,12 @@ export function ChatSidebar({
           </div>
         </div>
       </aside>
+      
+      {/* Settings Modal */}
+      <SettingsModal 
+        isOpen={isSettingsOpen} 
+        onClose={() => setIsSettingsOpen(false)} 
+      />
     </>
   )
 }

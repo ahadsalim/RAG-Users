@@ -33,6 +33,8 @@ class CoreAPIService:
         conversation_id: Optional[str] = None,
         language: str = 'fa',
         stream: bool = False,
+        filters: Optional[Dict[str, Any]] = None,
+        user_preferences: Optional[Dict[str, Any]] = None,
     ) -> Dict[str, Any]:
         """
         Send a query to Core API.
@@ -43,6 +45,8 @@ class CoreAPIService:
             conversation_id: Optional conversation ID for context
             language: Query language (fa, en, ar)
             stream: Whether to stream the response
+            filters: Optional filters (jurisdiction, category, date_range, etc.)
+            user_preferences: User's custom preferences for response style
             
         Returns:
             Query response with answer and sources
@@ -53,11 +57,16 @@ class CoreAPIService:
             "query": query,
             "conversation_id": conversation_id,
             "language": language,
-            "max_results": 5,
-            "use_cache": True,
-            "use_reranking": True,
             "stream": stream,
         }
+        
+        # Add filters if provided
+        if filters:
+            payload["filters"] = filters
+        
+        # Add user preferences if provided
+        if user_preferences:
+            payload["user_preferences"] = user_preferences
         
         try:
             async with httpx.AsyncClient(timeout=self.timeout) as client:
@@ -82,6 +91,8 @@ class CoreAPIService:
         token: str,
         conversation_id: Optional[str] = None,
         language: str = 'fa',
+        filters: Optional[Dict[str, Any]] = None,
+        user_preferences: Optional[Dict[str, Any]] = None,
     ) -> AsyncGenerator[str, None]:
         """
         Send a query and stream the response.
@@ -91,6 +102,8 @@ class CoreAPIService:
             token: JWT token
             conversation_id: Optional conversation ID
             language: Query language
+            filters: Optional filters
+            user_preferences: User's custom preferences for response style
             
         Yields:
             Streamed response chunks
@@ -101,11 +114,16 @@ class CoreAPIService:
             "query": query,
             "conversation_id": conversation_id,
             "language": language,
-            "max_results": 5,
-            "use_cache": True,
-            "use_reranking": True,
             "stream": True,
         }
+        
+        # Add filters if provided
+        if filters:
+            payload["filters"] = filters
+        
+        # Add user preferences if provided
+        if user_preferences:
+            payload["user_preferences"] = user_preferences
         
         try:
             async with httpx.AsyncClient(timeout=self.timeout) as client:

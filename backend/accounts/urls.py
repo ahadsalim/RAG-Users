@@ -20,6 +20,7 @@ from .views import (
     LogoutView
 )
 from .otp_views import SendOTPView, VerifyOTPView
+from .settings_views import user_settings
 
 router = DefaultRouter()
 router.register(r'sessions', UserSessionViewSet, basename='session')
@@ -40,6 +41,9 @@ urlpatterns = [
     # Profile
     path('profile/', UserProfileView.as_view(), name='profile'),
     path('password/change/', PasswordChangeView.as_view(), name='password-change'),
+    
+    # Settings
+    path('settings/', user_settings, name='settings'),
     
     # 2FA
     path('2fa/setup/', TwoFactorSetupView.as_view(), name='2fa-setup'),

@@ -249,8 +249,8 @@ SIMPLE_JWT = {
     'AUTH_HEADER_TYPES': ('Bearer',),
     'USER_ID_FIELD': 'id',
     'USER_ID_CLAIM': 'sub',  # استاندارد JWT برای Core API compatibility
-    'AUTH_TOKEN_CLASSES': ('rest_framework_simplejwt.tokens.AccessToken',),
-    'TOKEN_TYPE_CLAIM': 'token_type',
+    'AUTH_TOKEN_CLASSES': ('accounts.tokens.CustomAccessToken',),  # استفاده از custom token
+    'TOKEN_TYPE_CLAIM': 'type',  # Core API expects 'type' not 'token_type'
     'JTI_CLAIM': 'jti',
 }
 

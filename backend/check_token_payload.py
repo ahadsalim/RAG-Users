@@ -14,7 +14,7 @@ os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'core.settings')
 django.setup()
 
 from accounts.models import User
-from rest_framework_simplejwt.tokens import AccessToken
+from accounts.tokens import CustomAccessToken
 
 # Get JWT settings
 JWT_SECRET_KEY = os.getenv('JWT_SECRET_KEY', '').strip('"')
@@ -42,7 +42,7 @@ print(f"   Email: {user.email}")
 print()
 
 # Generate token
-token = AccessToken.for_user(user)
+token = CustomAccessToken.for_user(user)
 token_str = str(token)
 
 print(f"Token generated: {token_str[:80]}...")

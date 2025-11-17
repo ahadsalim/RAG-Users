@@ -14,6 +14,9 @@ export default function LoginPage() {
   const [userType, setUserType] = useState<'real' | 'legal'>('real')
   const [theme, setTheme] = useState<'light' | 'dark'>('light')
   
+  // Cache buster for images
+  const imageVersion = Date.now()
+  
   // For legal users
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -205,9 +208,22 @@ export default function LoginPage() {
     },
     header: {
       display: 'flex',
+      flexDirection: 'column' as const,
+      alignItems: 'center',
+      marginBottom: '30px',
+      gap: '20px'
+    },
+    headerTop: {
+      display: 'flex',
       justifyContent: 'space-between',
       alignItems: 'center',
-      marginBottom: '30px'
+      width: '100%'
+    },
+    logoContainer: {
+      display: 'flex',
+      justifyContent: 'center',
+      alignItems: 'center',
+      marginBottom: '10px'
     },
     title: {
       fontSize: '28px',
@@ -380,24 +396,38 @@ export default function LoginPage() {
       <div style={styles.container}>
       <div style={styles.card}>
         <div style={styles.header}>
-          <h2 style={styles.title}>ورود به سامانه</h2>
-          <button
-            type="button"
-            style={styles.themeBtn}
-            onClick={() => setTheme(theme === 'light' ? 'dark' : 'light')}
-            onMouseOver={(e) => {
-              e.currentTarget.style.background = theme === 'light'
-                ? 'rgba(255, 255, 255, 0.4)'
-                : '#374151'
-            }}
-            onMouseOut={(e) => {
-              e.currentTarget.style.background = theme === 'light'
-                ? 'rgba(255, 255, 255, 0.3)'
-                : '#2d3748'
-            }}
-          >
-            {theme === 'light' ? 'Dark' : 'Light'}
-          </button>
+          {/* Logo */}
+          <div style={styles.logoContainer}>
+            <img 
+              src={`/logo-small.png?v=${imageVersion}`}
+              alt="Logo" 
+              width={80} 
+              height={80}
+              style={{ objectFit: 'contain' }}
+            />
+          </div>
+          
+          {/* Title and Theme Button */}
+          <div style={styles.headerTop}>
+            <h2 style={styles.title}>ورود به سامانه</h2>
+            <button
+              type="button"
+              style={styles.themeBtn}
+              onClick={() => setTheme(theme === 'light' ? 'dark' : 'light')}
+              onMouseOver={(e) => {
+                e.currentTarget.style.background = theme === 'light'
+                  ? 'rgba(255, 255, 255, 0.4)'
+                  : '#374151'
+              }}
+              onMouseOut={(e) => {
+                e.currentTarget.style.background = theme === 'light'
+                  ? 'rgba(255, 255, 255, 0.3)'
+                  : '#2d3748'
+              }}
+            >
+              {theme === 'light' ? 'Dark' : 'Light'}
+            </button>
+          </div>
         </div>
 
         <div style={styles.userTypeContainer}>
@@ -539,7 +569,14 @@ export default function LoginPage() {
                     style={styles.methodBtn(otpMethod === 'bale')}
                     onClick={() => setOtpMethod('bale')}
                   >
-                    📱 پیام‌رسان (بله)
+                    <img 
+                      src={`/bale_64.png?v=${imageVersion}`}
+                      alt="Bale" 
+                      width={24} 
+                      height={24}
+                      style={{ objectFit: 'contain' }}
+                    />
+                    پیام‌رسان (بله)
                   </button>
                   <button
                     type="button"
@@ -571,8 +608,15 @@ export default function LoginPage() {
                     e.currentTarget.style.boxShadow = 'none'
                   }}
                 />
-                <p style={{...styles.label, fontSize: '12px', marginTop: '8px'}}>
-                  کد 6 رقمی ارسال شده از طریق {otpMethod === 'bale' ? '📱 پیام‌رسان بله' : '💬 پیامک'} به {phoneNumber} را وارد کنید
+                <p style={{...styles.label, fontSize: '12px', marginTop: '8px', display: 'flex', alignItems: 'center', gap: '6px', justifyContent: 'center'}}>
+                  کد 6 رقمی ارسال شده از طریق 
+                  {otpMethod === 'bale' ? (
+                    <span style={{display: 'flex', alignItems: 'center', gap: '4px'}}>
+                      <img src={`/bale_64.png?v=${imageVersion}`} alt="Bale" width={18} height={18} style={{ objectFit: 'contain' }} />
+                      پیام‌رسان بله
+                    </span>
+                  ) : '💬 پیامک'} 
+                  به {phoneNumber} را وارد کنید
                 </p>
                 {otpTimer > 0 && (
                   <p style={{...styles.label, fontSize: '14px', marginTop: '8px', textAlign: 'center', fontWeight: 'bold'}}>

@@ -13,7 +13,7 @@ import { Message, Conversation } from '@/types/chat'
 
 export default function ChatPage() {
   const router = useRouter()
-  const { isAuthenticated, user } = useAuthStore()
+  const { isAuthenticated, user, isLoading: authLoading } = useAuthStore()
   const { 
     currentConversation,
     messages,
@@ -25,7 +25,13 @@ export default function ChatPage() {
   
   const [isSidebarOpen, setIsSidebarOpen] = useState(false) // Start closed for faster load
   const [isTyping, setIsTyping] = useState(false)
+  const [isHydrated, setIsHydrated] = useState(false)
   const messagesEndRef = useRef<HTMLDivElement>(null)
+  
+  // Wait for hydration
+  useEffect(() => {
+    setIsHydrated(true)
+  }, [])
   
   // WebSocket connection (optional - won't block UI)
   const [isConnected, setIsConnected] = useState(true) // Assume connected for better UX
@@ -47,12 +53,12 @@ export default function ChatPage() {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [messages])
 
-  // Check authentication
+  // Check authentication after hydration
   useEffect(() => {
-    if (!isAuthenticated) {
+    if (isHydrated && !authLoading && !isAuthenticated) {
       router.push('/auth/login')
     }
-  }, [isAuthenticated, router])
+  }, [isHydrated, authLoading, isAuthenticated, router])
 
   // Handle sending message
   const handleSendMessage = useCallback(async (content: string, mode?: string) => {
@@ -75,6 +81,16 @@ export default function ChatPage() {
     setIsSidebarOpen(prev => !prev)
   }, [])
 
+  // Show loading while hydrating or checking auth
+  if (!isHydrated || authLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary-600"></div>
+      </div>
+    )
+  }
+  
+  // Redirect will happen in useEffect, show loading meanwhile
   if (!isAuthenticated) {
     return (
       <div className="flex items-center justify-center min-h-screen">

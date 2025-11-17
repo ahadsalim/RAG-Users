@@ -201,12 +201,15 @@ export function ChatMessages({ messages, isLoading, isTyping }: ChatMessagesProp
     )
   }
   
+  // Check if there's already a processing message
+  const hasProcessingMessage = messages.some(msg => msg.status === 'processing')
+  
   return (
     <div className="w-full">
       {messages.map(renderMessage)}
       
-      {/* Loading indicator */}
-      {isLoading && (
+      {/* Loading indicator - only show if no processing message exists */}
+      {isLoading && !hasProcessingMessage && (
         <div className="py-6 bg-gray-50 dark:bg-gray-900">
           <div className="w-full">
             <div className="flex gap-4">

@@ -39,7 +39,7 @@ export const useAuthStore = create<AuthState>()(
       accessToken: null,
       refreshToken: null,
       isAuthenticated: false,
-      isLoading: false,
+      isLoading: true, // Start as loading to prevent redirect
       error: null,
       
       login: async (email: string, password: string) => {
@@ -220,6 +220,13 @@ export const useAuthStore = create<AuthState>()(
         refreshToken: state.refreshToken,
         isAuthenticated: state.isAuthenticated,
       }),
+      onRehydrateStorage: () => (state) => {
+        // After rehydration, set loading to false and restore axios header
+        if (state?.accessToken) {
+          axios.defaults.headers.common['Authorization'] = `Bearer ${state.accessToken}`
+        }
+        state && (state.isLoading = false)
+      },
     }
   )
 )

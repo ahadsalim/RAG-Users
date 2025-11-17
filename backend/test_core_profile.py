@@ -14,7 +14,7 @@ django.setup()
 
 from chat.core_service import core_service
 from accounts.models import User
-from rest_framework_simplejwt.tokens import AccessToken
+from accounts.tokens import CustomAccessToken
 from asgiref.sync import sync_to_async
 
 
@@ -23,7 +23,7 @@ def get_test_user():
 
 
 def generate_token(user):
-    token = AccessToken.for_user(user)
+    token = CustomAccessToken.for_user(user)
     return str(token)
 
 

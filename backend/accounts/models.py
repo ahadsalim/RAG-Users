@@ -193,6 +193,14 @@ class User(AbstractUser):
         help_text=_('تنظیمات و زمینه کاربر برای تعاملات چت')
     )
     
+    # User Preferences (for UI and response customization)
+    preferences = models.JSONField(
+        default=dict,
+        blank=True,
+        verbose_name=_('تنظیمات کاربر'),
+        help_text=_('تنظیمات UI، تم، و سفارشی‌سازی پاسخ')
+    )
+    
     # 2FA
     two_factor_enabled = models.BooleanField(default=False, verbose_name=_('احراز هویت دو مرحله‌ای فعال'))
     totp_secret = models.CharField(max_length=32, blank=True, verbose_name=_('کلید TOTP'))

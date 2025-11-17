@@ -28,10 +28,21 @@ from .serializers import (
     MessageFeedbackSerializer, ConversationExportSerializer,
     BulkConversationActionSerializer
 )
-from .rag_client import rag_client, RAGCoreException, RateLimitException
+from .core_service import core_service
 from accounts.models import AuditLog
+from rest_framework_simplejwt.tokens import RefreshToken
 
 logger = logging.getLogger('app')
+
+
+class RAGCoreException(Exception):
+    """Exception for RAG Core errors"""
+    pass
+
+
+class RateLimitException(Exception):
+    """Exception for rate limit errors"""
+    pass
 
 
 class QueryView(APIView):
@@ -118,23 +129,34 @@ class QueryView(APIView):
         )
         
         try:
+            # Generate JWT token for Core API
+            refresh = RefreshToken.for_user(user)
+            access_token = str(refresh.access_token)
+            
+            # Get user preferences as object (not just response_style)
+            user_preferences = None
+            if user.preferences:
+                user_preferences = {
+                    'response_style': user.preferences.get('response_style', 'formal'),
+                    'detail_level': user.preferences.get('detail_level', 'moderate'),
+                    'include_examples': user.preferences.get('include_examples', True),
+                    'language_style': user.preferences.get('language_style', 'simple'),
+                    'format': user.preferences.get('format', 'paragraph')
+                }
+            
             # ارسال به RAG Core به صورت async
             loop = asyncio.new_event_loop()
             asyncio.set_event_loop(loop)
             
             response = loop.run_until_complete(
-                rag_client.send_query(
+                core_service.send_query(
                     query=data['query'],
-                    user=user,
+                    token=access_token,
                     conversation_id=conversation.rag_conversation_id or None,
-                    response_mode=data.get('response_mode', 'simple_explanation'),
-                    max_results=data.get('max_results', 5),
-                    use_cache=data.get('use_cache', True),
-                    use_reranking=data.get('use_reranking', True),
+                    language='fa',
                     stream=False,
                     filters=data.get('filters'),
-                    llm_config=data.get('llm_config'),
-                    context=data.get('context')
+                    user_preferences=user_preferences
                 )
             )
             
@@ -290,6 +312,21 @@ class StreamingQueryView(APIView):
         async def generate_stream():
             """Generator برای streaming response"""
             try:
+                # Generate JWT token for Core API
+                refresh = RefreshToken.for_user(user)
+                access_token = str(refresh.access_token)
+                
+                # Get user preferences as object
+                user_preferences = None
+                if user.preferences:
+                    user_preferences = {
+                        'response_style': user.preferences.get('response_style', 'formal'),
+                        'detail_level': user.preferences.get('detail_level', 'moderate'),
+                        'include_examples': user.preferences.get('include_examples', True),
+                        'language_style': user.preferences.get('language_style', 'simple'),
+                        'format': user.preferences.get('format', 'paragraph')
+                    }
+                
                 full_content = ""
                 sources = []
                 chunks = []
@@ -299,27 +336,36 @@ class StreamingQueryView(APIView):
                 yield f"data: {json.dumps({'type': 'start', 'conversation_id': str(conversation.id), 'message_id': str(assistant_message.id)})}\n\n"
                 
                 # دریافت stream از RAG Core
-                async for chunk_data in rag_client.send_query_stream(
+                async for chunk_text in core_service.send_query_stream(
                     query=data['query'],
-                    user=user,
+                    token=access_token,
                     conversation_id=conversation.rag_conversation_id,
-                    response_mode=data.get('response_mode', 'simple_explanation')
+                    language='fa',
+                    filters=data.get('filters'),
+                    user_preferences=user_preferences
                 ):
-                    chunk_type = chunk_data.get('type')
-                    
-                    if chunk_type == 'chunk':
-                        content = chunk_data.get('content', '')
-                        full_content += content
-                        yield f"data: {json.dumps({'type': 'chunk', 'content': content})}\n\n"
-                    
-                    elif chunk_type == 'sources':
-                        sources = chunk_data.get('sources', [])
-                        yield f"data: {json.dumps({'type': 'sources', 'sources': sources})}\n\n"
-                    
-                    elif chunk_type == 'end':
-                        metadata = chunk_data.get('metadata', {})
-                        chunks = chunk_data.get('chunks', [])
-                        yield f"data: {json.dumps({'type': 'end', 'metadata': metadata})}\n\n"
+                    # Parse JSON chunk
+                    try:
+                        chunk_data = json.loads(chunk_text)
+                        chunk_type = chunk_data.get('type')
+                        
+                        if chunk_type == 'chunk':
+                            content = chunk_data.get('content', '')
+                            full_content += content
+                            yield f"data: {json.dumps({'type': 'chunk', 'content': content})}\n\n"
+                        
+                        elif chunk_type == 'sources':
+                            sources = chunk_data.get('sources', [])
+                            yield f"data: {json.dumps({'type': 'sources', 'sources': sources})}\n\n"
+                        
+                        elif chunk_type == 'end':
+                            metadata = chunk_data.get('metadata', {})
+                            chunks = chunk_data.get('chunks', [])
+                            yield f"data: {json.dumps({'type': 'end', 'metadata': metadata})}\n\n"
+                    except json.JSONDecodeError:
+                        # اگر JSON نبود، مستقیم به عنوان content ارسال کن
+                        full_content += chunk_text
+                        yield f"data: {json.dumps({'type': 'chunk', 'content': chunk_text})}\n\n"
                 
                 # به‌روزرسانی پیام در دیتابیس
                 assistant_message.content = full_content
