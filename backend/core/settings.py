@@ -248,7 +248,7 @@ SIMPLE_JWT = {
     'VERIFYING_KEY': None,
     'AUTH_HEADER_TYPES': ('Bearer',),
     'USER_ID_FIELD': 'id',
-    'USER_ID_CLAIM': 'user_id',
+    'USER_ID_CLAIM': 'sub',  # استاندارد JWT برای Core API compatibility
     'AUTH_TOKEN_CLASSES': ('rest_framework_simplejwt.tokens.AccessToken',),
     'TOKEN_TYPE_CLAIM': 'token_type',
     'JTI_CLAIM': 'jti',
@@ -373,6 +373,12 @@ KAVENEGAR_SENDER = config('KAVENEGAR_SENDER', default='')
 # Bale Messenger (OTP)
 BALE_USERNAME = config('BALE_USERNAME', default='')
 BALE_PASSWORD = config('BALE_PASSWORD', default='')
+
+# ===========================
+# Core RAG API Configuration
+# ===========================
+CORE_API_URL = config('CORE_API_URL', default='https://core.tejarat.chat')
+CORE_API_KEY = config('CORE_API_KEY', default='')
 
 # ===========================
 # Jazzmin Admin Configuration

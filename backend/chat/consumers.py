@@ -9,8 +9,9 @@ from django.utils import timezone
 import logging
 
 from .models import Conversation, Message
-from .rag_client import rag_client
+from .core_service import core_service
 from accounts.models import AuditLog
+from rest_framework_simplejwt.tokens import AccessToken
 
 logger = logging.getLogger('app')
 
@@ -25,6 +26,12 @@ class ChatConsumer(AsyncWebsocketConsumer):
         # بررسی احراز هویت
         if not self.user.is_authenticated:
             await self.close(code=4001)
+            return
+        
+        # دریافت JWT token برای Core API
+        self.jwt_token = await self.get_jwt_token()
+        if not self.jwt_token:
+            await self.close(code=4002)
             return
         
         # دریافت conversation_id از URL
@@ -151,51 +158,61 @@ class ChatConsumer(AsyncWebsocketConsumer):
         }))
         
         try:
-            # ارسال به RAG Core با streaming
+            # ارسال به Core RAG با streaming
             full_content = ""
             sources = []
-            chunks = []
             metadata = {}
             
-            async for chunk_data in rag_client.send_query_stream(
+            async for chunk in core_service.send_query_stream(
                 query=query,
-                user=self.user,
+                token=self.jwt_token,
                 conversation_id=conversation.rag_conversation_id,
-                response_mode=response_mode
+                language='fa'
             ):
-                chunk_type = chunk_data.get('type')
-                
-                if chunk_type == 'chunk':
-                    content = chunk_data.get('content', '')
-                    full_content += content
+                # پردازش chunk دریافتی
+                try:
+                    chunk_data = json.loads(chunk)
+                    chunk_type = chunk_data.get('type', 'text')
                     
-                    # ارسال chunk به کاربر
+                    if chunk_type == 'text' or 'content' in chunk_data:
+                        content = chunk_data.get('content', chunk_data.get('text', ''))
+                        full_content += content
+                        
+                        # ارسال chunk به کاربر
+                        await self.send(text_data=json.dumps({
+                            'type': 'chunk',
+                            'content': content,
+                            'message_id': str(assistant_message.id)
+                        }))
+                    
+                    elif chunk_type == 'sources':
+                        sources = chunk_data.get('sources', [])
+                        
+                        # ارسال منابع
+                        await self.send(text_data=json.dumps({
+                            'type': 'sources',
+                            'sources': sources,
+                            'message_id': str(assistant_message.id)
+                        }))
+                    
+                    elif chunk_type == 'metadata' or chunk_type == 'end':
+                        metadata = chunk_data
+                        
+                except json.JSONDecodeError:
+                    # اگر chunk فقط متن باشد
+                    full_content += chunk
                     await self.send(text_data=json.dumps({
                         'type': 'chunk',
-                        'content': content,
+                        'content': chunk,
                         'message_id': str(assistant_message.id)
                     }))
-                
-                elif chunk_type == 'sources':
-                    sources = chunk_data.get('sources', [])
-                    
-                    # ارسال منابع
-                    await self.send(text_data=json.dumps({
-                        'type': 'sources',
-                        'sources': sources,
-                        'message_id': str(assistant_message.id)
-                    }))
-                
-                elif chunk_type == 'end':
-                    metadata = chunk_data.get('metadata', {})
-                    chunks = chunk_data.get('chunks', [])
             
             # به‌روزرسانی پیام assistant
             await self.update_assistant_message(
                 assistant_message,
                 full_content,
                 sources,
-                chunks,
+                [],  # chunks - Core API returns sources directly
                 metadata
             )
             
@@ -279,15 +296,14 @@ class ChatConsumer(AsyncWebsocketConsumer):
             feedback_text
         )
         
-        # ارسال به RAG Core
+        # ارسال به Core API
         if success:
             message = await self.get_message(message_id)
             if message and message.rag_message_id:
-                await rag_client.send_feedback(
-                    user=self.user,
+                await core_service.submit_feedback(
                     message_id=message.rag_message_id,
-                    rating=rating,
-                    feedback_type=feedback_type,
+                    rating=rating if rating else 3,
+                    token=self.jwt_token,
                     feedback_text=feedback_text
                 )
         
@@ -424,3 +440,13 @@ class ChatConsumer(AsyncWebsocketConsumer):
             ip_address=self.scope.get('client', ['', ''])[0],
             user_agent=dict(self.scope.get('headers', {})).get(b'user-agent', b'').decode()
         )
+    
+    @database_sync_to_async
+    def get_jwt_token(self):
+        """دریافت JWT token برای کاربر"""
+        try:
+            token = AccessToken.for_user(self.user)
+            return str(token)
+        except Exception as e:
+            logger.error(f"Error generating JWT token: {str(e)}")
+            return None

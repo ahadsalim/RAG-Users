@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import Image from 'next/image'
 import { useChatStore } from '@/store/chat'
 import { useAuthStore } from '@/store/auth'
 import { Conversation } from '@/types/chat'
@@ -72,35 +73,44 @@ export function ChatSidebar({
         isOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'
       )}>
         {/* Header */}
-        <div className="p-4 border-b border-gray-700">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-xl font-bold">گفتگوها</h2>
+        <div className="p-3 border-b border-gray-700">
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center gap-2">
+              <Image 
+                src="/logo-small.png" 
+                alt="Logo" 
+                width={24} 
+                height={24}
+                className="rounded"
+              />
+              <h2 className="text-lg font-bold">گفتگوها</h2>
+            </div>
             <button
               onClick={onClose}
-              className="md:hidden p-1 hover:bg-gray-800 rounded-lg"
+              className="md:hidden p-1 hover:bg-gray-800 rounded"
             >
-              <span className="text-2xl">×</span>
+              <span className="text-xl">×</span>
             </button>
           </div>
           
           {/* New Chat Button */}
           <button
             onClick={onNewChat}
-            className="w-full flex items-center gap-3 px-4 py-3 bg-gray-800 hover:bg-gray-700 rounded-lg transition-colors"
+            className="w-full flex items-center gap-2 px-3 py-2 bg-gray-800 hover:bg-gray-700 rounded-lg transition-colors text-sm"
           >
             <span>➕</span>
             <span>گفتگوی جدید</span>
           </button>
           
           {/* Search */}
-          <div className="mt-4 relative">
-            <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400">🔍</span>
+          <div className="mt-3 relative">
+            <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 text-sm">🔍</span>
             <input
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="جستجو در گفتگوها..."
-              className="w-full pr-10 pl-4 py-2 bg-gray-800 border border-gray-700 rounded-lg focus:outline-none focus:border-gray-600"
+              placeholder="جستجو..."
+              className="w-full pr-9 pl-3 py-1.5 text-sm bg-gray-800 border border-gray-700 rounded-lg focus:outline-none focus:border-gray-600"
             />
           </div>
         </div>
@@ -162,38 +172,38 @@ export function ChatSidebar({
         </div>
         
         {/* Footer */}
-        <div className="p-4 border-t border-gray-700">
+        <div className="p-2 border-t border-gray-700">
           {/* User Info */}
-          <div className="flex items-center gap-3 mb-3">
-            <div className="w-10 h-10 bg-gray-700 rounded-full flex items-center justify-center">
-              <span className="text-sm font-bold">
+          <div className="flex items-center gap-2 mb-2">
+            <div className="w-8 h-8 bg-gray-700 rounded-full flex items-center justify-center flex-shrink-0">
+              <span className="text-xs font-bold">
                 {user?.first_name?.[0] || user?.email?.[0] || '?'}
               </span>
             </div>
             <div className="flex-1 min-w-0">
-              <p className="font-medium truncate">
+              <p className="text-sm font-medium truncate">
                 {user?.first_name && user?.last_name 
                   ? `${user.first_name} ${user.last_name}`
                   : user?.email}
               </p>
-              <p className="text-xs text-gray-400">
+              <p className="text-xs text-gray-400 truncate">
                 {user?.organization?.name || 'کاربر عادی'}
               </p>
             </div>
           </div>
           
           {/* Actions */}
-          <div className="space-y-1">
-            <button className="w-full flex items-center gap-3 px-3 py-2 hover:bg-gray-800 rounded-lg transition-colors">
-              <span className="text-gray-400">⚙️</span>
-              <span className="text-sm">تنظیمات</span>
+          <div className="space-y-0.5">
+            <button className="w-full flex items-center gap-2 px-2 py-1.5 hover:bg-gray-800 rounded transition-colors text-sm">
+              <span className="text-gray-400 text-xs">⚙️</span>
+              <span>تنظیمات</span>
             </button>
             <button 
               onClick={handleLogout}
-              className="w-full flex items-center gap-3 px-3 py-2 hover:bg-gray-800 rounded-lg transition-colors text-red-400"
+              className="w-full flex items-center gap-2 px-2 py-1.5 hover:bg-gray-800 rounded transition-colors text-red-400 text-sm"
             >
-              <span>🚪</span>
-              <span className="text-sm">خروج</span>
+              <span className="text-xs">🚪</span>
+              <span>خروج</span>
             </button>
           </div>
         </div>
