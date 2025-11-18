@@ -6,28 +6,114 @@ from .models import Plan, Subscription
 
 @admin.register(Plan)
 class PlanAdmin(admin.ModelAdmin):
-    list_display = ['name', 'price', 'duration_days', 'is_active']
-    list_filter = ['is_active']
+    list_display = ['name', 'price', 'duration_days', 'queries_per_day', 'queries_per_month', 'is_active', 'colored_status']
+    list_filter = ['is_active', 'created_at']
     search_fields = ['name', 'description']
+    list_editable = ['price', 'duration_days', 'is_active']
+    ordering = ['price']
+    
+    fieldsets = (
+        ('اطلاعات پایه', {
+            'fields': ('name', 'description', 'price', 'duration_days', 'is_active')
+        }),
+        ('محدودیت‌های استفاده', {
+            'fields': ('features',),
+            'description': 'تنظیمات JSON برای محدودیت‌ها. مثال: {"max_queries_per_day": 10, "max_queries_per_month": 300, "gpt_3_5_access": true, "gpt_4_access": false}'
+        }),
+    )
+    
+    def queries_per_day(self, obj):
+        return obj.features.get('max_queries_per_day', '-') if obj.features else '-'
+    queries_per_day.short_description = 'سوال/روز'
+    
+    def queries_per_month(self, obj):
+        return obj.features.get('max_queries_per_month', '-') if obj.features else '-'
+    queries_per_month.short_description = 'سوال/ماه'
+    
+    def colored_status(self, obj):
+        if obj.is_active:
+            return format_html('<span style="color: green;">●</span> فعال')
+        return format_html('<span style="color: red;">●</span> غیرفعال')
+    colored_status.short_description = 'وضعیت'
 
 
 @admin.register(Subscription)
 class SubscriptionAdmin(admin.ModelAdmin):
-    list_display = ['user', 'plan', 'status', 'start_date', 'end_date', 'auto_renew']
-    list_filter = ['status', 'plan', 'auto_renew']
-    search_fields = ['user__email']
+    list_display = ['user_info', 'plan', 'colored_status', 'start_date', 'end_date', 'days_remaining', 'auto_renew']
+    list_filter = ['status', 'plan', 'auto_renew', 'created_at']
+    search_fields = ['user__email', 'user__phone_number', 'user__first_name', 'user__last_name']
     date_hierarchy = 'created_at'
+    list_editable = ['auto_renew']
+    readonly_fields = ['created_at', 'updated_at', 'days_remaining']
     
-    actions = ['activate_subscription', 'cancel_subscription']
+    fieldsets = (
+        ('اطلاعات کاربر', {
+            'fields': ('user', 'plan')
+        }),
+        ('وضعیت اشتراک', {
+            'fields': ('status', 'start_date', 'end_date', 'auto_renew')
+        }),
+        ('اطلاعات سیستمی', {
+            'fields': ('created_at', 'updated_at'),
+            'classes': ('collapse',)
+        }),
+    )
+    
+    actions = ['activate_subscription', 'cancel_subscription', 'extend_subscription']
+    
+    def user_info(self, obj):
+        return format_html(
+            '<strong>{}</strong><br/><small>{}</small>',
+            obj.user.get_full_name() or obj.user.email,
+            obj.user.phone_number or obj.user.email
+        )
+    user_info.short_description = 'کاربر'
+    
+    def colored_status(self, obj):
+        colors = {
+            'active': 'green',
+            'expired': 'red',
+            'cancelled': 'gray',
+            'pending': 'orange',
+        }
+        color = colors.get(obj.status, 'gray')
+        status_fa = dict(obj.STATUS_CHOICES).get(obj.status, obj.status)
+        return format_html('<span style="color: {};">●</span> {}', color, status_fa)
+    colored_status.short_description = 'وضعیت'
+    
+    def days_remaining(self, obj):
+        if obj.status == 'active' and obj.end_date:
+            delta = obj.end_date - timezone.now()
+            days = delta.days
+            if days > 0:
+                return format_html('<span style="color: green;">{} روز</span>', days)
+            else:
+                return format_html('<span style="color: red;">منقضی شده</span>')
+        return '-'
+    days_remaining.short_description = 'باقیمانده'
     
     def activate_subscription(self, request, queryset):
+        count = 0
         for sub in queryset:
             sub.activate()
-        self.message_user(request, f'{queryset.count()} اشتراک فعال شد.')
-    activate_subscription.short_description = 'فعال‌سازی'
+            count += 1
+        self.message_user(request, f'{count} اشتراک فعال شد.')
+    activate_subscription.short_description = 'فعال‌سازی اشتراک'
     
     def cancel_subscription(self, request, queryset):
+        count = 0
         for sub in queryset:
             sub.cancel()
-        self.message_user(request, f'{queryset.count()} اشتراک لغو شد.')
+            count += 1
+        self.message_user(request, f'{count} اشتراک لغو شد.')
     cancel_subscription.short_description = 'لغو اشتراک'
+    
+    def extend_subscription(self, request, queryset):
+        from datetime import timedelta
+        count = 0
+        for sub in queryset:
+            sub.end_date = sub.end_date + timedelta(days=30)
+            sub.save()
+            count += 1
+        self.message_user(request, f'{count} اشتراک 30 روز تمدید شد.')
+    extend_subscription.short_description = 'تمدید 30 روزه'

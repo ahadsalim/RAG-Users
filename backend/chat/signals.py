@@ -4,9 +4,10 @@ Signals برای همگام‌سازی با RAG Core
 from django.db.models.signals import post_delete, pre_delete
 from django.dispatch import receiver
 import logging
+import asyncio
 
 from .models import Conversation, Message
-# from .core_service import CoreAPIService  # TODO: فعلاً غیرفعال
+from .core_service import core_service
 
 logger = logging.getLogger(__name__)
 
@@ -18,14 +19,44 @@ def delete_conversation_from_rag_core(sender, instance, **kwargs):
     """
     if instance.rag_conversation_id:
         try:
-            # حذف از RAG Core
-            # TODO: باید endpoint حذف conversation در RAG Core اضافه شود
-            # core_service = CoreAPIService()
-            # core_service.delete_conversation(instance.rag_conversation_id)
+            # دریافت JWT token کاربر
+            # از آنجایی که در signal هستیم و دسترسی مستقیم به request نداریم،
+            # باید از یک روش دیگر token را بگیریم
             
-            logger.info(f"Conversation {instance.id} will be deleted from RAG Core: {instance.rag_conversation_id}")
+            # گزینه 1: استفاده از token ذخیره شده در user model (اگر وجود داشته باشد)
+            # گزینه 2: تولید یک service token برای عملیات داخلی
+            # گزینه 3: استفاده از API key سیستمی
+            
+            # برای الان از user token استفاده می‌کنیم (باید در model ذخیره شود)
+            # یا می‌توانیم یک service token داشته باشیم
+            
+            from rest_framework_simplejwt.tokens import RefreshToken
+            
+            # تولید token برای کاربر
+            refresh = RefreshToken.for_user(instance.user)
+            access_token = str(refresh.access_token)
+            
+            # حذف از RAG Core (async call را در sync context اجرا می‌کنیم)
+            try:
+                loop = asyncio.get_event_loop()
+            except RuntimeError:
+                loop = asyncio.new_event_loop()
+                asyncio.set_event_loop(loop)
+            
+            success = loop.run_until_complete(
+                core_service.delete_conversation(
+                    conversation_id=instance.rag_conversation_id,
+                    token=access_token
+                )
+            )
+            
+            if success:
+                logger.info(f"✅ Conversation {instance.id} deleted from RAG Core: {instance.rag_conversation_id}")
+            else:
+                logger.warning(f"⚠️ Failed to delete conversation {instance.id} from RAG Core")
+                
         except Exception as e:
-            logger.error(f"Error deleting conversation from RAG Core: {e}")
+            logger.error(f"❌ Error deleting conversation from RAG Core: {e}")
             # ادامه حذف در Django حتی اگر RAG Core خطا داد
 
 

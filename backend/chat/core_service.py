@@ -313,6 +313,44 @@ class CoreAPIService:
         except Exception as e:
             logger.error(f"Error fetching user profile: {str(e)}")
             return None
+    
+    async def delete_conversation(
+        self,
+        conversation_id: str,
+        token: str,
+    ) -> bool:
+        """
+        Delete a conversation from Core RAG system.
+        
+        Args:
+            conversation_id: UUID of the conversation to delete
+            token: JWT token for authentication
+            
+        Returns:
+            True if deletion was successful, False otherwise
+        """
+        url = f"{self.base_url}/api/v1/users/conversations/{conversation_id}"
+        
+        try:
+            async with httpx.AsyncClient(timeout=30) as client:
+                response = await client.delete(
+                    url,
+                    headers=self._get_headers(token),
+                )
+                
+                if response.status_code == 200:
+                    logger.info(f"✅ Conversation {conversation_id} deleted from Core RAG")
+                    return True
+                elif response.status_code == 404:
+                    logger.warning(f"⚠️ Conversation {conversation_id} not found in Core RAG")
+                    return True  # Consider it deleted if not found
+                else:
+                    logger.error(f"❌ Failed to delete conversation {conversation_id}: {response.status_code}")
+                    return False
+                    
+        except Exception as e:
+            logger.error(f"❌ Error deleting conversation from Core RAG: {str(e)}")
+            return False
 
 
 # Singleton instance

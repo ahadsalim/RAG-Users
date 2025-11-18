@@ -79,3 +79,33 @@ class Subscription(models.Model):
         self.status = 'cancelled'
         self.auto_renew = False
         self.save()
+    
+    def can_query(self):
+        """
+        بررسی اینکه آیا کاربر می‌تواند query بفرستد
+        
+        Returns:
+            tuple: (can_query: bool, message: str)
+        """
+        # بررسی فعال بودن اشتراک
+        if not self.is_active:
+            return False, "اشتراک شما منقضی شده است"
+        
+        # دریافت محدودیت‌ها از features
+        features = self.plan.features or {}
+        max_queries_per_day = features.get('max_queries_per_day', 10)
+        max_queries_per_month = features.get('max_queries_per_month', 300)
+        
+        # برای الان همیشه True برمی‌گردانیم
+        # TODO: باید usage tracking اضافه شود
+        return True, "OK"
+    
+    @property
+    def queries_used_today(self):
+        """تعداد query های امروز - TODO: باید implement شود"""
+        return 0
+    
+    @property
+    def queries_used_month(self):
+        """تعداد query های این ماه - TODO: باید implement شود"""
+        return 0

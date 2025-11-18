@@ -129,6 +129,13 @@ export const useAuthStore = create<AuthState>()(
         
         // Clear axios header
         delete axios.defaults.headers.common['Authorization']
+        
+        // Clear ALL localStorage data to prevent cache issues
+        if (typeof window !== 'undefined') {
+          localStorage.removeItem('userSettings')
+          localStorage.removeItem('auth-storage') // Zustand persist key
+          localStorage.clear() // Clear everything to be safe
+        }
       },
       
       refreshAccessToken: async () => {

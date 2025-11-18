@@ -6,7 +6,7 @@ import { useChatStore } from '@/store/chat'
 import { useAuthStore } from '@/store/auth'
 import { Conversation } from '@/types/chat'
 import clsx from 'clsx'
-import SettingsModal from '@/components/SettingsModal'
+import SettingsPage from '@/components/SettingsPage'
 
 interface ChatSidebarProps {
   isOpen: boolean
@@ -184,12 +184,35 @@ export function ChatSidebar({
             </div>
             <div className="flex-1 min-w-0">
               <p className="text-sm font-medium truncate">
-                {user?.first_name && user?.last_name 
-                  ? `${user.first_name} ${user.last_name}`
-                  : user?.email}
+                {(() => {
+                  // بارگذاری نام از localStorage
+                  const savedSettings = typeof window !== 'undefined' ? localStorage.getItem('userSettings') : null;
+                  let fullName = '';
+                  if (savedSettings) {
+                    try {
+                      const settings = JSON.parse(savedSettings);
+                      fullName = settings.full_name || '';
+                    } catch (e) {
+                      console.error('Error loading settings:', e);
+                    }
+                  }
+                  
+                  // اگر نام در localStorage بود
+                  if (fullName) {
+                    return fullName;
+                  }
+                  
+                  // اگر نام در user object بود
+                  if (user?.first_name && user?.last_name) {
+                    return `${user.first_name} ${user.last_name}`;
+                  }
+                  
+                  // در غیر این صورت ایمیل
+                  return user?.email || 'کاربر';
+                })()}
               </p>
               <p className="text-xs text-gray-400 truncate">
-                {user?.organization?.name || 'کاربر عادی'}
+                <span className="text-blue-400">(کاربر عادی)</span>
               </p>
             </div>
           </div>
@@ -214,8 +237,8 @@ export function ChatSidebar({
         </div>
       </aside>
       
-      {/* Settings Modal */}
-      <SettingsModal 
+      {/* Settings Page */}
+      <SettingsPage 
         isOpen={isSettingsOpen} 
         onClose={() => setIsSettingsOpen(false)} 
       />
