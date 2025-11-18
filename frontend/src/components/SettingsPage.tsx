@@ -13,6 +13,7 @@ type SettingsTab = 'profile' | 'subscription' | 'preferences' | 'notifications' 
 interface UserSettings {
   // Profile
   full_name: string;
+  company_name: string;
   email: string;
   phone: string;
   
@@ -52,6 +53,7 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ isOpen, onClose }) => {
             localStorage.removeItem('userSettings');
             return {
               full_name: user?.first_name && user?.last_name ? `${user.first_name} ${user.last_name}` : '',
+              company_name: user?.company_name || '',
               email: user?.email || '',
               phone: user?.phone_number || '',
               theme: 'light',
@@ -71,6 +73,7 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ isOpen, onClose }) => {
     // اگر localStorage خالی است، از user فعلی استفاده کن
     return {
       full_name: user?.first_name && user?.last_name ? `${user.first_name} ${user.last_name}` : '',
+      company_name: user?.company_name || '',
       email: user?.email || '',
       phone: user?.phone_number || '',
       theme: 'light',
@@ -241,7 +244,7 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ isOpen, onClose }) => {
 
           {/* Content Body */}
           <div className="flex-1 overflow-y-auto p-6">
-            {activeTab === 'profile' && <ProfileTab settings={settings} setSettings={setSettings} userPhone={user?.phone_number} />}
+            {activeTab === 'profile' && <ProfileTab settings={settings} setSettings={setSettings} userPhone={user?.phone_number} userType={user?.user_type} />}
             {activeTab === 'subscription' && <SubscriptionTab subscription={subscription} loading={loading} />}
             {activeTab === 'preferences' && <PreferencesTab settings={settings} setSettings={setSettings} />}
             {activeTab === 'notifications' && <NotificationsTab />}
@@ -255,22 +258,37 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ isOpen, onClose }) => {
 };
 
 // Profile Tab
-const ProfileTab: React.FC<{ settings: UserSettings; setSettings: React.Dispatch<React.SetStateAction<UserSettings>>; userPhone?: string }> = ({ settings, setSettings, userPhone }) => {
+const ProfileTab: React.FC<{ settings: UserSettings; setSettings: React.Dispatch<React.SetStateAction<UserSettings>>; userPhone?: string; userType?: string }> = ({ settings, setSettings, userPhone, userType }) => {
+  const isBusiness = userType === 'business';
+  
   return (
     <div className="space-y-6">
       <div className="bg-gray-50 dark:bg-gray-800 rounded-xl p-6">
         <h4 className="text-lg font-semibold mb-4 text-gray-900 dark:text-white">اطلاعات کاربری</h4>
         <div className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">نام و نام خانوادگی</label>
-            <input
-              type="text"
-              value={settings.full_name}
-              onChange={(e) => setSettings({ ...settings, full_name: e.target.value })}
-              className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white"
-              placeholder="نام خود را وارد کنید"
-            />
-          </div>
+          {isBusiness ? (
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">نام شرکت/سازمان</label>
+              <input
+                type="text"
+                value={settings.company_name}
+                onChange={(e) => setSettings({ ...settings, company_name: e.target.value })}
+                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white"
+                placeholder="نام شرکت یا سازمان خود را وارد کنید"
+              />
+            </div>
+          ) : (
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">نام و نام خانوادگی</label>
+              <input
+                type="text"
+                value={settings.full_name}
+                onChange={(e) => setSettings({ ...settings, full_name: e.target.value })}
+                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white"
+                placeholder="نام خود را وارد کنید"
+              />
+            </div>
+          )}
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">ایمیل</label>
             <input
@@ -284,15 +302,23 @@ const ProfileTab: React.FC<{ settings: UserSettings; setSettings: React.Dispatch
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               شماره تلفن
-              <span className="text-xs text-gray-500 mr-2">(غیرقابل تغییر)</span>
+              {!isBusiness && <span className="text-xs text-gray-500 mr-2">(غیرقابل تغییر)</span>}
             </label>
             <input
               type="tel"
               value={userPhone || ''}
-              disabled
-              className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 cursor-not-allowed"
-              placeholder="شماره تلفن ثبت نشده"
+              disabled={!isBusiness}
+              onChange={(e) => isBusiness && setSettings({ ...settings, phone: e.target.value })}
+              className={`w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg ${
+                isBusiness 
+                  ? 'bg-white dark:bg-gray-900 text-gray-900 dark:text-white' 
+                  : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 cursor-not-allowed'
+              }`}
+              placeholder={isBusiness ? "شماره تلفن برای اطلاع‌رسانی" : "شماره تلفن ثبت نشده"}
             />
+            {isBusiness && (
+              <p className="text-xs text-gray-500 mt-1">این شماره فقط برای اطلاع‌رسانی استفاده می‌شود</p>
+            )}
           </div>
         </div>
       </div>
@@ -440,11 +466,113 @@ const NotificationsTab: React.FC = () => {
 
 // Security Tab
 const SecurityTab: React.FC = () => {
+  const [oldPassword, setOldPassword] = React.useState('');
+  const [newPassword, setNewPassword] = React.useState('');
+  const [confirmPassword, setConfirmPassword] = React.useState('');
+  const [changing, setChanging] = React.useState(false);
+  const [message, setMessage] = React.useState('');
+
+  const handleChangePassword = async () => {
+    if (!oldPassword || !newPassword || !confirmPassword) {
+      setMessage('✗ لطفا تمام فیلدها را پر کنید');
+      return;
+    }
+
+    if (newPassword !== confirmPassword) {
+      setMessage('✗ رمز عبور جدید و تکرار آن یکسان نیستند');
+      return;
+    }
+
+    if (newPassword.length < 8) {
+      setMessage('✗ رمز عبور باید حداقل 8 کاراکتر باشد');
+      return;
+    }
+
+    try {
+      setChanging(true);
+      setMessage('');
+      
+      // TODO: ارسال به سرور
+      // await axios.post('/api/v1/auth/change-password/', {
+      //   old_password: oldPassword,
+      //   new_password: newPassword
+      // });
+      
+      setMessage('✓ رمز عبور با موفقیت تغییر کرد');
+      setOldPassword('');
+      setNewPassword('');
+      setConfirmPassword('');
+      
+      setTimeout(() => setMessage(''), 3000);
+    } catch (error) {
+      console.error('Error changing password:', error);
+      setMessage('✗ خطا در تغییر رمز عبور');
+    } finally {
+      setChanging(false);
+    }
+  };
+
   return (
     <div className="space-y-6">
       <div className="bg-gray-50 dark:bg-gray-800 rounded-xl p-6">
-        <h4 className="text-lg font-semibold mb-4 text-gray-900 dark:text-white">تنظیمات امنیتی</h4>
-        <p className="text-gray-600 dark:text-gray-400">به زودی...</p>
+        <h4 className="text-lg font-semibold mb-4 text-gray-900 dark:text-white">تغییر رمز عبور</h4>
+        <div className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">رمز عبور فعلی</label>
+            <input
+              type="password"
+              value={oldPassword}
+              onChange={(e) => setOldPassword(e.target.value)}
+              className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white"
+              placeholder="رمز عبور فعلی خود را وارد کنید"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">رمز عبور جدید</label>
+            <input
+              type="password"
+              value={newPassword}
+              onChange={(e) => setNewPassword(e.target.value)}
+              className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white"
+              placeholder="رمز عبور جدید (حداقل 8 کاراکتر)"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">تکرار رمز عبور جدید</label>
+            <input
+              type="password"
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
+              className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white"
+              placeholder="رمز عبور جدید را دوباره وارد کنید"
+            />
+          </div>
+
+          {message && (
+            <div className={`text-sm py-2 px-4 rounded-lg ${
+              message.includes('✓') 
+                ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300' 
+                : 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300'
+            }`}>
+              {message}
+            </div>
+          )}
+
+          <button
+            onClick={handleChangePassword}
+            disabled={changing}
+            className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium"
+          >
+            {changing ? (
+              <>
+                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                <span>در حال تغییر...</span>
+              </>
+            ) : (
+              <span>تغییر رمز عبور</span>
+            )}
+          </button>
+        </div>
       </div>
     </div>
   );

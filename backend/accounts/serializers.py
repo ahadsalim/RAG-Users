@@ -12,6 +12,8 @@ User = get_user_model()
 class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
     """Custom JWT token serializer with additional claims"""
     
+    username_field = 'phone_number'
+    
     def validate(self, attrs):
         data = super().validate(attrs)
         
@@ -31,6 +33,11 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
             'username': self.user.username,
             'first_name': self.user.first_name,
             'last_name': self.user.last_name,
+            'phone_number': self.user.phone_number,
+            'is_superuser': self.user.is_superuser,
+            'is_staff': self.user.is_staff,
+            'user_type': self.user.user_type,
+            'company_name': self.user.company_name,
             'avatar': self.user.avatar.url if self.user.avatar else None,
             'organization': {
                 'id': str(self.user.organization.id),
@@ -110,11 +117,13 @@ class UserProfileSerializer(serializers.ModelSerializer):
             'language', 'timezone', 'currency', 'chat_context',
             'two_factor_enabled', 'max_concurrent_sessions',
             'email_notifications', 'sms_notifications', 'push_notifications',
+            'is_superuser', 'is_staff',
             'created_at', 'updated_at', 'last_seen', 'sessions_count'
         ]
         read_only_fields = [
             'id', 'email_verified', 'phone_verified', 'national_id_verified',
-            'two_factor_enabled', 'created_at', 'updated_at', 'last_seen'
+            'two_factor_enabled', 'is_superuser', 'is_staff',
+            'created_at', 'updated_at', 'last_seen'
         ]
     
     def get_organization(self, obj):

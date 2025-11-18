@@ -212,7 +212,15 @@ export function ChatSidebar({
                 })()}
               </p>
               <p className="text-xs text-gray-400 truncate">
-                <span className="text-blue-400">(کاربر عادی)</span>
+                {user?.is_superuser ? (
+                  <span className="text-red-400 font-semibold">(مدیر ارشد)</span>
+                ) : user?.is_staff ? (
+                  <span className="text-yellow-400">(کارمند)</span>
+                ) : user?.user_type === 'business' ? (
+                  <span className="text-purple-400">(کاربر حقوقی)</span>
+                ) : (
+                  <span className="text-blue-400">(کاربر عادی)</span>
+                )}
               </p>
             </div>
           </div>

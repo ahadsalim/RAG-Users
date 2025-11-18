@@ -5,6 +5,10 @@ export interface User {
   first_name?: string
   last_name?: string
   phone_number?: string
+  is_superuser?: boolean
+  is_staff?: boolean
+  user_type?: 'individual' | 'business'
+  company_name?: string
   organization?: Organization
   language: string
   timezone: string
