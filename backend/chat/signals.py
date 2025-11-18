@@ -6,7 +6,7 @@ from django.dispatch import receiver
 import logging
 
 from .models import Conversation, Message
-from .core_service import RAGCoreService
+# from .core_service import CoreAPIService  # TODO: فعلاً غیرفعال
 
 logger = logging.getLogger(__name__)
 
@@ -19,11 +19,11 @@ def delete_conversation_from_rag_core(sender, instance, **kwargs):
     if instance.rag_conversation_id:
         try:
             # حذف از RAG Core
-            rag_service = RAGCoreService()
             # TODO: باید endpoint حذف conversation در RAG Core اضافه شود
-            # rag_service.delete_conversation(instance.rag_conversation_id)
+            # core_service = CoreAPIService()
+            # core_service.delete_conversation(instance.rag_conversation_id)
             
-            logger.info(f"Conversation {instance.id} deleted from RAG Core: {instance.rag_conversation_id}")
+            logger.info(f"Conversation {instance.id} will be deleted from RAG Core: {instance.rag_conversation_id}")
         except Exception as e:
             logger.error(f"Error deleting conversation from RAG Core: {e}")
             # ادامه حذف در Django حتی اگر RAG Core خطا داد

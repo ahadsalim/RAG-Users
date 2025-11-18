@@ -5,6 +5,7 @@ import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import { Message } from '@/types/chat'
 import clsx from 'clsx'
+import Image from 'next/image'
 
 interface ChatMessagesProps {
   messages: Message[]
@@ -41,14 +42,24 @@ export function ChatMessages({ messages, isLoading, isTyping }: ChatMessagesProp
       >
         <div className="w-full">
           <div className="flex gap-4">
-            {/* Avatar - Simple Text Based */}
+            {/* Avatar */}
             <div className={clsx(
               'flex-shrink-0 w-8 h-8 rounded-md flex items-center justify-center text-sm font-bold',
               isUser 
                 ? 'bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-200' 
-                : 'bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-200'
+                : 'bg-green-100 dark:bg-green-900 p-1'
             )}>
-              {isUser ? 'ش' : 'AI'}
+              {isUser ? (
+                'ش'
+              ) : (
+                <Image 
+                  src="/favicon.ico" 
+                  alt="AI" 
+                  width={24} 
+                  height={24}
+                  className="w-full h-full object-contain"
+                />
+              )}
             </div>
             
             {/* Content */}
@@ -213,8 +224,14 @@ export function ChatMessages({ messages, isLoading, isTyping }: ChatMessagesProp
         <div className="py-6 bg-gray-50 dark:bg-gray-900">
           <div className="w-full">
             <div className="flex gap-4">
-              <div className="flex-shrink-0 w-8 h-8 rounded-full bg-green-100 dark:bg-green-900 flex items-center justify-center">
-                <span className="text-sm">✨</span>
+              <div className="flex-shrink-0 w-8 h-8 rounded-md bg-green-100 dark:bg-green-900 flex items-center justify-center p-1">
+                <Image 
+                  src="/favicon.ico" 
+                  alt="AI" 
+                  width={24} 
+                  height={24}
+                  className="w-full h-full object-contain"
+                />
               </div>
               <div className="flex-1">
                 <div className="flex items-center gap-2">
