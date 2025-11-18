@@ -473,6 +473,34 @@ class ConversationViewSet(viewsets.ModelViewSet):
         conversation.save()
         return Response({'status': 'unarchived'})
     
+    def destroy(self, request, *args, **kwargs):
+        """
+        حذف گفتگو
+        ابتدا از Core حذف می‌شود، سپس از Django
+        اگر حذف از Core ناموفق باشد، خطا برمی‌گرداند
+        """
+        conversation = self.get_object()
+        
+        try:
+            # Signal به طور خودکار حذف از Core را انجام می‌دهد
+            # اگر خطا رخ دهد، exception می‌فرستد و حذف متوقف می‌شود
+            conversation.delete()
+            
+            return Response(
+                {'message': 'گفتگو با موفقیت حذف شد'},
+                status=status.HTTP_204_NO_CONTENT
+            )
+            
+        except Exception as e:
+            logger.error(f"Failed to delete conversation {conversation.id}: {e}")
+            return Response(
+                {
+                    'error': 'خطا در حذف گفتگو',
+                    'detail': 'امکان حذف از سیستم مرکزی وجود ندارد. لطفا دوباره تلاش کنید.'
+                },
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+    
     @action(detail=True, methods=['post'])
     def share(self, request, pk=None):
         """اشتراک‌گذاری گفتگو"""

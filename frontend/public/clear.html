@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>پاک کردن حافظه</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        .container {
+            background: white;
+            padding: 2rem;
+            border-radius: 1rem;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            text-align: center;
+            max-width: 400px;
+        }
+        h1 {
+            color: #333;
+            margin-bottom: 1rem;
+        }
+        .status {
+            font-size: 3rem;
+            margin: 1rem 0;
+        }
+        .message {
+            color: #666;
+            margin: 1rem 0;
+        }
+        .btn {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 0.75rem 2rem;
+            border-radius: 0.5rem;
+            font-size: 1rem;
+            cursor: pointer;
+            margin-top: 1rem;
+            transition: all 0.3s;
+        }
+        .btn:hover {
+            background: #764ba2;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>پاک کردن حافظه موقت</h1>
+        <div class="status">🧹</div>
+        <div class="message" id="message">در حال پاک کردن...</div>
+        <button class="btn" id="loginBtn" style="display:none;" onclick="window.location.href='/auth/login'">
+            ورود مجدد
+        </button>
+    </div>
+
+    <script>
+        // Clear all storage
+        localStorage.clear();
+        sessionStorage.clear();
+        
+        // Clear cookies
+        document.cookie.split(";").forEach(function(c) { 
+            document.cookie = c.replace(/^ +/, "").replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/"); 
+        });
+        
+        // Show success message
+        setTimeout(() => {
+            document.querySelector('.status').textContent = '✅';
+            document.getElementById('message').textContent = 'حافظه موقت با موفقیت پاک شد!';
+            document.getElementById('loginBtn').style.display = 'inline-block';
+        }, 1000);
+    </script>
+</body>
+</html>

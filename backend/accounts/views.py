@@ -87,9 +87,11 @@ class CustomTokenObtainPairView(TokenObtainPairView):
             }, status=status.HTTP_200_OK)
         
         # Create session record
+        import uuid
+        session_key = request.session.session_key or str(uuid.uuid4())
         session = UserSession.objects.create(
             user=user,
-            session_key=request.session.session_key or '',
+            session_key=session_key,
             ip_address=get_client_ip(request),
             **get_user_agent_info(request),
             expires_at=timezone.now() + timedelta(days=7),

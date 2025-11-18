@@ -179,10 +179,23 @@ class VerifyOTPView(APIView):
             'refresh': str(refresh),
             'user': {
                 'id': str(user.id),
-                'phone_number': user.phone_number,
-                'user_type': user.user_type,
+                'email': user.email or '',
+                'username': user.username,
                 'first_name': user.first_name or '',
                 'last_name': user.last_name or '',
+                'phone_number': user.phone_number,
+                'is_superuser': user.is_superuser,
+                'is_staff': user.is_staff,
+                'user_type': user.user_type,
+                'company_name': user.company_name or '',
+                'avatar': user.avatar.url if user.avatar else None,
+                'organization': {
+                    'id': str(user.organization.id),
+                    'name': user.organization.name,
+                    'role': user.organization_role
+                } if user.organization else None,
+                'two_factor_enabled': user.two_factor_enabled,
+                'language': user.language,
             },
             'message': 'ورود موفقیت‌آمیز بود' if not created else 'ثبت‌نام و ورود موفقیت‌آمیز بود'
         }, status=status.HTTP_200_OK)

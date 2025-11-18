@@ -147,14 +147,14 @@ def send_otp_bale(phone_number, otp_code):
 
 
 def send_otp_sms(phone_number, otp_code):
-    """Send OTP via SMS using Kavenegar"""
+    """Send OTP via SMS using Kavenegar Verify API"""
+    import requests
+    from decouple import config
+    
     try:
-        from kavenegar import KavenegarAPI, APIException, HTTPException
-        from decouple import config
-        
-        # Get Kavenegar credentials
+        # Get Kavenegar API key
         api_key = config('KAVENEGAR_API_KEY', default=None)
-        sender = config('KAVENEGAR_SENDER', default='10004346')
+        template_name = 'smskaveh'  # نام الگوی تعریف شده در کاوه نگار
         
         if not api_key or api_key == 'your-kavenegar-api-key':
             logger.warning("Kavenegar API key not configured - logging OTP instead")
@@ -162,19 +162,26 @@ def send_otp_sms(phone_number, otp_code):
             print(f"\n{'='*50}\n🔐 OTP CODE: {otp_code}\n📱 Phone: {phone_number}\n{'='*50}\n")
             return True
         
-        # Send SMS using Kavenegar SDK
-        api = KavenegarAPI(api_key)
-        message = f"کد تایید شما: {otp_code}\nمشاور"
+        # ارسال از طریق Verify API (اعتبارسنجی)
+        url = f'https://api.kavenegar.com/v1/{api_key}/verify/lookup.json'
         
         params = {
-            'sender': sender,
             'receptor': phone_number,
-            'message': message,
+            'token': otp_code,
+            'template': template_name,
         }
         
-        response = api.sms_send(params)
-        logger.info(f"OTP SMS sent to {phone_number} via Kavenegar")
-        return True
+        response = requests.get(url, params=params, timeout=10)
+        response.raise_for_status()
+        
+        result = response.json()
+        
+        if result.get('return', {}).get('status') == 200:
+            logger.info(f"OTP SMS sent to {phone_number} via Kavenegar Verify API")
+            return True
+        else:
+            logger.error(f"Kavenegar API error: {result}")
+            raise Exception(f"API returned status {result.get('return', {}).get('status')}")
         
     except Exception as e:
         logger.error(f"Failed to send OTP SMS to {phone_number}: {str(e)}")

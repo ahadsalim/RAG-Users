@@ -67,12 +67,13 @@ export function ChatSidebar({
       
       {/* Sidebar */}
       <aside className={clsx(
-        'fixed md:relative z-50 md:z-auto',
-        'w-80 h-full',
+        'fixed top-0 right-0 md:relative z-50 md:z-auto',
+        'w-80 h-screen md:h-full',
         'bg-gray-900 text-white',
         'transition-transform duration-300',
         'flex flex-col',
-        isOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'
+        'overflow-hidden',
+        isOpen ? 'translate-x-0' : 'translate-x-full md:translate-x-0'
       )}>
         {/* Header */}
         <div className="p-3 border-b border-gray-700">

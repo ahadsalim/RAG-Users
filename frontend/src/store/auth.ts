@@ -45,12 +45,21 @@ export const useAuthStore = create<AuthState>()(
       login: async (email: string, password: string) => {
         set({ isLoading: true, error: null })
         try {
+          // Check if email is actually a phone number
+          const isPhoneNumber = /^(\+98|0)?9\d{9}$/.test(email);
+          
           const response = await axios.post(`${API_URL}/api/v1/auth/login/`, {
-            email,
+            ...(isPhoneNumber ? { phone_number: email } : { email }),
             password,
           })
           
           const { access, refresh, user, requires_2fa } = response.data
+          
+          // Debug: Log user data
+          console.log('🔐 Login Response - User Data:', user);
+          console.log('  - is_superuser:', user?.is_superuser);
+          console.log('  - is_staff:', user?.is_staff);
+          console.log('  - user_type:', user?.user_type);
           
           if (requires_2fa) {
             // Store tokens temporarily and wait for 2FA
@@ -69,6 +78,9 @@ export const useAuthStore = create<AuthState>()(
             isLoading: false,
             error: null,
           })
+          
+          // Debug: Log what was saved
+          console.log('💾 Saved to store:', { user, isAuthenticated: true });
           
           // Set axios default header
           axios.defaults.headers.common['Authorization'] = `Bearer ${access}`
