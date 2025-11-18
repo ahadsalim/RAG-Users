@@ -3,7 +3,7 @@ const nextConfig = {
   reactStrictMode: true,
   swcMinify: true,
   images: {
-    domains: ['localhost', 'core.app.ir'],
+    domains: ['localhost', 'core.app.ir', 'www.tejarat.chat', 'tejarat.chat'],
   },
   i18n: {
     locales: ['fa', 'en'],
