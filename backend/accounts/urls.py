@@ -17,6 +17,7 @@ from .views import (
     UserSessionViewSet,
     PhoneVerificationView,
     OTPVerificationView,
+    EmailVerificationView,
     LogoutView
 )
 from .otp_views import SendOTPView, VerifyOTPView
@@ -37,6 +38,9 @@ urlpatterns = [
     # OTP Login (for real users)
     path('send-otp/', SendOTPView.as_view(), name='send-otp'),
     path('verify-otp/', VerifyOTPView.as_view(), name='verify-otp'),
+    
+    # Email Verification
+    path('verify-email/', EmailVerificationView.as_view(), name='verify-email'),
     
     # Profile
     path('profile/', UserProfileView.as_view(), name='profile'),

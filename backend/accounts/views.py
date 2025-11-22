@@ -188,39 +188,64 @@ class UserRegistrationView(generics.CreateAPIView):
         serializer.is_valid(raise_exception=True)
         user = serializer.save()
         
-        # Send verification email
-        send_email_verification(user)
+        user_type = request.data.get('user_type', 'individual')
         
-        # Generate tokens
-        refresh = RefreshToken.for_user(user)
+        # For legal users, send verification email and don't allow login until verified
+        if user_type == 'legal' or user_type == 'business':
+            # Set user as inactive until email is verified
+            user.is_active = False
+            user.save()
+            
+            # Send verification email
+            email_sent = send_email_verification(user)
+            
+            # Log registration
+            AuditLog.objects.create(
+                user=user,
+                action='registration',
+                details={'email': user.email, 'user_type': user_type},
+                ip_address=get_client_ip(request),
+                user_agent=request.META.get('HTTP_USER_AGENT', '')
+            )
+            
+            return Response({
+                'message': _('Registration successful! Please check your email to verify your account before logging in.'),
+                'email': user.email,
+                'email_sent': email_sent
+            }, status=status.HTTP_201_CREATED)
         
-        # Create session
-        session = UserSession.objects.create(
-            user=user,
-            session_key=request.session.session_key or '',
-            ip_address=get_client_ip(request),
-            **get_user_agent_info(request),
-            expires_at=timezone.now() + timedelta(days=7),
-            refresh_token=str(refresh)
-        )
-        
-        # Log registration
-        AuditLog.objects.create(
-            user=user,
-            action='registration',
-            details={'email': user.email},
-            ip_address=get_client_ip(request),
-            user_agent=request.META.get('HTTP_USER_AGENT', '')
-        )
-        
-        return Response({
-            'user': UserProfileSerializer(user).data,
-            'tokens': {
-                'refresh': str(refresh),
-                'access': str(refresh.access_token),
-            },
-            'message': _('Registration successful. Please check your email to verify your account.')
-        }, status=status.HTTP_201_CREATED)
+        # For individual users, allow immediate login
+        else:
+            # Generate tokens
+            refresh = RefreshToken.for_user(user)
+            
+            # Create session
+            session = UserSession.objects.create(
+                user=user,
+                session_key=request.session.session_key or '',
+                ip_address=get_client_ip(request),
+                **get_user_agent_info(request),
+                expires_at=timezone.now() + timedelta(days=7),
+                refresh_token=str(refresh)
+            )
+            
+            # Log registration
+            AuditLog.objects.create(
+                user=user,
+                action='registration',
+                details={'phone_number': user.phone_number, 'user_type': user_type},
+                ip_address=get_client_ip(request),
+                user_agent=request.META.get('HTTP_USER_AGENT', '')
+            )
+            
+            return Response({
+                'user': UserProfileSerializer(user).data,
+                'tokens': {
+                    'refresh': str(refresh),
+                    'access': str(refresh.access_token),
+                },
+                'message': _('Registration successful.')
+            }, status=status.HTTP_201_CREATED)
 
 
 class UserProfileView(generics.RetrieveUpdateAPIView):
@@ -513,6 +538,65 @@ class OTPVerificationView(APIView):
         return Response({
             'message': _('Phone number verified successfully.')
         }, status=status.HTTP_200_OK)
+
+
+class EmailVerificationView(APIView):
+    """Verify email address using token"""
+    permission_classes = [permissions.AllowAny]
+    
+    def get(self, request):
+        token = request.query_params.get('token')
+        user_id = request.query_params.get('user')
+        
+        if not token or not user_id:
+            return Response({
+                'error': _('Invalid verification link.')
+            }, status=status.HTTP_400_BAD_REQUEST)
+        
+        try:
+            # Get user
+            user = User.objects.get(id=user_id)
+            
+            # Check token from cache
+            cache_key = f"email_verify_{user.id}"
+            cached_token = cache.get(cache_key)
+            
+            if not cached_token or cached_token != token:
+                return Response({
+                    'error': _('Invalid or expired verification token.')
+                }, status=status.HTTP_400_BAD_REQUEST)
+            
+            # Verify email
+            user.email_verified = True
+            user.is_active = True  # Activate user account
+            user.save(update_fields=['email_verified', 'is_active'])
+            
+            # Delete token from cache
+            cache.delete(cache_key)
+            
+            # Log email verification
+            AuditLog.objects.create(
+                user=user,
+                action='email_verified',
+                details={'email': user.email},
+                ip_address=get_client_ip(request),
+                user_agent=request.META.get('HTTP_USER_AGENT', '')
+            )
+            
+            return Response({
+                'message': _('Email verified successfully! You can now log in.'),
+                'email': user.email
+            }, status=status.HTTP_200_OK)
+            
+        except User.DoesNotExist:
+            return Response({
+                'error': _('User not found.')
+            }, status=status.HTTP_404_NOT_FOUND)
+        except Exception as e:
+            logger.error(f"Email verification error: {str(e)}")
+            return Response({
+                'error': _('An error occurred during verification.')
+            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 class LogoutView(APIView):

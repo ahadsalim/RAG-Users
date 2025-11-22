@@ -29,8 +29,8 @@ export default function LoginPage() {
     localStorage.setItem('theme', newTheme)
   }
   
-  // Cache buster for images
-  const imageVersion = Date.now()
+  // Cache buster - force reload on every page load
+  const [cacheVersion] = useState(() => Date.now())
   
   // For legal users
   const [email, setEmail] = useState('')
@@ -294,25 +294,28 @@ export default function LoginPage() {
       border: active
         ? 'none'
         : theme === 'light'
-          ? '1px solid #fff'
+          ? '1px solid rgba(255, 255, 255, 0.4)'
           : '1px solid #718096',
       background: active
         ? theme === 'light'
-          ? '#fff'
-          : '#e2e8f0'
-        : 'transparent',
+          ? 'rgba(255, 255, 255, 0.95)'
+          : 'rgba(226, 232, 240, 0.95)'
+        : theme === 'light'
+          ? 'rgba(255, 255, 255, 0.1)'
+          : 'rgba(45, 55, 72, 0.3)',
       color: active
         ? theme === 'light'
           ? '#667eea'
           : '#1a202c'
         : theme === 'light'
-          ? '#fff'
+          ? 'rgba(255, 255, 255, 0.8)'
           : '#cbd5e0',
       cursor: 'pointer',
       fontSize: '14px',
       fontWeight: '500',
       transition: 'all 0.3s ease',
-      boxShadow: active ? '0 4px 12px rgba(0,0,0,0.15)' : 'none'
+      boxShadow: active ? '0 4px 12px rgba(0,0,0,0.2)' : 'none',
+      backdropFilter: 'blur(10px)'
     }),
     methodSelector: {
       display: 'flex',
@@ -376,22 +379,25 @@ export default function LoginPage() {
       fontSize: '14px',
       fontWeight: '500',
       color: theme === 'light' ? '#fff' : '#cbd5e0',
-      minWidth: '90px',
+      minWidth: '75px',
       whiteSpace: 'nowrap' as const
     },
     input: {
       width: '100%',
       padding: '10px 14px',
       borderRadius: '8px',
-      border: 'none',
+      border: theme === 'light'
+        ? '1px solid rgba(255, 255, 255, 0.3)'
+        : '1px solid rgba(113, 128, 150, 0.3)',
       background: theme === 'light'
-        ? 'rgba(255, 255, 255, 0.9)'
-        : '#2d3748',
-      color: theme === 'light' ? '#1a202c' : '#e2e8f0',
+        ? 'rgba(255, 255, 255, 0.2)'
+        : 'rgba(45, 55, 72, 0.5)',
+      color: theme === 'light' ? '#fff' : '#e2e8f0',
       fontSize: '14px',
       outline: 'none',
       transition: 'all 0.3s ease',
-      boxSizing: 'border-box' as const
+      boxSizing: 'border-box' as const,
+      backdropFilter: 'blur(10px)'
     },
     errorBox: {
       padding: '12px',
@@ -425,8 +431,8 @@ export default function LoginPage() {
       color: theme === 'light' ? 'rgba(255, 255, 255, 0.9)' : '#a0aec0'
     },
     supportInfo: {
-      marginTop: '20px',
-      padding: '16px',
+      marginTop: '16px',
+      padding: '10px 16px 8px',
       borderTop: theme === 'light'
         ? '1px solid rgba(255, 255, 255, 0.3)'
         : '1px solid rgba(113, 128, 150, 0.3)',
@@ -436,13 +442,13 @@ export default function LoginPage() {
     },
     supportTitle: {
       fontWeight: '600',
-      marginBottom: '8px',
+      marginBottom: '4px',
       color: theme === 'light' ? '#fff' : '#e2e8f0'
     },
     phoneNumbers: {
       display: 'flex',
       flexDirection: 'column' as const,
-      gap: '4px',
+      gap: '2px',
       alignItems: 'center'
     },
     phoneNumber: {
@@ -464,8 +470,13 @@ export default function LoginPage() {
     <>
       <style>{`
         input::placeholder {
-          color: ${theme === 'light' ? '#4a5568' : '#a0aec0'} !important;
-          opacity: 0.7;
+          color: ${theme === 'light' ? 'rgba(255, 255, 255, 0.6)' : '#a0aec0'} !important;
+          opacity: 1;
+        }
+        /* Force reload styles - cache buster */
+        body::before {
+          content: '${cacheVersion}';
+          display: none;
         }
       `}</style>
       <div style={styles.container}>
@@ -474,7 +485,7 @@ export default function LoginPage() {
           {/* Logo */}
           <div style={styles.logoContainer}>
             <img 
-              src={`/logo-small.png?v=${imageVersion}`}
+              src={`/logo-small.png?v=${cacheVersion}`}
               alt="Logo" 
               width={70} 
               height={70}
@@ -552,41 +563,45 @@ export default function LoginPage() {
         {userType === 'legal' && (
           <form style={styles.form} onSubmit={handleLoginWithPassword}>
             <div style={styles.inputGroup}>
-              <label style={styles.label}>ایمیل</label>
-              <input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="ایمیل خود را وارد کنید"
-                style={styles.input}
-                onFocus={(e) => {
-                  e.currentTarget.style.boxShadow = theme === 'light'
-                    ? '0 0 0 2px rgba(255, 255, 255, 0.5)'
-                    : '0 0 0 2px rgba(113, 128, 150, 0.5)'
-                }}
-                onBlur={(e) => {
-                  e.currentTarget.style.boxShadow = 'none'
-                }}
-              />
+              <div style={styles.inputGroupRow}>
+                <label style={styles.labelInline}>ایمیل</label>
+                <input
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="ایمیل خود را وارد کنید"
+                  style={{...styles.input, flex: 1}}
+                  onFocus={(e) => {
+                    e.currentTarget.style.boxShadow = theme === 'light'
+                      ? '0 0 0 2px rgba(255, 255, 255, 0.5)'
+                      : '0 0 0 2px rgba(113, 128, 150, 0.5)'
+                  }}
+                  onBlur={(e) => {
+                    e.currentTarget.style.boxShadow = 'none'
+                  }}
+                />
+              </div>
             </div>
 
             <div style={styles.inputGroup}>
-              <label style={styles.label}>رمز عبور</label>
-              <input
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="رمز عبور خود را وارد کنید"
-                style={styles.input}
-                onFocus={(e) => {
-                  e.currentTarget.style.boxShadow = theme === 'light'
-                    ? '0 0 0 2px rgba(255, 255, 255, 0.5)'
-                    : '0 0 0 2px rgba(113, 128, 150, 0.5)'
-                }}
-                onBlur={(e) => {
-                  e.currentTarget.style.boxShadow = 'none'
-                }}
-              />
+              <div style={styles.inputGroupRow}>
+                <label style={styles.labelInline}>رمز عبور</label>
+                <input
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="رمز عبور خود را وارد کنید"
+                  style={{...styles.input, flex: 1}}
+                  onFocus={(e) => {
+                    e.currentTarget.style.boxShadow = theme === 'light'
+                      ? '0 0 0 2px rgba(255, 255, 255, 0.5)'
+                      : '0 0 0 2px rgba(113, 128, 150, 0.5)'
+                  }}
+                  onBlur={(e) => {
+                    e.currentTarget.style.boxShadow = 'none'
+                  }}
+                />
+              </div>
             </div>
 
             {error && (
@@ -649,7 +664,7 @@ export default function LoginPage() {
                     onClick={() => setOtpMethod('bale')}
                   >
                     <img 
-                      src={`/bale_64.png?v=${imageVersion}`}
+                      src={`/bale_64.png?v=${cacheVersion}`}
                       alt="Bale" 
                       width={24} 
                       height={24}
@@ -691,7 +706,7 @@ export default function LoginPage() {
                   کد 6 رقمی ارسال شده از طریق 
                   {otpMethod === 'bale' ? (
                     <span style={{display: 'flex', alignItems: 'center', gap: '4px'}}>
-                      <img src={`/bale_64.png?v=${imageVersion}`} alt="Bale" width={18} height={18} style={{ objectFit: 'contain' }} />
+                      <img src={`/bale_64.png?v=${cacheVersion}`} alt="Bale" width={18} height={18} style={{ objectFit: 'contain' }} />
                       پیام‌رسان بله
                     </span>
                   ) : '💬 پیامک'} 

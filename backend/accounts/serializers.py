@@ -72,28 +72,63 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
         fields = [
             'email', 'username', 'password', 'password_confirm',
             'first_name', 'last_name', 'phone_number', 'user_type',
-            'language', 'timezone', 'currency'
+            'company_name', 'language', 'timezone', 'currency'
         ]
         extra_kwargs = {
-            'email': {'required': True},
-            'username': {'required': True},
+            'email': {'required': False},
+            'username': {'required': False},
+            'phone_number': {'required': False},
         }
     
     def validate_email(self, value):
-        if User.objects.filter(email=value).exists():
+        if value and User.objects.filter(email=value).exists():
             raise serializers.ValidationError(_('A user with this email already exists.'))
-        return value.lower()
+        return value.lower() if value else None
+    
+    def validate_phone_number(self, value):
+        if value and User.objects.filter(phone_number=value).exists():
+            raise serializers.ValidationError(_('A user with this phone number already exists.'))
+        return value
     
     def validate_username(self, value):
-        if User.objects.filter(username=value).exists():
+        if value and User.objects.filter(username=value).exists():
             raise serializers.ValidationError(_('A user with this username already exists.'))
-        if not re.match(r'^[\w.@+-]+$', value):
+        if value and not re.match(r'^[\w.@+-]+$', value):
             raise serializers.ValidationError(_('Username can only contain letters, numbers, and @/./+/-/_ characters.'))
         return value
     
     def validate(self, attrs):
+        # Check password match
         if attrs['password'] != attrs['password_confirm']:
             raise serializers.ValidationError({'password': _('Passwords do not match.')})
+        
+        user_type = attrs.get('user_type', 'individual')
+        
+        # For legal users (business), email is required
+        if user_type == 'legal' or user_type == 'business':
+            if not attrs.get('email'):
+                raise serializers.ValidationError({'email': _('Email is required for business accounts.')})
+            
+            # For legal users, email IS the username (not a separate username)
+            # Set username to None to avoid conflicts
+            attrs['username'] = None
+            
+            # For legal users, phone is optional - generate dummy if not provided
+            if not attrs.get('phone_number'):
+                # Generate a unique dummy phone number for legal users
+                import random
+                import time
+                # Use timestamp + random to ensure uniqueness
+                dummy_phone = f"09{int(time.time()) % 100000000:08d}{random.randint(0, 9)}"
+                attrs['phone_number'] = dummy_phone
+        else:
+            # For real users (individual), phone_number is required
+            if not attrs.get('phone_number'):
+                raise serializers.ValidationError({'phone_number': _('Phone number is required for individual accounts.')})
+            
+            # For individual users, username can be None (phone is the identifier)
+            attrs['username'] = None
+        
         return attrs
     
     def create(self, validated_data):
