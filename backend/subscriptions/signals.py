@@ -32,11 +32,11 @@ def create_free_trial_subscription(sender, instance, created, **kwargs):
                 free_plan = Plan.objects.filter(is_active=True).first()
             
             if free_plan:
-                # ایجاد اشتراک trial برای 30 روز
+                # ایجاد اشتراک active برای 30 روز
                 subscription = Subscription.objects.create(
                     user=instance,
                     plan=free_plan,
-                    status='trial',
+                    status='active',  # باید active باشد تا کاربر بتواند از سیستم استفاده کند
                     start_date=timezone.now(),
                     end_date=timezone.now() + timedelta(days=30),
                     auto_renew=False

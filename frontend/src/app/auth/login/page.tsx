@@ -14,6 +14,21 @@ export default function LoginPage() {
   const [userType, setUserType] = useState<'real' | 'legal'>('real')
   const [theme, setTheme] = useState<'light' | 'dark'>('light')
   
+  // Load theme from localStorage on mount
+  useEffect(() => {
+    const savedTheme = localStorage.getItem('theme') as 'light' | 'dark' | null
+    if (savedTheme) {
+      setTheme(savedTheme)
+    }
+  }, [])
+  
+  // Save theme to localStorage when it changes
+  const handleThemeToggle = () => {
+    const newTheme = theme === 'light' ? 'dark' : 'light'
+    setTheme(newTheme)
+    localStorage.setItem('theme', newTheme)
+  }
+  
   // Cache buster for images
   const imageVersion = Date.now()
   
@@ -193,10 +208,10 @@ export default function LoginPage() {
     },
     card: {
       width: '100%',
-      maxWidth: '450px',
+      maxWidth: '420px',
       borderRadius: '16px',
       boxShadow: '0 20px 60px rgba(0,0,0,0.3)',
-      padding: '40px',
+      padding: '30px',
       background: theme === 'light'
         ? 'rgba(255, 255, 255, 0.2)'
         : 'rgba(45, 55, 72, 0.4)',
@@ -210,31 +225,46 @@ export default function LoginPage() {
       display: 'flex',
       flexDirection: 'column' as const,
       alignItems: 'center',
-      marginBottom: '30px',
-      gap: '20px'
+      marginBottom: '20px',
+      gap: '12px'
     },
     headerTop: {
       display: 'flex',
-      justifyContent: 'space-between',
+      justifyContent: 'center',
       alignItems: 'center',
-      width: '100%'
+      width: '100%',
+      position: 'relative' as const
     },
     logoContainer: {
       display: 'flex',
+      flexDirection: 'column' as const,
       justifyContent: 'center',
       alignItems: 'center',
-      marginBottom: '10px'
+      marginBottom: '8px',
+      gap: '8px'
+    },
+    subtitle: {
+      fontSize: '16px',
+      fontWeight: '600',
+      color: theme === 'light' ? '#fff' : '#e2e8f0',
+      margin: 0,
+      fontFamily: 'IRANSans, Vazirmatn, sans-serif',
+      textShadow: '0 2px 4px rgba(0,0,0,0.2)',
+      letterSpacing: '0.5px'
     },
     title: {
-      fontSize: '28px',
+      fontSize: '24px',
       fontWeight: 'bold',
       color: theme === 'light' ? '#fff' : '#e2e8f0',
       margin: 0,
       textShadow: '0 2px 4px rgba(0,0,0,0.1)'
     },
     themeBtn: {
-      padding: '8px 16px',
-      borderRadius: '8px',
+      position: 'absolute' as const,
+      top: '-10px',
+      left: '0',
+      padding: '8px',
+      borderRadius: '50%',
       border: theme === 'light' 
         ? '1px solid rgba(255, 255, 255, 0.4)'
         : '1px solid #4a5568',
@@ -243,15 +273,20 @@ export default function LoginPage() {
         : '#2d3748',
       color: theme === 'light' ? '#fff' : '#e2e8f0',
       cursor: 'pointer',
-      fontSize: '14px',
+      fontSize: '20px',
       fontWeight: '500',
-      transition: 'all 0.3s ease'
+      transition: 'all 0.3s ease',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      width: '40px',
+      height: '40px'
     },
     userTypeContainer: {
       display: 'flex',
       justifyContent: 'center',
-      gap: '16px',
-      marginBottom: '24px'
+      gap: '12px',
+      marginBottom: '16px'
     },
     userTypeBtn: (active: boolean) => ({
       padding: '10px 20px',
@@ -286,7 +321,7 @@ export default function LoginPage() {
     },
     methodBtn: (active: boolean) => ({
       flex: 1,
-      padding: '12px 16px',
+      padding: '8px 12px',
       borderRadius: '8px',
       border: active
         ? 'none'
@@ -320,28 +355,40 @@ export default function LoginPage() {
     form: {
       display: 'flex',
       flexDirection: 'column' as const,
-      gap: '20px'
+      gap: '16px'
     },
     inputGroup: {
       display: 'flex',
       flexDirection: 'column' as const,
-      gap: '8px'
+      gap: '6px'
+    },
+    inputGroupRow: {
+      display: 'flex',
+      alignItems: 'center',
+      gap: '12px'
     },
     label: {
       fontSize: '14px',
       fontWeight: '500',
       color: theme === 'light' ? '#fff' : '#cbd5e0'
     },
+    labelInline: {
+      fontSize: '14px',
+      fontWeight: '500',
+      color: theme === 'light' ? '#fff' : '#cbd5e0',
+      minWidth: '90px',
+      whiteSpace: 'nowrap' as const
+    },
     input: {
       width: '100%',
-      padding: '12px 16px',
+      padding: '10px 14px',
       borderRadius: '8px',
       border: 'none',
       background: theme === 'light'
         ? 'rgba(255, 255, 255, 0.9)'
         : '#2d3748',
       color: theme === 'light' ? '#1a202c' : '#e2e8f0',
-      fontSize: '15px',
+      fontSize: '14px',
       outline: 'none',
       transition: 'all 0.3s ease',
       boxSizing: 'border-box' as const
@@ -356,14 +403,14 @@ export default function LoginPage() {
     },
     submitBtn: {
       width: '100%',
-      padding: '14px',
+      padding: '12px',
       borderRadius: '8px',
       border: 'none',
       background: theme === 'light'
         ? 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'
         : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
       color: '#fff',
-      fontSize: '16px',
+      fontSize: '15px',
       fontWeight: '600',
       cursor: isLoading ? 'not-allowed' : 'pointer',
       opacity: isLoading ? 0.5 : 1,
@@ -373,9 +420,37 @@ export default function LoginPage() {
     links: {
       display: 'flex',
       justifyContent: 'space-between',
-      marginTop: '20px',
-      fontSize: '14px',
+      marginTop: '16px',
+      fontSize: '13px',
       color: theme === 'light' ? 'rgba(255, 255, 255, 0.9)' : '#a0aec0'
+    },
+    supportInfo: {
+      marginTop: '20px',
+      padding: '16px',
+      borderTop: theme === 'light'
+        ? '1px solid rgba(255, 255, 255, 0.3)'
+        : '1px solid rgba(113, 128, 150, 0.3)',
+      textAlign: 'center' as const,
+      fontSize: '13px',
+      color: theme === 'light' ? 'rgba(255, 255, 255, 0.95)' : '#cbd5e0'
+    },
+    supportTitle: {
+      fontWeight: '600',
+      marginBottom: '8px',
+      color: theme === 'light' ? '#fff' : '#e2e8f0'
+    },
+    phoneNumbers: {
+      display: 'flex',
+      flexDirection: 'column' as const,
+      gap: '4px',
+      alignItems: 'center'
+    },
+    phoneNumber: {
+      fontFamily: 'monospace',
+      fontSize: '14px',
+      fontWeight: '600',
+      color: theme === 'light' ? '#fff' : '#e2e8f0',
+      direction: 'ltr' as const
     },
     link: {
       color: 'inherit',
@@ -401,10 +476,11 @@ export default function LoginPage() {
             <img 
               src={`/logo-small.png?v=${imageVersion}`}
               alt="Logo" 
-              width={80} 
-              height={80}
+              width={70} 
+              height={70}
               style={{ objectFit: 'contain' }}
             />
+            <p style={styles.subtitle}>سامانه مشاور هوشمند کسب و کار</p>
           </div>
           
           {/* Title and Theme Button */}
@@ -413,7 +489,7 @@ export default function LoginPage() {
             <button
               type="button"
               style={styles.themeBtn}
-              onClick={() => setTheme(theme === 'light' ? 'dark' : 'light')}
+              onClick={handleThemeToggle}
               onMouseOver={(e) => {
                 e.currentTarget.style.background = theme === 'light'
                   ? 'rgba(255, 255, 255, 0.4)'
@@ -424,8 +500,9 @@ export default function LoginPage() {
                   ? 'rgba(255, 255, 255, 0.3)'
                   : '#2d3748'
               }}
+              title={theme === 'light' ? 'حالت تاریک' : 'حالت روشن'}
             >
-              {theme === 'light' ? 'Dark' : 'Light'}
+              {theme === 'light' ? '🌙' : '☀️'}
             </button>
           </div>
         </div>
@@ -540,24 +617,26 @@ export default function LoginPage() {
         {userType === 'real' && (
           <form style={styles.form} onSubmit={otpSent ? handleLoginWithOtp : handleSendOtp}>
             <div style={styles.inputGroup}>
-              <label style={styles.label}>شماره موبایل</label>
-              <input
-                type="tel"
-                value={phoneNumber}
-                onChange={(e) => setPhoneNumber(e.target.value)}
-                placeholder="09123456789"
-                style={styles.input}
-                disabled={otpSent}
-                maxLength={11}
-                onFocus={(e) => {
-                  e.currentTarget.style.boxShadow = theme === 'light'
-                    ? '0 0 0 2px rgba(255, 255, 255, 0.5)'
-                    : '0 0 0 2px rgba(113, 128, 150, 0.5)'
-                }}
-                onBlur={(e) => {
-                  e.currentTarget.style.boxShadow = 'none'
-                }}
-              />
+              <div style={styles.inputGroupRow}>
+                <label style={styles.labelInline}>شماره موبایل</label>
+                <input
+                  type="tel"
+                  value={phoneNumber}
+                  onChange={(e) => setPhoneNumber(e.target.value)}
+                  placeholder="09123456789"
+                  style={{...styles.input, flex: 1}}
+                  disabled={otpSent}
+                  maxLength={11}
+                  onFocus={(e) => {
+                    e.currentTarget.style.boxShadow = theme === 'light'
+                      ? '0 0 0 2px rgba(255, 255, 255, 0.5)'
+                      : '0 0 0 2px rgba(113, 128, 150, 0.5)'
+                  }}
+                  onBlur={(e) => {
+                    e.currentTarget.style.boxShadow = 'none'
+                  }}
+                />
+              </div>
             </div>
 
             {!otpSent && (
@@ -703,6 +782,15 @@ export default function LoginPage() {
               ثبت‌نام شرکت
             </Link>
           )}
+        </div>
+
+        {/* Support Contact Info */}
+        <div style={styles.supportInfo}>
+          <div style={styles.supportTitle}>تماس با پشتیبانی</div>
+          <div style={styles.phoneNumbers}>
+            <a href="tel:02191097737" style={styles.phoneNumber}>021-91097737</a>
+            <a href="tel:02188748436" style={styles.phoneNumber}>021-88748436</a>
+          </div>
         </div>
       </div>
     </div>

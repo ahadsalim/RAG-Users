@@ -100,47 +100,45 @@ export default function ChatPage() {
   }
 
   return (
-    <div className="h-screen overflow-hidden bg-white dark:bg-gray-900">
-      <div className="flex h-full">
-        {/* Sidebar */}
-        <ChatSidebar 
-          isOpen={isSidebarOpen}
-          onClose={() => setIsSidebarOpen(false)}
-          onNewChat={handleNewChat}
-          currentConversationId={currentConversation?.id}
+    <div className="h-screen overflow-hidden bg-white dark:bg-gray-900 flex flex-col md:flex-row">
+      {/* Sidebar */}
+      <ChatSidebar 
+        isOpen={isSidebarOpen}
+        onClose={() => setIsSidebarOpen(false)}
+        onNewChat={handleNewChat}
+        currentConversationId={currentConversation?.id}
+      />
+      
+      {/* Main Chat Area - ChatGPT Style */}
+      <div className="flex-1 flex flex-col h-full overflow-hidden">
+        {/* Header */}
+        <ChatHeader 
+          onToggleSidebar={toggleSidebar}
+          conversation={currentConversation}
+          isConnected={isConnected}
         />
         
-        {/* Main Chat Area - ChatGPT Style */}
-        <div className="flex-1 flex flex-col">
-          {/* Header */}
-          <ChatHeader 
-            onToggleSidebar={toggleSidebar}
-            conversation={currentConversation}
-            isConnected={isConnected}
-          />
-          
-          {/* Messages Container */}
-          <div className="flex-1 overflow-y-auto bg-white dark:bg-gray-900">
-            <div className="max-w-3xl mx-auto px-4">
-              <ChatMessages 
-                messages={messages}
-                isLoading={isLoading}
-                isTyping={isTyping}
-              />
-              <div className="h-32" /> {/* Spacer for bottom */}
-              <div ref={messagesEndRef} />
-            </div>
+        {/* Messages Container */}
+        <div className="flex-1 overflow-y-auto bg-white dark:bg-gray-900">
+          <div className="max-w-3xl mx-auto px-4 pb-4">
+            <ChatMessages 
+              messages={messages}
+              isLoading={isLoading}
+              isTyping={isTyping}
+            />
+            <div className="h-32 md:h-20" /> {/* Spacer for bottom input */}
+            <div ref={messagesEndRef} />
           </div>
-          
-          {/* Input Container - Fixed Bottom */}
-          <div className="border-t border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900">
-            <div className="max-w-3xl mx-auto p-4">
-              <ChatInput 
-                onSendMessage={handleSendMessage}
-                isLoading={isLoading}
-                disabled={!isConnected}
-              />
-            </div>
+        </div>
+        
+        {/* Input Container - Fixed Bottom */}
+        <div className="shrink-0 border-t border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 safe-area-bottom">
+          <div className="max-w-3xl mx-auto p-4">
+            <ChatInput 
+              onSendMessage={handleSendMessage}
+              isLoading={isLoading}
+              disabled={!isConnected}
+            />
           </div>
         </div>
       </div>

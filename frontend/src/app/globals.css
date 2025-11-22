@@ -271,3 +271,14 @@
     @apply ring-offset-gray-900;
   }
 }
+
+/* Safe area for mobile devices (iOS notch, Android navigation bar) */
+@layer utilities {
+  .safe-area-bottom {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+  
+  .safe-area-top {
+    padding-top: env(safe-area-inset-top);
+  }
+}
