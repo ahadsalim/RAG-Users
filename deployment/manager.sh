@@ -187,6 +187,28 @@ collect_static() {
     print_success "Static files collected"
 }
 
+rebuild_frontend() {
+    print_header "Rebuilding Frontend"
+    cd "$DEPLOYMENT_DIR"
+    
+    print_info "Stopping frontend..."
+    docker-compose stop frontend
+    
+    print_info "Clearing Next.js cache..."
+    rm -rf /srv/frontend/.next
+    
+    print_info "Starting frontend..."
+    docker-compose up -d frontend
+    
+    print_info "Waiting for frontend to be ready..."
+    sleep 5
+    
+    print_info "Checking logs..."
+    docker-compose logs frontend --tail=10
+    
+    print_success "Frontend rebuilt successfully"
+}
+
 update_system() {
     print_header "Updating System"
     
@@ -356,18 +378,19 @@ show_menu() {
     echo "Maintenance:"
     echo "  11) Clear Cache"
     echo "  12) Collect Static Files"
-    echo "  13) Update System"
-    echo "  14) Docker Cleanup"
+    echo "  13) Rebuild Frontend"
+    echo "  14) Update System"
+    echo "  15) Docker Cleanup"
     echo ""
     echo "Monitoring:"
-    echo "  15) System Information"
-    echo "  16) Health Check"
+    echo "  16) System Information"
+    echo "  17) Health Check"
     echo ""
     echo "Troubleshooting:"
-    echo "  17) Fix OTP Issues"
-    echo "  18) Fix Permissions"
+    echo "  18) Fix OTP Issues"
+    echo "  19) Fix Permissions"
     echo ""
-    echo "  19) Exit"
+    echo "  20) Exit"
     echo ""
 }
 
@@ -391,13 +414,14 @@ if [ $# -eq 0 ]; then
             10) database_shell ;;
             11) clear_cache ;;
             12) collect_static ;;
-            13) update_system ;;
-            14) cleanup_docker ;;
-            15) system_info ;;
-            16) health_check ;;
-            17) fix_otp_issues ;;
-            18) fix_permissions ;;
-            19)
+            13) rebuild_frontend ;;
+            14) update_system ;;
+            15) cleanup_docker ;;
+            16) system_info ;;
+            17) health_check ;;
+            18) fix_otp_issues ;;
+            19) fix_permissions ;;
+            20)
                 echo "Goodbye!"
                 exit 0
                 ;;
@@ -422,6 +446,7 @@ else
         dbshell) database_shell ;;
         cache) clear_cache ;;
         static) collect_static ;;
+        rebuild-frontend) rebuild_frontend ;;
         update) update_system ;;
         cleanup) cleanup_docker ;;
         info) system_info ;;
@@ -429,7 +454,7 @@ else
         fix-otp) fix_otp_issues ;;
         fix-perms) fix_permissions ;;
         *)
-            echo "Usage: $0 {start|stop|restart|status|logs|migrate|shell|dbshell|cache|static|update|cleanup|info|health|fix-otp|fix-perms}"
+            echo "Usage: $0 {start|stop|restart|status|logs|migrate|shell|dbshell|cache|static|rebuild-frontend|update|cleanup|info|health|fix-otp|fix-perms}"
             exit 1
             ;;
     esac
