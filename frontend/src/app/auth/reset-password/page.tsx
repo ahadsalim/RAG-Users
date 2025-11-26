@@ -76,7 +76,7 @@ export default function ResetPasswordPage() {
         },
         body: JSON.stringify({ 
           token,
-          user_id: parseInt(userId),
+          user_id: userId,
           new_password: password,
           new_password_confirm: confirmPassword
         })
@@ -288,7 +288,7 @@ export default function ResetPasswordPage() {
             </div>
             
             <div style={styles.headerTop}>
-              <h2 style={styles.title}>بازیابی رمز عبور</h2>
+              <h2 style={styles.title}>تنظیم رمز عبور جدید</h2>
               <button
                 type="button"
                 style={styles.themeBtn}
@@ -300,16 +300,29 @@ export default function ResetPasswordPage() {
             </div>
           </div>
 
-          {!emailSent ? (
+          {!resetSuccess ? (
             <form style={styles.form} onSubmit={handleSubmit}>
               <div style={styles.inputGroup}>
                 <div style={styles.inputGroupRow}>
-                  <label style={styles.labelInline}>ایمیل</label>
+                  <label style={styles.labelInline}>رمز عبور جدید</label>
                   <input
-                    type="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    placeholder="ایمیل خود را وارد کنید"
+                    type="password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    placeholder="رمز عبور جدید"
+                    style={{...styles.input, flex: 1}}
+                  />
+                </div>
+              </div>
+
+              <div style={styles.inputGroup}>
+                <div style={styles.inputGroupRow}>
+                  <label style={styles.labelInline}>تکرار رمز عبور</label>
+                  <input
+                    type="password"
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    placeholder="تکرار رمز عبور"
                     style={{...styles.input, flex: 1}}
                   />
                 </div>
@@ -320,14 +333,14 @@ export default function ResetPasswordPage() {
                 disabled={isLoading}
                 style={styles.submitBtn}
               >
-                {isLoading ? 'در حال ارسال...' : 'ارسال لینک بازیابی'}
+                {isLoading ? 'در حال تغییر...' : 'تغییر رمز عبور'}
               </button>
             </form>
           ) : (
             <div style={styles.successBox}>
-              ✅ لینک بازیابی رمز عبور به ایمیل شما ارسال شد.
+              ✅ رمز عبور شما با موفقیت تغییر کرد.
               <br />
-              لطفا ایمیل خود را بررسی کنید.
+              در حال انتقال به صفحه ورود...
             </div>
           )}
 

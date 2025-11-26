@@ -286,6 +286,7 @@ Email: your-email@example.com
 #### Advanced Tab:
 ```nginx
 # Backend API
+# ⚠️ توجه: CORS توسط Django مدیریت می‌شود، نباید در NPM تنظیم شود
 location /api {
     proxy_pass http://backend:8000;
     proxy_set_header Host $host;
@@ -297,12 +298,6 @@ location /api {
     proxy_connect_timeout 60s;
     proxy_send_timeout 60s;
     proxy_read_timeout 60s;
-    
-    # CORS
-    add_header Access-Control-Allow-Origin https://tejarat.chat always;
-    add_header Access-Control-Allow-Methods "GET, POST, PUT, DELETE, OPTIONS, PATCH" always;
-    add_header Access-Control-Allow-Headers "Authorization, Content-Type" always;
-    add_header Access-Control-Allow-Credentials true always;
 }
 
 # Django Admin
@@ -334,13 +329,11 @@ location /ws {
     proxy_set_header Upgrade $http_upgrade;
     proxy_set_header Connection "upgrade";
     proxy_set_header Host $host;
+    proxy_set_header X-Real-IP $remote_addr;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_set_header X-Forwarded-Proto $scheme;
     proxy_read_timeout 86400;
 }
-
-# Security Headers
-add_header X-Frame-Options "SAMEORIGIN" always;
-add_header X-Content-Type-Options "nosniff" always;
-add_header X-XSS-Protection "1; mode=block" always;
 ```
 
 ### 3. تنظیم Frontend (tejarat.chat):
@@ -565,6 +558,73 @@ docker-compose restart nginx_proxy_manager
 # یا دستی:
 rm -rf /srv/frontend/.next
 docker-compose restart frontend
+```
+
+### مشکل 6: خطای CORS در Forgot Password
+
+**علامت:**
+```
+Access-Control-Allow-Origin header contains multiple values 
+'https://tejarat.chat, https://tejarat.chat'
+```
+
+**علت:**  
+CORS header هم از Django و هم از Nginx Proxy Manager ارسال می‌شود.
+
+**راه‌حل:**
+
+1. ورود به NPM:
+   ```
+   http://YOUR_SERVER_IP:81
+   ```
+
+2. ویرایش `admin.tejarat.chat`:
+   ```
+   Hosts → Proxy Hosts → admin.tejarat.chat → Edit → Advanced Tab
+   ```
+
+3. **حذف خطوط CORS:**
+   ```nginx
+   # ❌ این خطوط را حذف کن:
+   add_header Access-Control-Allow-Origin https://tejarat.chat always;
+   add_header Access-Control-Allow-Methods "..." always;
+   add_header Access-Control-Allow-Headers "..." always;
+   add_header Access-Control-Allow-Credentials true always;
+   ```
+
+4. **Configuration صحیح NPM:**
+   ```nginx
+   # ✅ فقط proxy settings نگه دار:
+   location /api {
+       proxy_pass http://backend:8000;
+       proxy_set_header Host $host;
+       proxy_set_header X-Real-IP $remote_addr;
+       proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+       proxy_set_header X-Forwarded-Proto $scheme;
+       proxy_redirect off;
+       
+       proxy_connect_timeout 60s;
+       proxy_send_timeout 60s;
+       proxy_read_timeout 60s;
+   }
+   ```
+
+5. Save کن و تست کن.
+
+**توضیح:**  
+CORS در Django تنظیم شده (`/srv/backend/core/settings.py`) و نباید در NPM تکرار شود.
+
+**تست CORS:**
+```bash
+curl -X POST https://admin.tejarat.chat/api/v1/auth/forgot-password/ \
+  -H "Origin: https://tejarat.chat" \
+  -H "Content-Type: application/json" \
+  -d '{"email":"test@example.com"}' \
+  -v 2>&1 | grep -i "access-control"
+
+# خروجی صحیح (فقط یک header):
+< access-control-allow-origin: https://tejarat.chat
+< access-control-allow-credentials: true
 ```
 
 ---

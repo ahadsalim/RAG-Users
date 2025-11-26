@@ -247,7 +247,7 @@ class PasswordResetRequestSerializer(serializers.Serializer):
 class PasswordResetConfirmSerializer(serializers.Serializer):
     """Password reset confirmation serializer"""
     token = serializers.CharField(required=True)
-    user_id = serializers.IntegerField(required=True)
+    user_id = serializers.UUIDField(required=True)
     new_password = serializers.CharField(required=True, write_only=True, validators=[validate_password])
     new_password_confirm = serializers.CharField(required=True, write_only=True)
     

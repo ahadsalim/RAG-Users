@@ -282,7 +282,7 @@ EMAIL_USE_TLS = config('EMAIL_USE_TLS', default=True, cast=bool)
 EMAIL_HOST_USER = config('EMAIL_HOST_USER', default='')
 EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD', default='')
 DEFAULT_FROM_EMAIL = config('DEFAULT_FROM_EMAIL', default='noreply@tejarat.chat')
-FRONTEND_URL = config('FRONTEND_URL', default='https://admin.tejarat.chat')
+FRONTEND_URL = config('FRONTEND_URL', default='https://tejarat.chat')
 
 # Celery Configuration
 CELERY_BROKER_URL = f"redis://{config('REDIS_HOST', default='localhost')}:{config('REDIS_PORT', default=6379)}/0"
