@@ -196,6 +196,9 @@ def send_password_reset_email(user, reset_token):
     try:
         reset_link = f"{settings.FRONTEND_URL}/auth/reset-password?token={reset_token}&user={user.id}"
         
+        logger.info(f"Generated reset link: {reset_link}")
+        logger.info(f"Token being sent: {reset_token}")
+        
         subject = 'درخواست بازیابی رمز عبور - تجارت چت'
         message = render_to_string('emails/password_reset.txt', {
             'user': user,

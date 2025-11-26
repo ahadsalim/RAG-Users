@@ -225,7 +225,9 @@ class PasswordResetRequestSerializer(serializers.Serializer):
         from .utils import send_password_reset_email
         import secrets
         from django.core.cache import cache
+        import logging
         
+        logger = logging.getLogger(__name__)
         email = self.validated_data['email']
         try:
             user = User.objects.get(email=email)
@@ -237,10 +239,18 @@ class PasswordResetRequestSerializer(serializers.Serializer):
             cache_key = f"password_reset_{user.id}"
             cache.set(cache_key, reset_token, 3600)
             
+            # Verify token was stored
+            stored_token = cache.get(cache_key)
+            logger.info(f"Password reset token generated for {user.email}")
+            logger.info(f"Cache key: {cache_key}")
+            logger.info(f"Token stored: {stored_token == reset_token}")
+            logger.info(f"Token value: {reset_token}")
+            
             # Send email
             send_password_reset_email(user, reset_token)
         except User.DoesNotExist:
             # Don't reveal if email exists or not
+            logger.warning(f"Password reset requested for non-existent email: {email}")
             pass
 
 
@@ -252,6 +262,9 @@ class PasswordResetConfirmSerializer(serializers.Serializer):
     new_password_confirm = serializers.CharField(required=True, write_only=True)
     
     def validate(self, attrs):
+        import logging
+        logger = logging.getLogger(__name__)
+        
         if attrs['new_password'] != attrs['new_password_confirm']:
             raise serializers.ValidationError({'new_password': _('Passwords do not match.')})
         
@@ -263,27 +276,48 @@ class PasswordResetConfirmSerializer(serializers.Serializer):
         cache_key = f"password_reset_{user_id}"
         cached_token = cache.get(cache_key)
         
+        logger.info(f"Validating reset token for user: {user_id}")
+        logger.info(f"Received token: {token}")
+        logger.info(f"Cached token: {cached_token}")
+        logger.info(f"Tokens match: {cached_token == token}")
+        
         if not cached_token or cached_token != token:
+            logger.error(f"Token validation failed! Cached: {cached_token}, Received: {token}")
             raise serializers.ValidationError({'token': _('Invalid or expired reset token.')})
         
         return attrs
     
     def save(self):
         from django.core.cache import cache
+        import logging
         
+        logger = logging.getLogger(__name__)
         user_id = self.validated_data['user_id']
         new_password = self.validated_data['new_password']
         
         try:
             user = User.objects.get(id=user_id)
+            logger.info(f"Resetting password for user: {user.email}")
+            
+            # Reset password
             user.set_password(new_password)
-            user.save(update_fields=['password'])
+            
+            # Unlock account and reset failed login attempts
+            user.locked_until = None
+            user.failed_login_attempts = 0
+            
+            user.save(update_fields=['password', 'locked_until', 'failed_login_attempts'])
+            
+            logger.info(f"Password successfully reset for user: {user.email}")
+            logger.info(f"Account unlocked and failed login attempts reset")
             
             # Delete used token
             cache_key = f"password_reset_{user_id}"
             cache.delete(cache_key)
+            logger.info(f"Reset token deleted for user: {user.email}")
             
         except User.DoesNotExist:
+            logger.error(f"User not found with ID: {user_id}")
             raise serializers.ValidationError({'user_id': _('User not found.')})
 
 
