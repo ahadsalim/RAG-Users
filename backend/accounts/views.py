@@ -606,6 +606,34 @@ class EmailVerificationView(APIView):
             })
 
 
+class PasswordResetRequestView(APIView):
+    """Request password reset via email"""
+    permission_classes = [permissions.AllowAny]
+    
+    def post(self, request):
+        serializer = PasswordResetRequestSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        
+        return Response({
+            'message': _('Password reset link has been sent to your email.')
+        }, status=status.HTTP_200_OK)
+
+
+class PasswordResetConfirmView(APIView):
+    """Confirm password reset with token"""
+    permission_classes = [permissions.AllowAny]
+    
+    def post(self, request):
+        serializer = PasswordResetConfirmSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        
+        return Response({
+            'message': _('Password has been reset successfully.')
+        }, status=status.HTTP_200_OK)
+
+
 class LogoutView(APIView):
     """Logout user and blacklist token"""
     permission_classes = [permissions.IsAuthenticated]

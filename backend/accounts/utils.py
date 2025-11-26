@@ -194,7 +194,7 @@ def send_otp_sms(phone_number, otp_code):
 def send_password_reset_email(user, reset_token):
     """Send password reset email"""
     try:
-        reset_link = f"{settings.FRONTEND_URL}/reset-password?token={reset_token}&user={user.id}"
+        reset_link = f"{settings.FRONTEND_URL}/auth/reset-password?token={reset_token}&user={user.id}"
         
         subject = _('Password Reset Request - app Platform')
         message = render_to_string('emails/password_reset.txt', {

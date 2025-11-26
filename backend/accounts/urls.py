@@ -11,6 +11,8 @@ from .views import (
     UserRegistrationView,
     UserProfileView,
     PasswordChangeView,
+    PasswordResetRequestView,
+    PasswordResetConfirmView,
     TwoFactorSetupView,
     TwoFactorEnableView,
     TwoFactorDisableView,
@@ -45,6 +47,8 @@ urlpatterns = [
     # Profile
     path('profile/', UserProfileView.as_view(), name='profile'),
     path('password/change/', PasswordChangeView.as_view(), name='password-change'),
+    path('forgot-password/', PasswordResetRequestView.as_view(), name='password-reset-request'),
+    path('reset-password/', PasswordResetConfirmView.as_view(), name='password-reset-confirm'),
     
     # Settings
     path('settings/', user_settings, name='settings'),

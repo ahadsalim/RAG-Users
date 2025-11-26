@@ -220,18 +220,71 @@ class PasswordResetRequestSerializer(serializers.Serializer):
             # Don't reveal if email exists or not for security
             pass
         return value.lower()
+    
+    def save(self):
+        from .utils import send_password_reset_email
+        import secrets
+        from django.core.cache import cache
+        
+        email = self.validated_data['email']
+        try:
+            user = User.objects.get(email=email)
+            
+            # Generate reset token
+            reset_token = secrets.token_urlsafe(32)
+            
+            # Store token in cache (valid for 1 hour)
+            cache_key = f"password_reset_{user.id}"
+            cache.set(cache_key, reset_token, 3600)
+            
+            # Send email
+            send_password_reset_email(user, reset_token)
+        except User.DoesNotExist:
+            # Don't reveal if email exists or not
+            pass
 
 
 class PasswordResetConfirmSerializer(serializers.Serializer):
     """Password reset confirmation serializer"""
     token = serializers.CharField(required=True)
+    user_id = serializers.IntegerField(required=True)
     new_password = serializers.CharField(required=True, write_only=True, validators=[validate_password])
     new_password_confirm = serializers.CharField(required=True, write_only=True)
     
     def validate(self, attrs):
         if attrs['new_password'] != attrs['new_password_confirm']:
             raise serializers.ValidationError({'new_password': _('Passwords do not match.')})
+        
+        # Validate token
+        from django.core.cache import cache
+        user_id = attrs['user_id']
+        token = attrs['token']
+        
+        cache_key = f"password_reset_{user_id}"
+        cached_token = cache.get(cache_key)
+        
+        if not cached_token or cached_token != token:
+            raise serializers.ValidationError({'token': _('Invalid or expired reset token.')})
+        
         return attrs
+    
+    def save(self):
+        from django.core.cache import cache
+        
+        user_id = self.validated_data['user_id']
+        new_password = self.validated_data['new_password']
+        
+        try:
+            user = User.objects.get(id=user_id)
+            user.set_password(new_password)
+            user.save(update_fields=['password'])
+            
+            # Delete used token
+            cache_key = f"password_reset_{user_id}"
+            cache.delete(cache_key)
+            
+        except User.DoesNotExist:
+            raise serializers.ValidationError({'user_id': _('User not found.')})
 
 
 class TwoFactorSetupSerializer(serializers.Serializer):
