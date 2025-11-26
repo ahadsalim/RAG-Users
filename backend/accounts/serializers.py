@@ -82,12 +82,14 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
     
     def validate_email(self, value):
         if value and User.objects.filter(email=value).exists():
-            raise serializers.ValidationError(_('A user with this email already exists.'))
+            raise serializers.ValidationError(_('کاربری با این ایمیل قبلاً ثبت‌نام کرده است.'))
         return value.lower() if value else None
     
     def validate_phone_number(self, value):
         if value and User.objects.filter(phone_number=value).exists():
-            raise serializers.ValidationError(_('A user with this phone number already exists.'))
+            raise serializers.ValidationError(_('کاربری با این شماره تلفن قبلاً ثبت‌نام کرده است.'))
+        
+        # Validate phone format based on user type (will be checked in validate method)
         return value
     
     def validate_username(self, value):
@@ -100,31 +102,41 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
     def validate(self, attrs):
         # Check password match
         if attrs['password'] != attrs['password_confirm']:
-            raise serializers.ValidationError({'password': _('Passwords do not match.')})
+            raise serializers.ValidationError({'password': _('رمز عبور و تکرار آن یکسان نیستند.')})
         
         user_type = attrs.get('user_type', 'individual')
+        phone_number = attrs.get('phone_number', '')
         
         # For legal users (business), email is required
         if user_type == 'legal' or user_type == 'business':
             if not attrs.get('email'):
-                raise serializers.ValidationError({'email': _('Email is required for business accounts.')})
+                raise serializers.ValidationError({'email': _('ایمیل برای حساب‌های حقوقی الزامی است.')})
             
             # For legal users, email IS the username (not a separate username)
             # Set username to None to avoid conflicts
             attrs['username'] = None
             
-            # For legal users, phone is optional - generate dummy if not provided
-            if not attrs.get('phone_number'):
-                # Generate a unique dummy phone number for legal users
-                import random
-                import time
-                # Use timestamp + random to ensure uniqueness
-                dummy_phone = f"09{int(time.time()) % 100000000:08d}{random.randint(0, 9)}"
-                attrs['phone_number'] = dummy_phone
+            # For legal users, phone is required (can be mobile or landline)
+            if not phone_number:
+                raise serializers.ValidationError({'phone_number': _('شماره تلفن الزامی است.')})
+            
+            # Validate phone format for legal users (mobile or landline)
+            # Mobile: 09123456789 (11 digits starting with 09)
+            # Landline: 02112345678 (11 digits starting with 0 + area code)
+            if not re.match(r'^0\d{10}$', phone_number):
+                raise serializers.ValidationError({
+                    'phone_number': _('لطفا یک شماره تلفن معتبر وارد کنید (موبایل: 09123456789 یا ثابت: 02112345678)')
+                })
         else:
-            # For real users (individual), phone_number is required
-            if not attrs.get('phone_number'):
-                raise serializers.ValidationError({'phone_number': _('Phone number is required for individual accounts.')})
+            # For real users (individual), mobile phone is required
+            if not phone_number:
+                raise serializers.ValidationError({'phone_number': _('شماره موبایل برای حساب‌های حقیقی الزامی است.')})
+            
+            # Validate mobile format for individual users (must be mobile)
+            if not re.match(r'^09\d{9}$', phone_number):
+                raise serializers.ValidationError({
+                    'phone_number': _('لطفا یک شماره موبایل معتبر ایرانی وارد کنید (مثال: 09123456789)')
+                })
             
             # For individual users, username can be None (phone is the identifier)
             attrs['username'] = None

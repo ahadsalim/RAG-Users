@@ -47,11 +47,11 @@ def send_email_verification(user):
         cache_key = f"email_verify_{user.id}"
         cache.set(cache_key, token, 86400)  # 24 hours
         
-        # Construct verification link
-        verification_link = f"{settings.FRONTEND_URL}/verify-email?token={token}&user={user.id}"
+        # Construct verification link (using backend API endpoint)
+        verification_link = f"{settings.FRONTEND_URL}/api/v1/auth/verify-email/?token={token}&user={user.id}"
         
         # Send email
-        subject = _('Verify your email address - app Platform')
+        subject = _('تایید ایمیل - سامانه تجارت چت')
         message = render_to_string('emails/verify_email.txt', {
             'user': user,
             'verification_link': verification_link

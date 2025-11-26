@@ -118,8 +118,11 @@ services:
       # Email
       EMAIL_HOST: ${EMAIL_HOST:-smtp.gmail.com}
       EMAIL_PORT: ${EMAIL_PORT:-587}
+      EMAIL_USE_TLS: ${EMAIL_USE_TLS:-true}
       EMAIL_HOST_USER: ${EMAIL_HOST_USER}
       EMAIL_HOST_PASSWORD: ${EMAIL_HOST_PASSWORD}
+      DEFAULT_FROM_EMAIL: ${DEFAULT_FROM_EMAIL:-noreply@tejarat.chat}
+      FRONTEND_URL: ${FRONTEND_URL:-https://admin.tejarat.chat}
       # Payment
       ZARINPAL_MERCHANT_ID: ${ZARINPAL_MERCHANT_ID}
       STRIPE_PUBLIC_KEY: ${STRIPE_PUBLIC_KEY}

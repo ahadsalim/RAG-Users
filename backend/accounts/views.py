@@ -545,13 +545,16 @@ class EmailVerificationView(APIView):
     permission_classes = [permissions.AllowAny]
     
     def get(self, request):
+        from django.shortcuts import render
+        
         token = request.query_params.get('token')
         user_id = request.query_params.get('user')
         
         if not token or not user_id:
-            return Response({
-                'error': _('Invalid verification link.')
-            }, status=status.HTTP_400_BAD_REQUEST)
+            return render(request, 'emails/verification_result.html', {
+                'success': False,
+                'message': 'لینک تایید نامعتبر است.'
+            })
         
         try:
             # Get user
@@ -562,9 +565,10 @@ class EmailVerificationView(APIView):
             cached_token = cache.get(cache_key)
             
             if not cached_token or cached_token != token:
-                return Response({
-                    'error': _('Invalid or expired verification token.')
-                }, status=status.HTTP_400_BAD_REQUEST)
+                return render(request, 'emails/verification_result.html', {
+                    'success': False,
+                    'message': 'لینک تایید منقضی شده یا نامعتبر است.'
+                })
             
             # Verify email
             user.email_verified = True
@@ -583,20 +587,23 @@ class EmailVerificationView(APIView):
                 user_agent=request.META.get('HTTP_USER_AGENT', '')
             )
             
-            return Response({
-                'message': _('Email verified successfully! You can now log in.'),
+            return render(request, 'emails/verification_result.html', {
+                'success': True,
+                'message': 'ایمیل شما با موفقیت تایید شد!',
                 'email': user.email
-            }, status=status.HTTP_200_OK)
+            })
             
         except User.DoesNotExist:
-            return Response({
-                'error': _('User not found.')
-            }, status=status.HTTP_404_NOT_FOUND)
+            return render(request, 'emails/verification_result.html', {
+                'success': False,
+                'message': 'کاربر یافت نشد.'
+            })
         except Exception as e:
             logger.error(f"Email verification error: {str(e)}")
-            return Response({
-                'error': _('An error occurred during verification.')
-            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            return render(request, 'emails/verification_result.html', {
+                'success': False,
+                'message': 'خطایی در تایید ایمیل رخ داد.'
+            })
 
 
 class LogoutView(APIView):

@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="fa">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% if success %}تایید موفق{% else %}خطا در تایید{% endif %}</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: Tahoma, Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            direction: rtl;
+            padding: 20px;
+        }
+        
+        .container {
+            background: white;
+            border-radius: 20px;
+            padding: 60px 40px;
+            max-width: 500px;
+            width: 100%;
+            text-align: center;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            animation: slideIn 0.5s ease-out;
+        }
+        
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .icon {
+            font-size: 80px;
+            margin-bottom: 20px;
+            animation: bounce 1s ease-in-out;
+        }
+        
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-20px); }
+        }
+        
+        .success-icon {
+            color: #10b981;
+        }
+        
+        .error-icon {
+            color: #ef4444;
+        }
+        
+        h1 {
+            color: #1f2937;
+            font-size: 28px;
+            margin-bottom: 15px;
+            font-weight: bold;
+        }
+        
+        .message {
+            color: #6b7280;
+            font-size: 18px;
+            line-height: 1.6;
+            margin-bottom: 30px;
+        }
+        
+        .email {
+            background: #f3f4f6;
+            padding: 15px;
+            border-radius: 10px;
+            color: #667eea;
+            font-weight: bold;
+            margin-bottom: 30px;
+            word-break: break-all;
+        }
+        
+        .button {
+            display: inline-block;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px 40px;
+            border-radius: 10px;
+            text-decoration: none;
+            font-weight: bold;
+            font-size: 16px;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        
+        .button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.4);
+        }
+        
+        .footer {
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 2px solid #e5e7eb;
+            color: #9ca3af;
+            font-size: 14px;
+        }
+        
+        .footer a {
+            color: #667eea;
+            text-decoration: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        {% if success %}
+            <div class="icon success-icon">✅</div>
+            <h1>تایید موفقیت‌آمیز!</h1>
+            <p class="message">{{ message }}</p>
+            {% if email %}
+                <div class="email">{{ email }}</div>
+            {% endif %}
+            <p class="message">اکنون می‌توانید وارد حساب کاربری خود شوید.</p>
+            <a href="https://tejarat.chat/auth/login" class="button">ورود به حساب کاربری</a>
+        {% else %}
+            <div class="icon error-icon">❌</div>
+            <h1>خطا در تایید</h1>
+            <p class="message">{{ message }}</p>
+            <p class="message">لطفاً دوباره تلاش کنید یا با پشتیبانی تماس بگیرید.</p>
+            <a href="https://tejarat.chat/auth/register" class="button">بازگشت به صفحه ثبت‌نام</a>
+        {% endif %}
+        
+        <div class="footer">
+            <p>سامانه هوشمند کسب و کار <strong>تجارت چت</strong></p>
+            <p style="margin-top: 10px;">
+                <a href="https://tejarat.chat">tejarat.chat</a> | 
+                <a href="mailto:info@tejarat.chat">info@tejarat.chat</a>
+            </p>
+        </div>
+    </div>
+</body>
+</html>

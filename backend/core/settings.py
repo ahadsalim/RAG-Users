@@ -153,12 +153,12 @@ CACHES = {
 SESSION_ENGINE = 'django.contrib.sessions.backends.db'
 SESSION_COOKIE_AGE = 1209600  # 2 weeks
 
-# Password validation
+# Password validation (with Persian error messages)
 AUTH_PASSWORD_VALIDATORS = [
-    {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator'},
-    {'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator', 'OPTIONS': {'min_length': 8}},
-    {'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator'},
-    {'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator'},
+    {'NAME': 'accounts.validators.PersianUserAttributeSimilarityValidator'},
+    {'NAME': 'accounts.validators.PersianMinimumLengthValidator', 'OPTIONS': {'min_length': 8}},
+    {'NAME': 'accounts.validators.PersianCommonPasswordValidator'},
+    {'NAME': 'accounts.validators.PersianNumericPasswordValidator'},
 ]
 
 # Custom User Model
@@ -281,7 +281,8 @@ EMAIL_PORT = config('EMAIL_PORT', default=587, cast=int)
 EMAIL_USE_TLS = config('EMAIL_USE_TLS', default=True, cast=bool)
 EMAIL_HOST_USER = config('EMAIL_HOST_USER', default='')
 EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD', default='')
-DEFAULT_FROM_EMAIL = config('DEFAULT_FROM_EMAIL', default='noreply@app.ir')
+DEFAULT_FROM_EMAIL = config('DEFAULT_FROM_EMAIL', default='noreply@tejarat.chat')
+FRONTEND_URL = config('FRONTEND_URL', default='https://admin.tejarat.chat')
 
 # Celery Configuration
 CELERY_BROKER_URL = f"redis://{config('REDIS_HOST', default='localhost')}:{config('REDIS_PORT', default=6379)}/0"

@@ -10,19 +10,26 @@ from io import BytesIO
 import base64
 
 # Validators
-phone_validator = RegexValidator(
+# Mobile phone validator (for individual users)
+mobile_validator = RegexValidator(
     regex=r'^(\+98|0)?9\d{9}$',
-    message=_('Enter a valid Iranian phone number.')
+    message=_('لطفا یک شماره موبایل معتبر ایرانی وارد کنید (مثال: 09123456789)')
+)
+
+# Phone validator (mobile or landline - for legal users)
+phone_validator = RegexValidator(
+    regex=r'^(\+98|0)?(\d{10}|\d{11})$',
+    message=_('لطفا یک شماره تلفن معتبر ایرانی وارد کنید (موبایل: 09123456789 یا ثابت: 02112345678)')
 )
 
 national_id_validator = RegexValidator(
     regex=r'^\d{10}$',
-    message=_('Enter a valid 10-digit national ID.')
+    message=_('لطفا یک کد ملی 10 رقمی معتبر وارد کنید.')
 )
 
 economic_code_validator = RegexValidator(
     regex=r'^\d{14}$',
-    message=_('Enter a valid 14-digit economic code.')
+    message=_('لطفا یک کد اقتصادی 14 رقمی معتبر وارد کنید.')
 )
 
 
@@ -115,6 +122,7 @@ class User(AbstractUser):
     
     USER_TYPE_CHOICES = [
         ('individual', _('فردی')),
+        ('legal', _('حقوقی')),
         ('business', _('تجاری')),
     ]
     

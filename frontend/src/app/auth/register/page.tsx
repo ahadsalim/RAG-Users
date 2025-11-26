@@ -310,14 +310,17 @@ export default function RegisterPage() {
 
             <div style={styles.inputGroup}>
               <div style={styles.inputGroupRow}>
-                <label style={styles.labelInline}>شماره تماس</label>
+                <label style={styles.labelInline}>شماره تلفن</label>
                 <input
                   type="tel"
                   value={phoneNumber}
                   onChange={(e) => setPhoneNumber(e.target.value)}
-                  placeholder="02188888888"
+                  placeholder="09123456789 یا 02112345678"
                   style={{...styles.input, flex: 1}}
                 />
+              </div>
+              <div style={{fontSize: '12px', color: theme === 'light' ? 'rgba(255,255,255,0.7)' : '#a0aec0', marginTop: '4px'}}>
+                موبایل یا تلفن ثابت با کد شهر
               </div>
             </div>
 
