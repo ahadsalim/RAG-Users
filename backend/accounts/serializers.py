@@ -9,57 +9,82 @@ import re
 User = get_user_model()
 
 
-class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
-    """Custom JWT token serializer with additional claims"""
+class CustomTokenObtainPairSerializer(serializers.Serializer):
+    """Custom JWT token serializer supporting both email and phone_number login"""
     
-    username_field = 'phone_number'
+    email = serializers.EmailField(required=False)
+    phone_number = serializers.CharField(required=False)
+    password = serializers.CharField(required=True, write_only=True)
     
     def validate(self, attrs):
-        data = super().validate(attrs)
+        # Handle both email and phone_number login
+        email = attrs.get('email')
+        phone_number = attrs.get('phone_number')
+        password = attrs.get('password')
+        
+        if not email and not phone_number:
+            raise serializers.ValidationError(_('Either email or phone_number is required.'))
+        
+        # Find user by email or phone_number
+        user = None
+        if email:
+            user = User.objects.filter(email=email).first()
+        elif phone_number:
+            user = User.objects.filter(phone_number=phone_number).first()
+        
+        # Validate credentials
+        if not user or not user.check_password(password):
+            raise serializers.ValidationError(_('Invalid credentials.'))
         
         # Check if account is locked
-        if self.user.is_account_locked():
+        if user.is_account_locked():
             raise serializers.ValidationError(_('Account is temporarily locked. Please try again later.'))
         
-        # Reset failed login attempts on successful login
-        if self.user.failed_login_attempts > 0:
-            self.user.failed_login_attempts = 0
-            self.user.save(update_fields=['failed_login_attempts'])
+        # Generate JWT tokens
+        from rest_framework_simplejwt.tokens import RefreshToken
+        refresh = RefreshToken.for_user(user)
         
-        # Add custom claims
+        # Add custom claims to tokens
+        refresh['email'] = user.email
+        refresh['username'] = user.username
+        refresh['organization_id'] = str(user.organization.id) if user.organization else None
+        
+        data = {
+            'refresh': str(refresh),
+            'access': str(refresh.access_token),
+        }
+        
+        # Reset failed login attempts on successful login
+        if user.failed_login_attempts > 0:
+            user.failed_login_attempts = 0
+            user.save(update_fields=['failed_login_attempts'])
+        
+        # Store user for view access
+        self.user = user
+        
+        # Add user data
         data['user'] = {
-            'id': str(self.user.id),
-            'email': self.user.email,
-            'username': self.user.username,
-            'first_name': self.user.first_name,
-            'last_name': self.user.last_name,
-            'phone_number': self.user.phone_number,
-            'is_superuser': self.user.is_superuser,
-            'is_staff': self.user.is_staff,
-            'user_type': self.user.user_type,
-            'company_name': self.user.company_name,
-            'avatar': self.user.avatar.url if self.user.avatar else None,
+            'id': str(user.id),
+            'email': user.email,
+            'username': user.username,
+            'first_name': user.first_name,
+            'last_name': user.last_name,
+            'phone_number': user.phone_number,
+            'is_superuser': user.is_superuser,
+            'is_staff': user.is_staff,
+            'user_type': user.user_type,
+            'company_name': user.company_name,
+            'avatar': user.avatar.url if user.avatar else None,
             'organization': {
-                'id': str(self.user.organization.id),
-                'name': self.user.organization.name,
-                'role': self.user.organization_role
-            } if self.user.organization else None,
-            'two_factor_enabled': self.user.two_factor_enabled,
-            'language': self.user.language,
+                'id': str(user.organization.id),
+                'name': user.organization.name,
+                'role': user.organization_role
+            } if user.organization else None,
+            'two_factor_enabled': user.two_factor_enabled,
+            'language': user.language,
         }
         
         return data
-    
-    @classmethod
-    def get_token(cls, user):
-        token = super().get_token(user)
-        
-        # Add custom claims to token
-        token['email'] = user.email
-        token['username'] = user.username
-        token['organization_id'] = str(user.organization.id) if user.organization else None
-        
-        return token
 
 
 class UserRegistrationSerializer(serializers.ModelSerializer):

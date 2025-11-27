@@ -45,11 +45,9 @@ export const useAuthStore = create<AuthState>()(
       login: async (email: string, password: string) => {
         set({ isLoading: true, error: null })
         try {
-          // Check if email is actually a phone number
-          const isPhoneNumber = /^(\+98|0)?9\d{9}$/.test(email);
-          
+          // Only accept email for legal users, not phone numbers
           const response = await axios.post(`${API_URL}/api/v1/auth/login/`, {
-            ...(isPhoneNumber ? { phone_number: email } : { email }),
+            email,
             password,
           })
           
