@@ -15,7 +15,8 @@ class CoreAPIService:
     """Service for interacting with Core RAG API."""
     
     def __init__(self):
-        self.base_url = getattr(settings, 'CORE_API_URL', 'https://core.tejarat.chat')
+        # استفاده از RAG_CORE_URL که در settings تعریف شده
+        self.base_url = getattr(settings, 'RAG_CORE_URL', getattr(settings, 'CORE_API_URL', 'http://localhost:7001'))
         self.api_key = getattr(settings, 'CORE_API_KEY', '')
         self.timeout = 120.0  # 2 minutes for long queries
         
