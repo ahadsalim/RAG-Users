@@ -95,22 +95,13 @@ class S3Service:
         # محاسبه زمان انقضا (24 ساعت)
         expires_at = datetime.utcnow() + timedelta(hours=24)
         
-        # Metadata
-        metadata = {
-            'user_id': str(user_id),
-            'original_filename': filename,
-            'upload_timestamp': datetime.utcnow().isoformat(),
-            'expiration_date': expires_at.isoformat()
-        }
-        
         try:
-            # آپلود به MinIO
+            # آپلود به S3
             self.s3_client.put_object(
                 Bucket=self.bucket_name,
                 Key=object_key,
                 Body=file_content,
-                ContentType=content_type,
-                Metadata=metadata
+                ContentType=content_type
             )
             
             logger.info(f"Uploaded file: {object_key} ({len(file_content)} bytes)")
