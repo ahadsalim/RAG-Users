@@ -804,7 +804,6 @@ export default function LoginPage() {
           <div style={styles.supportTitle}>تماس با پشتیبانی</div>
           <div style={styles.phoneNumbers}>
             <a href="tel:02191097737" style={styles.phoneNumber}>021-91097737</a>
-            <a href="tel:02188748436" style={styles.phoneNumber}>021-88748436</a>
           </div>
         </div>
       </div>
