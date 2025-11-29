@@ -3,8 +3,16 @@
 import { useState, useRef, useEffect, KeyboardEvent } from 'react'
 import clsx from 'clsx'
 
+interface FileUploadProgress {
+  file: File
+  progress: number
+  uploaded: boolean
+  error?: string
+  objectKey?: string
+}
+
 interface ChatInputProps {
-  onSendMessage: (message: string, files?: File[]) => void
+  onSendMessage: (message: string, fileAttachments?: any[]) => void
   isLoading: boolean
   disabled?: boolean
 }
@@ -12,6 +20,8 @@ interface ChatInputProps {
 export function ChatInput({ onSendMessage, isLoading, disabled }: ChatInputProps) {
   const [message, setMessage] = useState('')
   const [attachedFiles, setAttachedFiles] = useState<File[]>([])
+  const [uploadProgress, setUploadProgress] = useState<Map<string, FileUploadProgress>>(new Map())
+  const [isUploading, setIsUploading] = useState(false)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
   
@@ -23,11 +33,83 @@ export function ChatInput({ onSendMessage, isLoading, disabled }: ChatInputProps
     }
   }, [message])
   
-  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const uploadFileToServer = async (file: File): Promise<any> => {
+    const formData = new FormData()
+    formData.append('file', file)
+    
+    const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'
+    const token = localStorage.getItem('access_token')
+    
+    return new Promise((resolve, reject) => {
+      const xhr = new XMLHttpRequest()
+      
+      // Track upload progress
+      xhr.upload.addEventListener('progress', (e) => {
+        if (e.lengthComputable) {
+          const progress = Math.round((e.loaded / e.total) * 100)
+          setUploadProgress(prev => {
+            const newMap = new Map(prev)
+            const existing = newMap.get(file.name)
+            if (existing) {
+              newMap.set(file.name, { ...existing, progress })
+            }
+            return newMap
+          })
+        }
+      })
+      
+      xhr.addEventListener('load', () => {
+        if (xhr.status === 200) {
+          const response = JSON.parse(xhr.responseText)
+          setUploadProgress(prev => {
+            const newMap = new Map(prev)
+            newMap.set(file.name, {
+              file,
+              progress: 100,
+              uploaded: true,
+              objectKey: response.object_key
+            })
+            return newMap
+          })
+          resolve(response)
+        } else {
+          const error = 'خطا در آپلود فایل'
+          setUploadProgress(prev => {
+            const newMap = new Map(prev)
+            const existing = newMap.get(file.name)
+            if (existing) {
+              newMap.set(file.name, { ...existing, error })
+            }
+            return newMap
+          })
+          reject(new Error(error))
+        }
+      })
+      
+      xhr.addEventListener('error', () => {
+        const error = 'خطا در اتصال به سرور'
+        setUploadProgress(prev => {
+          const newMap = new Map(prev)
+          const existing = newMap.get(file.name)
+          if (existing) {
+            newMap.set(file.name, { ...existing, error })
+          }
+          return newMap
+        })
+        reject(new Error(error))
+      })
+      
+      xhr.open('POST', `${API_URL}/api/v1/chat/upload/`)
+      xhr.setRequestHeader('Authorization', `Bearer ${token}`)
+      xhr.send(formData)
+    })
+  }
+  
+  const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || [])
     
     // فیلتر فایل‌ها: فقط عکس، PDF و متن
-    const validFiles = files.filter(file => {
+    const validFiles = files.filter((file: File) => {
       const isImage = file.type.startsWith('image/')
       const isPDF = file.type === 'application/pdf'
       const isText = file.type === 'text/plain'
@@ -42,13 +124,38 @@ export function ChatInput({ onSendMessage, isLoading, disabled }: ChatInputProps
     }
     
     // حداکثر 10MB برای هر فایل
-    const oversizedFiles = validFiles.filter(file => file.size > 10 * 1024 * 1024)
+    const oversizedFiles = validFiles.filter((file: File) => file.size > 10 * 1024 * 1024)
     if (oversizedFiles.length > 0) {
       alert('حجم هر فایل نباید بیشتر از 10MB باشد')
       return
     }
     
     setAttachedFiles([...attachedFiles, ...validFiles])
+    
+    // شروع آپلود فوری
+    setIsUploading(true)
+    
+    // Initialize progress for each file
+    validFiles.forEach((file: File) => {
+      setUploadProgress(prev => {
+        const newMap = new Map(prev)
+        newMap.set(file.name, {
+          file,
+          progress: 0,
+          uploaded: false
+        })
+        return newMap
+      })
+    })
+    
+    // آپلود همه فایل‌ها به صورت موازی
+    try {
+      await Promise.all(validFiles.map((file: File) => uploadFileToServer(file)))
+    } catch (error) {
+      console.error('Error uploading files:', error)
+    } finally {
+      setIsUploading(false)
+    }
     
     // Reset input
     if (e.target) {
@@ -61,10 +168,21 @@ export function ChatInput({ onSendMessage, isLoading, disabled }: ChatInputProps
   }
   
   const handleSubmit = () => {
-    if ((message.trim() || attachedFiles.length > 0) && !isLoading && !disabled) {
-      onSendMessage(message, attachedFiles)
+    if ((message.trim() || attachedFiles.length > 0) && !isLoading && !disabled && !isUploading) {
+      // جمع‌آوری اطلاعات فایل‌های آپلود شده
+      const fileAttachments = Array.from(uploadProgress.values())
+        .filter(p => p.uploaded && p.objectKey)
+        .map(p => ({
+          filename: p.file.name,
+          minio_url: p.objectKey,
+          file_type: p.file.type,
+          size_bytes: p.file.size
+        }))
+      
+      onSendMessage(message, fileAttachments.length > 0 ? fileAttachments : undefined)
       setMessage('')
       setAttachedFiles([])
+      setUploadProgress(new Map())
     }
   }
   
@@ -84,30 +202,60 @@ export function ChatInput({ onSendMessage, isLoading, disabled }: ChatInputProps
   
   return (
     <div className="w-full">
-      {/* Attached Files Preview */}
+      {/* Attached Files Preview with Progress */}
       {attachedFiles.length > 0 && (
-        <div className="mb-2 flex flex-wrap gap-2">
-          {attachedFiles.map((file, index) => (
-            <div
-              key={index}
-              className="flex items-center gap-2 px-3 py-2 bg-gray-100 dark:bg-gray-700 rounded-lg text-sm"
-            >
-              <span>{getFileIcon(file)}</span>
-              <span className="text-gray-700 dark:text-gray-300 max-w-[150px] truncate">
-                {file.name}
-              </span>
-              <span className="text-gray-500 dark:text-gray-400 text-xs">
-                ({(file.size / 1024).toFixed(1)} KB)
-              </span>
-              <button
-                onClick={() => handleRemoveFile(index)}
-                className="text-red-500 hover:text-red-700 dark:hover:text-red-400 ml-1"
-                title="حذف"
+        <div className="mb-2 flex flex-col gap-2">
+          {attachedFiles.map((file, index) => {
+            const progress = uploadProgress.get(file.name)
+            return (
+              <div
+                key={index}
+                className="flex flex-col gap-1 px-3 py-2 bg-gray-100 dark:bg-gray-700 rounded-lg text-sm"
               >
-                ✕
-              </button>
-            </div>
-          ))}
+                <div className="flex items-center gap-2">
+                  <span>{getFileIcon(file)}</span>
+                  <span className="text-gray-700 dark:text-gray-300 max-w-[150px] truncate flex-1">
+                    {file.name}
+                  </span>
+                  <span className="text-gray-500 dark:text-gray-400 text-xs">
+                    ({(file.size / 1024).toFixed(1)} KB)
+                  </span>
+                  
+                  {/* Status Icons */}
+                  {progress?.uploaded && (
+                    <span className="text-green-500" title="آپلود شد">✓</span>
+                  )}
+                  {progress?.error && (
+                    <span className="text-red-500" title={progress.error}>✗</span>
+                  )}
+                  
+                  <button
+                    onClick={() => handleRemoveFile(index)}
+                    className="text-red-500 hover:text-red-700 dark:hover:text-red-400 ml-1"
+                    title="حذف"
+                    disabled={isUploading}
+                  >
+                    ✕
+                  </button>
+                </div>
+                
+                {/* Progress Bar */}
+                {progress && !progress.uploaded && !progress.error && (
+                  <div className="w-full bg-gray-300 dark:bg-gray-600 rounded-full h-1.5">
+                    <div
+                      className="bg-blue-500 h-1.5 rounded-full transition-all duration-300"
+                      style={{ width: `${progress.progress}%` }}
+                    />
+                  </div>
+                )}
+                
+                {/* Error Message */}
+                {progress?.error && (
+                  <span className="text-red-500 text-xs">{progress.error}</span>
+                )}
+              </div>
+            )
+          })}
         </div>
       )}
       

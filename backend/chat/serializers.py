@@ -134,6 +134,14 @@ class SharedConversationSerializer(serializers.ModelSerializer):
         ]
 
 
+class FileAttachmentSerializer(serializers.Serializer):
+    """Serializer برای فایل‌های ضمیمه"""
+    filename = serializers.CharField(required=True)
+    minio_url = serializers.CharField(required=True)  # object_key از MinIO
+    file_type = serializers.CharField(required=True)
+    size_bytes = serializers.IntegerField(required=False)
+
+
 class QueryRequestSerializer(serializers.Serializer):
     """Serializer برای درخواست پرسش"""
     query = serializers.CharField(required=True, min_length=3, max_length=5000)
@@ -146,6 +154,9 @@ class QueryRequestSerializer(serializers.Serializer):
     use_cache = serializers.BooleanField(default=True)
     use_reranking = serializers.BooleanField(default=True)
     stream = serializers.BooleanField(default=False)
+    
+    # فایل‌های ضمیمه (اختیاری)
+    file_attachments = FileAttachmentSerializer(many=True, required=False)
     
     # فیلترهای جستجو (اختیاری)
     filters = serializers.JSONField(required=False, default=dict)

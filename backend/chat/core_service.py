@@ -35,6 +35,7 @@ class CoreAPIService:
         stream: bool = False,
         filters: Optional[Dict[str, Any]] = None,
         user_preferences: Optional[Dict[str, Any]] = None,
+        file_attachments: Optional[list] = None,
     ) -> Dict[str, Any]:
         """
         Send a query to Core API.
@@ -47,11 +48,16 @@ class CoreAPIService:
             stream: Whether to stream the response
             filters: Optional filters (jurisdiction, category, date_range, etc.)
             user_preferences: User's custom preferences for response style
+            file_attachments: Optional list of file attachments from MinIO
             
         Returns:
             Query response with answer and sources
         """
-        url = f"{self.base_url}/api/v1/query/stream" if stream else f"{self.base_url}/api/v1/query/"
+        # Use v2 endpoint if file attachments are provided
+        if file_attachments:
+            url = f"{self.base_url}/api/v1/query/v2"
+        else:
+            url = f"{self.base_url}/api/v1/query/stream" if stream else f"{self.base_url}/api/v1/query/"
         
         payload = {
             "query": query,
@@ -67,6 +73,10 @@ class CoreAPIService:
         # Add user preferences if provided
         if user_preferences:
             payload["user_preferences"] = user_preferences
+        
+        # Add file attachments if provided
+        if file_attachments:
+            payload["file_attachments"] = file_attachments
         
         try:
             async with httpx.AsyncClient(timeout=self.timeout) as client:

@@ -14,6 +14,7 @@ from .views import (
     ChatTemplateViewSet,
     SharedConversationView
 )
+from .upload_views import upload_file, upload_multiple_files
 
 # Router اصلی
 router = DefaultRouter()
@@ -31,6 +32,10 @@ urlpatterns = [
     # Query endpoints
     path('query/', QueryView.as_view(), name='query'),
     path('query/stream/', StreamingQueryView.as_view(), name='query-stream'),
+    
+    # File upload endpoints
+    path('upload/', upload_file, name='upload-file'),
+    path('upload/multiple/', upload_multiple_files, name='upload-multiple-files'),
     
     # Shared conversations
     path('shared/<str:share_token>/', SharedConversationView.as_view(), name='shared-conversation'),

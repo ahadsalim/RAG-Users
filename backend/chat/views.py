@@ -144,6 +144,19 @@ class QueryView(APIView):
                     'format': user.preferences.get('format', 'paragraph')
                 }
             
+            # آماده‌سازی file_attachments برای ارسال به RAG Core
+            file_attachments = None
+            if 'file_attachments' in data and data['file_attachments']:
+                file_attachments = [
+                    {
+                        'filename': f['filename'],
+                        'minio_url': f['minio_url'],
+                        'file_type': f['file_type'],
+                        'size_bytes': f.get('size_bytes')
+                    }
+                    for f in data['file_attachments']
+                ]
+            
             # ارسال به RAG Core به صورت async
             loop = asyncio.new_event_loop()
             asyncio.set_event_loop(loop)
@@ -156,7 +169,8 @@ class QueryView(APIView):
                     language='fa',
                     stream=False,
                     filters=data.get('filters'),
-                    user_preferences=user_preferences
+                    user_preferences=user_preferences,
+                    file_attachments=file_attachments
                 )
             )
             

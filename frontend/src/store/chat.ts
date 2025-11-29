@@ -17,7 +17,7 @@ interface ChatState {
   archiveConversation: (conversationId: string) => Promise<void>
   pinConversation: (conversationId: string, pin: boolean) => Promise<void>
   
-  sendMessage: (content: string, conversationId?: string, mode?: string) => Promise<void>
+  sendMessage: (content: string, conversationId?: string, mode?: string, fileAttachments?: any[]) => Promise<void>
   loadMessages: (conversationId: string) => Promise<void>
   sendFeedback: (messageId: string, rating: number, feedback?: string) => Promise<void>
   
@@ -139,7 +139,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
     }
   },
   
-  sendMessage: async (content: string, conversationId?: string, mode = 'simple_explanation') => {
+  sendMessage: async (content: string, conversationId?: string, mode = 'simple_explanation', fileAttachments?: any[]) => {
     set({ isLoading: true, error: null })
     
     try {
@@ -180,12 +180,20 @@ export const useChatStore = create<ChatState>((set, get) => ({
         messages: [...state.messages, assistantMessage],
       }))
       
-      // Send to API
-      const response = await axios.post<QueryResponse>(`${API_URL}/api/v1/chat/query/`, {
+      // Prepare request payload
+      const payload: any = {
         query: content,
         conversation_id: conversationId || get().currentConversation?.id,
         response_mode: mode,
-      })
+      }
+      
+      // Add file attachments if provided
+      if (fileAttachments && fileAttachments.length > 0) {
+        payload.file_attachments = fileAttachments
+      }
+      
+      // Send to API
+      const response = await axios.post<QueryResponse>(`${API_URL}/api/v1/chat/query/`, payload)
       
       // Update conversation ID if new
       if (!conversationId && response.data.conversation_id) {

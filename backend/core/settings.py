@@ -488,3 +488,14 @@ JAZZMIN_UI_TWEAKS = {
         "success": "btn-success"
     }
 }
+
+# MinIO / S3 Configuration
+MINIO_ENDPOINT = config('MINIO_ENDPOINT', default='localhost:9000')
+MINIO_ACCESS_KEY = config('MINIO_ACCESS_KEY', default='minioadmin')
+MINIO_SECRET_KEY = config('MINIO_SECRET_KEY', default='minioadmin')
+MINIO_BUCKET_NAME = config('MINIO_BUCKET_NAME', default='shared-storage')
+MINIO_USE_SSL = config('MINIO_USE_SSL', default=False, cast=bool)
+MINIO_REGION = config('MINIO_REGION', default='us-east-1')
+
+# RAG Core Configuration
+RAG_CORE_URL = config('RAG_CORE_URL', default='http://localhost:7001')

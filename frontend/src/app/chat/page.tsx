@@ -61,18 +61,12 @@ export default function ChatPage() {
   }, [isHydrated, authLoading, isAuthenticated, router])
 
   // Handle sending message
-  const handleSendMessage = useCallback(async (content: string, files?: File[]) => {
-    if (!content.trim() && (!files || files.length === 0)) return
+  const handleSendMessage = useCallback(async (content: string, fileAttachments?: any[]) => {
+    if (!content.trim() && (!fileAttachments || fileAttachments.length === 0)) return
     
     try {
-      // TODO: Handle file uploads
-      if (files && files.length > 0) {
-        console.log('Files to upload:', files)
-        // For now, just send the text message
-        // File upload will be implemented later
-      }
-      
-      await sendMessage(content, currentConversation?.id)
+      // ارسال پیام با فایل‌های آپلود شده
+      await sendMessage(content, currentConversation?.id, undefined, fileAttachments)
     } catch (error) {
       console.error('Error sending message:', error)
     }
