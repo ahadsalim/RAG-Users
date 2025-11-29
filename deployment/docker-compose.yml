@@ -111,10 +111,8 @@ services:
       JWT_SECRET_KEY: ${JWT_SECRET_KEY}
       JWT_ALGORITHM: ${JWT_ALGORITHM:-HS256}
       # RAG Core
-      RAG_CORE_BASE_URL: ${RAG_CORE_BASE_URL:-https://api.example.com}
+      RAG_CORE_BASE_URL: ${RAG_CORE_BASE_URL}
       RAG_CORE_API_KEY: ${RAG_CORE_API_KEY}
-      CORE_API_URL: ${CORE_API_URL:-https://core.tejarat.chat}
-      CORE_API_KEY: ${CORE_API_KEY}
       # Email
       EMAIL_HOST: ${EMAIL_HOST:-smtp.gmail.com}
       EMAIL_PORT: ${EMAIL_PORT:-587}
@@ -182,8 +180,8 @@ services:
       SECRET_KEY: ${SECRET_KEY:-django-insecure-w)rw6j5bfnwl$$woa=)i3dgw6bv#*x(y0gew3n7ado3-jj=(yk6}
       JWT_SECRET_KEY: ${JWT_SECRET_KEY}
       JWT_ALGORITHM: ${JWT_ALGORITHM:-HS256}
-      CORE_API_URL: ${CORE_API_URL:-https://core.tejarat.chat}
-      CORE_API_KEY: ${CORE_API_KEY}
+      RAG_CORE_BASE_URL: ${RAG_CORE_BASE_URL}
+      RAG_CORE_API_KEY: ${RAG_CORE_API_KEY}
     volumes:
       - ../backend:/app
     networks:
@@ -215,8 +213,8 @@ services:
       SECRET_KEY: ${SECRET_KEY:-django-insecure-w)rw6j5bfnwl$$woa=)i3dgw6bv#*x(y0gew3n7ado3-jj=(yk6}
       JWT_SECRET_KEY: ${JWT_SECRET_KEY}
       JWT_ALGORITHM: ${JWT_ALGORITHM:-HS256}
-      CORE_API_URL: ${CORE_API_URL:-https://core.tejarat.chat}
-      CORE_API_KEY: ${CORE_API_KEY}
+      RAG_CORE_BASE_URL: ${RAG_CORE_BASE_URL}
+      RAG_CORE_API_KEY: ${RAG_CORE_API_KEY}
     volumes:
       - ../backend:/app
       - celerybeat_schedule:/app/schedule

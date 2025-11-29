@@ -14,7 +14,7 @@ django.setup()
 
 from django.conf import settings
 from io import BytesIO
-from core.storage import MinIOService
+from core.storage import S3Service
 
 print("="*80)
 print("🚀 تست کامل سیستم RAG Users")
@@ -28,14 +28,14 @@ print("="*80)
 try:
     start = time.time()
     
-    minio = MinIOService()
+    s3 = S3Service()
     print(f"✅ اتصال به S3: {settings.S3_ENDPOINT_URL}")
     print(f"   Bucket: {settings.S3_TEMP_BUCKET}")
     
     # آپلود فایل تستی
     test_content = b"Test file for RAG system - " + os.urandom(100)
     
-    result = minio.upload_file(
+    result = s3.upload_file(
         file_content=test_content,
         filename="test_upload.txt",
         user_id="test_user_123",
@@ -64,7 +64,7 @@ async def test_rag():
     try:
         start = time.time()
         
-        url = settings.RAG_CORE_URL
+        url = settings.RAG_CORE_BASE_URL
         api_key = settings.RAG_CORE_API_KEY
         
         if not api_key:

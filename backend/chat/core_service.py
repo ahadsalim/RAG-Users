@@ -15,9 +15,9 @@ class CoreAPIService:
     """Service for interacting with Core RAG API."""
     
     def __init__(self):
-        # استفاده از RAG_CORE_URL که در settings تعریف شده
-        self.base_url = getattr(settings, 'RAG_CORE_URL', getattr(settings, 'CORE_API_URL', 'http://localhost:7001'))
-        self.api_key = getattr(settings, 'CORE_API_KEY', '')
+        # استفاده از RAG_CORE_BASE_URL که در settings تعریف شده
+        self.base_url = settings.RAG_CORE_BASE_URL
+        self.api_key = settings.RAG_CORE_API_KEY
         self.timeout = 120.0  # 2 minutes for long queries
         
     def _get_headers(self, token: str) -> Dict[str, str]:

@@ -8,7 +8,7 @@ from rest_framework.response import Response
 from django.core.files.uploadedfile import UploadedFile
 import logging
 
-from core.storage import minio_service
+from core.storage import s3_service
 
 logger = logging.getLogger(__name__)
 
@@ -80,8 +80,8 @@ def upload_file(request):
         # Read file content
         file_content = file.read()
         
-        # Upload to MinIO
-        result = minio_service.upload_file(
+        # Upload to S3
+        result = s3_service.upload_file(
             file_content=file_content,
             filename=file.name,
             user_id=str(request.user.id),

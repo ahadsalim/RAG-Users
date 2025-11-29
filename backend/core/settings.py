@@ -301,9 +301,7 @@ ZARINPAL_SANDBOX = config('ZARINPAL_SANDBOX', default=True, cast=bool)
 STRIPE_PUBLIC_KEY = config('STRIPE_PUBLIC_KEY', default='')
 STRIPE_SECRET_KEY = config('STRIPE_SECRET_KEY', default='')
 
-# RAG Core API Configuration
-RAG_CORE_BASE_URL = config('RAG_CORE_BASE_URL', default='https://core.app.ir')
-RAG_CORE_API_KEY = config('RAG_CORE_API_KEY', default='')
+# RAG Core API Configuration (moved to end of file)
 
 # Security Settings
 SECURE_SSL_REDIRECT = config('SECURE_SSL_REDIRECT', default=False, cast=bool)
@@ -376,10 +374,11 @@ BALE_USERNAME = config('BALE_USERNAME', default='')
 BALE_PASSWORD = config('BALE_PASSWORD', default='')
 
 # ===========================
-# Core RAG API Configuration
+# Core RAG API Configuration (deprecated - use RAG_CORE_BASE_URL instead)
 # ===========================
-CORE_API_URL = config('CORE_API_URL', default='https://core.tejarat.chat')
-CORE_API_KEY = config('CORE_API_KEY', default='')
+# These are kept for backward compatibility with celery tasks
+CORE_API_URL = config('CORE_API_URL', default=config('RAG_CORE_BASE_URL', default=''))
+CORE_API_KEY = config('CORE_API_KEY', default=config('RAG_CORE_API_KEY', default=''))
 
 # ===========================
 # Jazzmin Admin Configuration
@@ -489,22 +488,14 @@ JAZZMIN_UI_TWEAKS = {
     }
 }
 
-# MinIO / S3 Configuration
-# Support both S3_* (new) and MINIO_* (legacy) variable names
-S3_ENDPOINT_URL = config('S3_ENDPOINT_URL', default=config('MINIO_ENDPOINT', default='https://s3.tejarat.chat'))
-S3_ACCESS_KEY_ID = config('S3_ACCESS_KEY_ID', default=config('MINIO_ACCESS_KEY', default='minioadmin'))
-S3_SECRET_ACCESS_KEY = config('S3_SECRET_ACCESS_KEY', default=config('MINIO_SECRET_KEY', default='minioadmin'))
-S3_TEMP_BUCKET = config('S3_TEMP_BUCKET', default=config('MINIO_BUCKET_NAME', default='temp-userfile'))
-S3_USE_SSL = config('S3_USE_SSL', default=config('MINIO_USE_SSL', default=True, cast=bool), cast=bool)
-S3_REGION = config('S3_REGION', default=config('MINIO_REGION', default='us-east-1'))
+# S3 Configuration
+S3_ENDPOINT_URL = config('S3_ENDPOINT_URL', default='')
+S3_ACCESS_KEY_ID = config('S3_ACCESS_KEY_ID', default='')
+S3_SECRET_ACCESS_KEY = config('S3_SECRET_ACCESS_KEY', default='')
+S3_TEMP_BUCKET = config('S3_TEMP_BUCKET', default='')
+S3_USE_SSL = config('S3_USE_SSL', default=True, cast=bool)
+S3_REGION = config('S3_REGION', default='us-east-1')
 
-# Legacy aliases for backward compatibility
-MINIO_ENDPOINT = S3_ENDPOINT_URL
-MINIO_ACCESS_KEY = S3_ACCESS_KEY_ID
-MINIO_SECRET_KEY = S3_SECRET_ACCESS_KEY
-MINIO_BUCKET_NAME = S3_TEMP_BUCKET
-MINIO_USE_SSL = S3_USE_SSL
-MINIO_REGION = S3_REGION
-
-# RAG Core Configuration (use RAG_CORE_BASE_URL as primary, RAG_CORE_URL as fallback)
-RAG_CORE_URL = config('RAG_CORE_BASE_URL', default=config('RAG_CORE_URL', default='https://core.tejarat.chat'))
+# RAG Core Configuration
+RAG_CORE_BASE_URL = config('RAG_CORE_BASE_URL', default='')
+RAG_CORE_API_KEY = config('RAG_CORE_API_KEY', default='')

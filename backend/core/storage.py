@@ -1,8 +1,9 @@
 """
-MinIO Storage Service for file uploads.
+S3 Storage Service for file uploads.
 """
 import boto3
 from botocore.exceptions import ClientError
+from botocore.config import Config
 from django.conf import settings
 from datetime import datetime, timedelta
 import uuid
@@ -11,25 +12,29 @@ import logging
 logger = logging.getLogger(__name__)
 
 
-class MinIOService:
-    """سرویس مدیریت فایل در MinIO."""
+class S3Service:
+    """سرویس مدیریت فایل در S3."""
     
     def __init__(self):
-        """Initialize MinIO client."""
-        endpoint_url = settings.MINIO_ENDPOINT
-        if not endpoint_url.startswith('http'):
-            protocol = 'https' if settings.MINIO_USE_SSL else 'http'
-            endpoint_url = f'{protocol}://{endpoint_url}'
+        """Initialize S3 client."""
+        endpoint_url = settings.S3_ENDPOINT_URL
+        
+        # Configure boto3 client with signature version
+        boto_config = Config(
+            signature_version='s3v4',
+            s3={'addressing_style': 'path'}
+        )
             
         self.s3_client = boto3.client(
             's3',
             endpoint_url=endpoint_url,
-            aws_access_key_id=settings.MINIO_ACCESS_KEY,
-            aws_secret_access_key=settings.MINIO_SECRET_KEY,
-            region_name=settings.MINIO_REGION,
-            use_ssl=settings.MINIO_USE_SSL
+            aws_access_key_id=settings.S3_ACCESS_KEY_ID,
+            aws_secret_access_key=settings.S3_SECRET_ACCESS_KEY,
+            region_name=settings.S3_REGION,
+            use_ssl=settings.S3_USE_SSL,
+            config=boto_config
         )
-        self.bucket_name = settings.MINIO_BUCKET_NAME
+        self.bucket_name = settings.S3_TEMP_BUCKET
         self.temp_prefix = "temp_uploads/"
         
         # Create bucket if it doesn't exist
@@ -174,4 +179,4 @@ class MinIOService:
 
 
 # سرویس سراسری
-minio_service = MinIOService()
+s3_service = S3Service()
