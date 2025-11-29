@@ -175,20 +175,20 @@ class QueryView(APIView):
             )
             
             # به‌روزرسانی conversation با ID از RAG Core
-            if not conversation.rag_conversation_id and 'metadata' in response:
-                conversation.rag_conversation_id = response['metadata'].get('conversation_id')
+            if not conversation.rag_conversation_id and 'conversation_id' in response:
+                conversation.rag_conversation_id = response.get('conversation_id')
                 conversation.save(update_fields=['rag_conversation_id'])
             
-            # به‌روزرسانی پیام assistant
+            # به‌روزرسانی پیام assistant - مطابق با مستندات جدید RAG Core
             assistant_message.content = response.get('answer', '')
             assistant_message.sources = response.get('sources', [])
             assistant_message.chunks = response.get('chunks', [])
             assistant_message.status = 'completed'
-            assistant_message.tokens = response.get('metadata', {}).get('total_tokens', 0)
-            assistant_message.processing_time_ms = response.get('metadata', {}).get('processing_time_ms', 0)
-            assistant_message.model_used = response.get('metadata', {}).get('model_used', '')
-            assistant_message.cached = response.get('metadata', {}).get('cached', False)
-            assistant_message.rag_message_id = response.get('metadata', {}).get('message_id', '')
+            assistant_message.tokens = response.get('tokens_used', 0)
+            assistant_message.processing_time_ms = response.get('processing_time_ms', 0)
+            assistant_message.model_used = response.get('model_used', '')
+            assistant_message.cached = response.get('cached', False)
+            assistant_message.rag_message_id = response.get('message_id', '')
             assistant_message.save()
             
             # به‌روزرسانی آمار conversation
@@ -233,20 +233,23 @@ class QueryView(APIView):
                 # )
                 pass
             
-            # آماده‌سازی پاسخ
+            # آماده‌سازی پاسخ - مطابق با فرمت RAG Core
             return Response({
                 'conversation_id': conversation.id,
                 'message_id': assistant_message.id,
                 'answer': assistant_message.content,
                 'sources': assistant_message.sources,
                 'chunks': assistant_message.chunks,
+                'tokens_used': assistant_message.tokens,
+                'processing_time_ms': assistant_message.processing_time_ms,
+                'cached': assistant_message.cached,
+                'files_processed': response.get('files_processed', 0),
                 'metadata': {
                     'tokens': assistant_message.tokens,
                     'processing_time_ms': assistant_message.processing_time_ms,
                     'model_used': assistant_message.model_used,
                     'cached': assistant_message.cached
-                },
-                'user_info': response.get('user_info', {})
+                }
             }, status=status.HTTP_200_OK)
             
         except RateLimitException as e:

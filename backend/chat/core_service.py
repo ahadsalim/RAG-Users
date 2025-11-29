@@ -53,18 +53,25 @@ class CoreAPIService:
         Returns:
             Query response with answer and sources
         """
-        # Use v2 endpoint if file attachments are provided
-        if file_attachments:
-            url = f"{self.base_url}/api/v1/query/v2"
-        else:
-            url = f"{self.base_url}/api/v1/query/stream" if stream else f"{self.base_url}/api/v1/query/"
+        # همیشه از endpoint اصلی استفاده می‌کنیم (v2 حذف شده)
+        url = f"{self.base_url}/api/v1/query/stream" if stream else f"{self.base_url}/api/v1/query/"
         
+        # ساخت payload مطابق با مستندات RAG Core
         payload = {
             "query": query,
-            "conversation_id": conversation_id,
             "language": language,
-            "stream": stream,
+            "max_results": 5,  # پیش‌فرض
+            "use_cache": True,
+            "use_reranking": True,
         }
+        
+        # Add conversation_id if provided
+        if conversation_id:
+            payload["conversation_id"] = conversation_id
+        
+        # Add file attachments if provided (حداکثر 5 فایل)
+        if file_attachments and len(file_attachments) > 0:
+            payload["file_attachments"] = file_attachments[:5]  # محدود به 5 فایل
         
         # Add filters if provided
         if filters:
@@ -73,10 +80,6 @@ class CoreAPIService:
         # Add user preferences if provided
         if user_preferences:
             payload["user_preferences"] = user_preferences
-        
-        # Add file attachments if provided
-        if file_attachments:
-            payload["file_attachments"] = file_attachments
         
         try:
             async with httpx.AsyncClient(timeout=self.timeout) as client:

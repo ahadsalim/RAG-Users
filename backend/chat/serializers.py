@@ -143,20 +143,24 @@ class FileAttachmentSerializer(serializers.Serializer):
 
 
 class QueryRequestSerializer(serializers.Serializer):
-    """Serializer برای درخواست پرسش"""
+    """Serializer برای درخواست پرسش - مطابق با مستندات RAG Core"""
     query = serializers.CharField(required=True, min_length=3, max_length=5000)
-    conversation_id = serializers.UUIDField(required=False, allow_null=True)
-    response_mode = serializers.ChoiceField(
-        choices=['simple_explanation', 'legal_reference', 'action_checklist'],
-        default='simple_explanation'
-    )
+    language = serializers.CharField(default='fa', required=False)
     max_results = serializers.IntegerField(default=5, min_value=1, max_value=20)
+    conversation_id = serializers.UUIDField(required=False, allow_null=True)
     use_cache = serializers.BooleanField(default=True)
     use_reranking = serializers.BooleanField(default=True)
-    stream = serializers.BooleanField(default=False)
     
-    # فایل‌های ضمیمه (اختیاری)
-    file_attachments = FileAttachmentSerializer(many=True, required=False)
+    # فایل‌های ضمیمه (اختیاری - حداکثر 5)
+    file_attachments = FileAttachmentSerializer(many=True, required=False, allow_null=True)
+    
+    # فیلدهای داخلی (برای سیستم کاربران)
+    response_mode = serializers.ChoiceField(
+        choices=['simple_explanation', 'legal_reference', 'action_checklist'],
+        default='simple_explanation',
+        required=False
+    )
+    stream = serializers.BooleanField(default=False, required=False)
     
     # فیلترهای جستجو (اختیاری)
     filters = serializers.JSONField(required=False, default=dict)
@@ -166,6 +170,12 @@ class QueryRequestSerializer(serializers.Serializer):
     
     # Context اضافی
     context = serializers.JSONField(required=False, default=dict)
+    
+    def validate_file_attachments(self, value):
+        """اعتبارسنجی فایل‌های ضمیمه - حداکثر 5 فایل"""
+        if value and len(value) > 5:
+            raise serializers.ValidationError('حداکثر 5 فایل مجاز است')
+        return value
     
     def validate_query(self, value):
         """اعتبارسنجی متن سوال"""
