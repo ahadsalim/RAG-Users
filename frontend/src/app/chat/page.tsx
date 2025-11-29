@@ -61,11 +61,18 @@ export default function ChatPage() {
   }, [isHydrated, authLoading, isAuthenticated, router])
 
   // Handle sending message
-  const handleSendMessage = useCallback(async (content: string, mode?: string) => {
-    if (!content.trim()) return
+  const handleSendMessage = useCallback(async (content: string, files?: File[]) => {
+    if (!content.trim() && (!files || files.length === 0)) return
     
     try {
-      await sendMessage(content, currentConversation?.id, mode)
+      // TODO: Handle file uploads
+      if (files && files.length > 0) {
+        console.log('Files to upload:', files)
+        // For now, just send the text message
+        // File upload will be implemented later
+      }
+      
+      await sendMessage(content, currentConversation?.id)
     } catch (error) {
       console.error('Error sending message:', error)
     }
