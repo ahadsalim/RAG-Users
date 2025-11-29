@@ -1,0 +1,35 @@
+# ===========================
+# پیشنهاد: جایگزینی متغیرهای خطوط 152-164 در .env
+# ===========================
+
+# ❌ حذف کنید (استفاده نمی‌شوند):
+# BACKUP_RETENTION_DAYS=30
+# BACKUP_S3_BUCKET=
+# BACKUP_S3_ACCESS_KEY=
+# BACKUP_S3_SECRET_KEY=...
+# BACKUP_S3_REGION=us-east-1
+# BACKUP_LOCAL_PATH=/srv/backups
+# S3_ENDPOINT_URL=https://storage.tejarat.chat:9000
+# S3_ACCESS_KEY_ID=eH01EjH7zdlIHEzlJ9Sb
+# S3_SECRET_ACCESS_KEY=5mswuxXYnZtNHSWhEDw8WUe51ztiOTlRCQa40r7i
+# S3_REGION=us-east-1
+# S3_USE_SSL=true
+
+# ✅ اضافه کنید (استفاده می‌شود در storage.py):
+# ===========================
+# MinIO Configuration
+# ===========================
+MINIO_ENDPOINT=storage.tejarat.chat:9000
+MINIO_ACCESS_KEY=eH01EjH7zdlIHEzlJ9Sb
+MINIO_SECRET_KEY=5mswuxXYnZtNHSWhEDw8WUe51ztiOTlRCQa40r7i
+MINIO_BUCKET_NAME=shared-storage
+MINIO_USE_SSL=true
+MINIO_REGION=us-east-1
+
+# ===========================
+# دستور اعمال تغییرات:
+# ===========================
+# 1. حذف خطوط 152-164 از /srv/deployment/.env
+# 2. اضافه کردن خطوط بالا به انتهای فایل
+# 3. Restart backend container:
+#    docker-compose restart backend
