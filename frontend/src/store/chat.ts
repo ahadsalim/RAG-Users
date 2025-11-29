@@ -192,8 +192,14 @@ export const useChatStore = create<ChatState>((set, get) => ({
         payload.file_attachments = fileAttachments
       }
       
-      // Send to API
-      const response = await axios.post<QueryResponse>(`${API_URL}/api/v1/chat/query/`, payload)
+      // Send to API with 2 minute timeout
+      const response = await axios.post<QueryResponse>(
+        `${API_URL}/api/v1/chat/query/`, 
+        payload,
+        {
+          timeout: 120000  // 2 minutes (120 seconds)
+        }
+      )
       
       // Update conversation ID if new
       if (!conversationId && response.data.conversation_id) {
@@ -229,6 +235,21 @@ export const useChatStore = create<ChatState>((set, get) => ({
       // Reload conversations to update sidebar
       get().loadConversations()
     } catch (error: any) {
+      // تشخیص نوع خطا
+      let errorMessage = 'خطا در ارسال پیام'
+      
+      if (error.code === 'ECONNABORTED' || error.message?.includes('timeout')) {
+        errorMessage = 'زمان پردازش تمام شد. لطفاً دوباره تلاش کنید.'
+      } else if (error.response?.status === 504) {
+        errorMessage = 'زمان پردازش تمام شد. سرور پاسخ نداد.'
+      } else if (error.response?.status === 503) {
+        errorMessage = 'سرور پردازش در دسترس نیست'
+      } else if (error.response?.data?.error) {
+        errorMessage = error.response.data.error
+      } else if (error.response?.data?.detail) {
+        errorMessage = error.response.data.detail
+      }
+      
       // Update assistant message with error
       set(state => ({
         messages: state.messages.map((msg, idx, arr) =>
@@ -236,12 +257,12 @@ export const useChatStore = create<ChatState>((set, get) => ({
             ? {
                 ...msg,
                 status: 'failed',
-                error_message: error.response?.data?.detail || 'خطا در ارسال پیام',
+                error_message: errorMessage,
               }
             : msg
         ),
         isLoading: false,
-        error: error.response?.data?.detail || 'خطا در ارسال پیام',
+        error: errorMessage,
       }))
     }
   },

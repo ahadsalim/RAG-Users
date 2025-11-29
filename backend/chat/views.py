@@ -14,6 +14,7 @@ import asyncio
 import json
 import uuid
 import logging
+import httpx
 from typing import AsyncGenerator
 
 from .models import (
@@ -268,8 +269,26 @@ class QueryView(APIView):
                 {'error': str(e), 'code': 'rag_core_error'},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
+        except httpx.TimeoutException as e:
+            logger.error(f"RAG Core timeout: {str(e)}")
+            assistant_message.status = 'failed'
+            assistant_message.error_message = 'زمان پردازش تمام شد. لطفاً دوباره تلاش کنید.'
+            assistant_message.save()
+            return Response(
+                {'error': 'زمان پردازش تمام شد. لطفاً دوباره تلاش کنید.', 'code': 'timeout'},
+                status=status.HTTP_504_GATEWAY_TIMEOUT
+            )
+        except httpx.ConnectError as e:
+            logger.error(f"Cannot connect to RAG Core: {str(e)}")
+            assistant_message.status = 'failed'
+            assistant_message.error_message = 'خطا در اتصال به سرور پردازش'
+            assistant_message.save()
+            return Response(
+                {'error': 'خطا در اتصال به سرور پردازش', 'code': 'connection_error'},
+                status=status.HTTP_503_SERVICE_UNAVAILABLE
+            )
         except Exception as e:
-            logger.error(f"Unexpected error in query: {str(e)}")
+            logger.error(f"Unexpected error in query: {str(e)}", exc_info=True)
             assistant_message.status = 'failed'
             assistant_message.error_message = str(e)
             assistant_message.save()
