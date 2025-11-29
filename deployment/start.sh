@@ -291,6 +291,34 @@ if [ ! -f "$ENV_FILE" ]; then
         read -p "BALE_USERNAME (leave empty if you don't have it yet): " BALE_USERNAME
         read -p "BALE_PASSWORD (leave empty if you don't have it yet): " BALE_PASSWORD
         
+        # Ask for S3/MinIO configuration
+        echo ""
+        print_info "S3/MinIO configuration (برای آپلود فایل)"
+        print_warning "اگر S3/MinIO ندارید، Enter بزنید. بعداً در .env اضافه کنید."
+        read -p "S3_ENDPOINT_URL (e.g. https://s3.yourdomain.com) [press Enter to skip]: " S3_ENDPOINT_URL
+        if [ -n "$S3_ENDPOINT_URL" ]; then
+            read -p "S3_ACCESS_KEY_ID: " S3_ACCESS_KEY_ID
+            read -p "S3_SECRET_ACCESS_KEY: " S3_SECRET_ACCESS_KEY
+            read -p "S3_TEMP_BUCKET [temp-userfile]: " S3_TEMP_BUCKET
+            if [ -z "$S3_TEMP_BUCKET" ]; then
+                S3_TEMP_BUCKET="temp-userfile"
+            fi
+            read -p "S3_USE_SSL (true/false) [true]: " S3_USE_SSL
+            if [ -z "$S3_USE_SSL" ]; then
+                S3_USE_SSL="true"
+            fi
+            S3_REGION="us-east-1"
+            print_success "S3/MinIO configuration saved."
+        else
+            print_info "S3/MinIO skipped. Add these to .env later:"
+            print_info "  S3_ENDPOINT_URL=https://s3.yourdomain.com"
+            print_info "  S3_ACCESS_KEY_ID=your_access_key"
+            print_info "  S3_SECRET_ACCESS_KEY=your_secret_key"
+            print_info "  S3_TEMP_BUCKET=temp-userfile"
+            print_info "  S3_USE_SSL=true"
+            print_info "  S3_REGION=us-east-1"
+        fi
+        
         # Ask for Backend URL configuration
         echo ""
         print_info "Backend URL configuration"
@@ -381,6 +409,21 @@ if [ ! -f "$ENV_FILE" ]; then
             BACKEND_URL_SED=$(escape_sed_replacement "$BACKEND_URL")
             sed -i "s|BACKEND_URL=.*|BACKEND_URL=${BACKEND_URL_SED}|g" "$ENV_FILE"
         fi
+        # S3/MinIO configuration
+        if [ -n "$S3_ENDPOINT_URL" ]; then
+            S3_ENDPOINT_URL_SED=$(escape_sed_replacement "$S3_ENDPOINT_URL")
+            S3_ACCESS_KEY_ID_SED=$(escape_sed_replacement "$S3_ACCESS_KEY_ID")
+            S3_SECRET_ACCESS_KEY_SED=$(escape_sed_replacement "$S3_SECRET_ACCESS_KEY")
+            S3_TEMP_BUCKET_SED=$(escape_sed_replacement "$S3_TEMP_BUCKET")
+            S3_USE_SSL_SED=$(escape_sed_replacement "$S3_USE_SSL")
+            S3_REGION_SED=$(escape_sed_replacement "$S3_REGION")
+            sed -i "s|S3_ENDPOINT_URL=.*|S3_ENDPOINT_URL=${S3_ENDPOINT_URL_SED}|g" "$ENV_FILE"
+            sed -i "s|S3_ACCESS_KEY_ID=.*|S3_ACCESS_KEY_ID=${S3_ACCESS_KEY_ID_SED}|g" "$ENV_FILE"
+            sed -i "s|S3_SECRET_ACCESS_KEY=.*|S3_SECRET_ACCESS_KEY=${S3_SECRET_ACCESS_KEY_SED}|g" "$ENV_FILE"
+            sed -i "s|S3_TEMP_BUCKET=.*|S3_TEMP_BUCKET=${S3_TEMP_BUCKET_SED}|g" "$ENV_FILE"
+            sed -i "s|S3_USE_SSL=.*|S3_USE_SSL=${S3_USE_SSL_SED}|g" "$ENV_FILE"
+            sed -i "s|S3_REGION=.*|S3_REGION=${S3_REGION_SED}|g" "$ENV_FILE"
+        fi
         
         print_success ".env file created with secure passwords."
         
@@ -396,10 +439,24 @@ print_info ""
 print_info "⚠️  Please make sure the following values are correctly set in ${ENV_FILE}:"
 echo "  1. DOMAIN (your domain)"
 echo "  2. RAG_CORE_BASE_URL and RAG_CORE_API_KEY (central system API)"
-echo "  3. Email settings (SMTP configuration)"
-echo "  4. Payment gateways (e.g. Zarinpal/Stripe)"
-echo "  5. SMS (Kavenegar) and Bale messenger settings"
+echo "  3. MinIO configuration (MINIO_ENDPOINT, MINIO_ACCESS_KEY, etc.)"
+echo "     → Location in .env: Search for 'MinIO Configuration'"
+echo "  4. Email settings (SMTP configuration)"
+echo "  5. Payment gateways (e.g. Zarinpal/Stripe)"
+echo "  6. SMS (Kavenegar) and Bale messenger settings"
 echo ""
+if [ -z "$S3_ENDPOINT_URL" ]; then
+    print_warning "⚠️  S3/MinIO was not configured during installation!"
+    print_info "To add S3/MinIO later, edit ${ENV_FILE} and add:"
+    print_info "  S3_ENDPOINT_URL=https://s3.yourdomain.com"
+    print_info "  S3_ACCESS_KEY_ID=your_access_key"
+    print_info "  S3_SECRET_ACCESS_KEY=your_secret_key"
+    print_info "  S3_TEMP_BUCKET=temp-userfile"
+    print_info "  S3_USE_SSL=true"
+    print_info "  S3_REGION=us-east-1"
+    print_info "Then restart: cd $DEPLOYMENT_DIR && docker-compose restart backend"
+    echo ""
+fi
 read -p "Have you reviewed and confirmed these values? (y/n): " -r
 if [[ ! $REPLY =~ ^[Yy]$ ]]; then
     print_warning "Continuing without confirmation. You can edit ${ENV_FILE} later and restart services."

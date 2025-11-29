@@ -490,12 +490,21 @@ JAZZMIN_UI_TWEAKS = {
 }
 
 # MinIO / S3 Configuration
-MINIO_ENDPOINT = config('MINIO_ENDPOINT', default='localhost:9000')
-MINIO_ACCESS_KEY = config('MINIO_ACCESS_KEY', default='minioadmin')
-MINIO_SECRET_KEY = config('MINIO_SECRET_KEY', default='minioadmin')
-MINIO_BUCKET_NAME = config('MINIO_BUCKET_NAME', default='shared-storage')
-MINIO_USE_SSL = config('MINIO_USE_SSL', default=False, cast=bool)
-MINIO_REGION = config('MINIO_REGION', default='us-east-1')
+# Support both S3_* (new) and MINIO_* (legacy) variable names
+S3_ENDPOINT_URL = config('S3_ENDPOINT_URL', default=config('MINIO_ENDPOINT', default='https://s3.tejarat.chat'))
+S3_ACCESS_KEY_ID = config('S3_ACCESS_KEY_ID', default=config('MINIO_ACCESS_KEY', default='minioadmin'))
+S3_SECRET_ACCESS_KEY = config('S3_SECRET_ACCESS_KEY', default=config('MINIO_SECRET_KEY', default='minioadmin'))
+S3_TEMP_BUCKET = config('S3_TEMP_BUCKET', default=config('MINIO_BUCKET_NAME', default='temp-userfile'))
+S3_USE_SSL = config('S3_USE_SSL', default=config('MINIO_USE_SSL', default=True, cast=bool), cast=bool)
+S3_REGION = config('S3_REGION', default=config('MINIO_REGION', default='us-east-1'))
 
-# RAG Core Configuration
-RAG_CORE_URL = config('RAG_CORE_URL', default='http://localhost:7001')
+# Legacy aliases for backward compatibility
+MINIO_ENDPOINT = S3_ENDPOINT_URL
+MINIO_ACCESS_KEY = S3_ACCESS_KEY_ID
+MINIO_SECRET_KEY = S3_SECRET_ACCESS_KEY
+MINIO_BUCKET_NAME = S3_TEMP_BUCKET
+MINIO_USE_SSL = S3_USE_SSL
+MINIO_REGION = S3_REGION
+
+# RAG Core Configuration (use RAG_CORE_BASE_URL as primary, RAG_CORE_URL as fallback)
+RAG_CORE_URL = config('RAG_CORE_BASE_URL', default=config('RAG_CORE_URL', default='https://core.tejarat.chat'))

@@ -49,6 +49,9 @@ class MinIOService:
                 except Exception as create_error:
                     logger.error(f"Failed to create bucket: {create_error}")
                     raise
+            elif error_code == '403':
+                # Bucket exists but we don't have permission to check - that's OK
+                logger.warning(f"Bucket {self.bucket_name} exists but access check forbidden (403) - continuing anyway")
             else:
                 logger.error(f"Error checking bucket: {e}")
                 raise
