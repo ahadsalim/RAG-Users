@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect, KeyboardEvent } from 'react'
 import clsx from 'clsx'
+import { useAuthStore } from '@/store/auth'
 
 interface FileUploadProgress {
   file: File
@@ -24,6 +25,7 @@ export function ChatInput({ onSendMessage, isLoading, disabled }: ChatInputProps
   const [isUploading, setIsUploading] = useState(false)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const { accessToken } = useAuthStore()
   
   useEffect(() => {
     // Auto-resize textarea
@@ -38,7 +40,7 @@ export function ChatInput({ onSendMessage, isLoading, disabled }: ChatInputProps
     formData.append('file', file)
     
     const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'
-    const token = localStorage.getItem('access_token')
+    const token = accessToken
     
     return new Promise((resolve, reject) => {
       const xhr = new XMLHttpRequest()
