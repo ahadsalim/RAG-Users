@@ -413,6 +413,44 @@ const SubscriptionTab: React.FC<{ subscription: SubscriptionInfo | null; loading
 const PreferencesTab: React.FC<{ settings: UserSettings; setSettings: React.Dispatch<React.SetStateAction<UserSettings>> }> = ({ settings, setSettings }) => {
   return (
     <div className="space-y-6">
+      {/* تم تاریک/روشن */}
+      <div className="bg-gray-50 dark:bg-gray-800 rounded-xl p-6">
+        <h4 className="text-lg font-semibold mb-4 text-gray-900 dark:text-white">ظاهر برنامه</h4>
+        <div className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">تم</label>
+            <div className="grid grid-cols-2 gap-3">
+              <button
+                onClick={() => setSettings({ ...settings, theme: 'light' })}
+                className={`p-3 rounded-lg border-2 transition-all flex items-center justify-center gap-2 ${
+                  settings.theme === 'light'
+                    ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300'
+                    : 'border-gray-300 dark:border-gray-600 hover:border-gray-400 dark:hover:border-gray-500 text-gray-700 dark:text-gray-300'
+                }`}
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+                </svg>
+                <span className="font-medium">روشن</span>
+              </button>
+              <button
+                onClick={() => setSettings({ ...settings, theme: 'dark' })}
+                className={`p-3 rounded-lg border-2 transition-all flex items-center justify-center gap-2 ${
+                  settings.theme === 'dark'
+                    ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300'
+                    : 'border-gray-300 dark:border-gray-600 hover:border-gray-400 dark:hover:border-gray-500 text-gray-700 dark:text-gray-300'
+                }`}
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+                </svg>
+                <span className="font-medium">تاریک</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <div className="bg-gray-50 dark:bg-gray-800 rounded-xl p-6">
         <h4 className="text-lg font-semibold mb-4 text-gray-900 dark:text-white">تنظیمات پاسخ</h4>
         <div className="space-y-4">
