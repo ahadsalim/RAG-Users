@@ -134,24 +134,14 @@ class QueryView(APIView):
             refresh = RefreshToken.for_user(user)
             access_token = str(refresh.access_token)
             
-            # Get user preferences as object (not just response_style)
-            user_preferences = None
-            if user.preferences:
-                user_preferences = {
-                    'response_style': user.preferences.get('response_style', 'formal'),
-                    'detail_level': user.preferences.get('detail_level', 'moderate'),
-                    'include_examples': user.preferences.get('include_examples', True),
-                    'language_style': user.preferences.get('language_style', 'simple'),
-                    'format': user.preferences.get('format', 'paragraph')
-                }
-            
             # آماده‌سازی file_attachments برای ارسال به RAG Core
             file_attachments = None
             if 'file_attachments' in data and data['file_attachments']:
+                # فایل‌ها قبلاً آپلود شده‌اند و object_key دارند
                 file_attachments = [
                     {
                         'filename': f['filename'],
-                        'minio_url': f['minio_url'],
+                        'minio_url': f['minio_url'],  # object_key از MinIO
                         'file_type': f['file_type'],
                         'size_bytes': f.get('size_bytes')
                     }
@@ -167,10 +157,7 @@ class QueryView(APIView):
                     query=data['query'],
                     token=access_token,
                     conversation_id=conversation.rag_conversation_id or None,
-                    language='fa',
-                    stream=False,
-                    filters=data.get('filters'),
-                    user_preferences=user_preferences,
+                    language=data.get('language', 'fa'),
                     file_attachments=file_attachments
                 )
             )
@@ -180,16 +167,20 @@ class QueryView(APIView):
                 conversation.rag_conversation_id = response.get('conversation_id')
                 conversation.save(update_fields=['rag_conversation_id'])
             
-            # به‌روزرسانی پیام assistant - مطابق با مستندات جدید RAG Core
+            # به‌روزرسانی پیام assistant - مطابق با API سیستم مرکزی
             assistant_message.content = response.get('answer', '')
             assistant_message.sources = response.get('sources', [])
-            assistant_message.chunks = response.get('chunks', [])
             assistant_message.status = 'completed'
             assistant_message.tokens = response.get('tokens_used', 0)
             assistant_message.processing_time_ms = response.get('processing_time_ms', 0)
-            assistant_message.model_used = response.get('model_used', '')
-            assistant_message.cached = response.get('cached', False)
+            assistant_message.cached = response.get('context_used', False)
             assistant_message.rag_message_id = response.get('message_id', '')
+            
+            # ذخیره file_analysis اگر وجود داشته باشد
+            if 'file_analysis' in response:
+                assistant_message.metadata = assistant_message.metadata or {}
+                assistant_message.metadata['file_analysis'] = response['file_analysis']
+            
             assistant_message.save()
             
             # به‌روزرسانی آمار conversation
@@ -234,24 +225,22 @@ class QueryView(APIView):
                 # )
                 pass
             
-            # آماده‌سازی پاسخ - مطابق با فرمت RAG Core
-            return Response({
+            # آماده‌سازی پاسخ - مطابق با API سیستم مرکزی
+            response_data = {
                 'conversation_id': conversation.id,
                 'message_id': assistant_message.id,
                 'answer': assistant_message.content,
                 'sources': assistant_message.sources,
-                'chunks': assistant_message.chunks,
                 'tokens_used': assistant_message.tokens,
                 'processing_time_ms': assistant_message.processing_time_ms,
-                'cached': assistant_message.cached,
-                'files_processed': response.get('files_processed', 0),
-                'metadata': {
-                    'tokens': assistant_message.tokens,
-                    'processing_time_ms': assistant_message.processing_time_ms,
-                    'model_used': assistant_message.model_used,
-                    'cached': assistant_message.cached
-                }
-            }, status=status.HTTP_200_OK)
+                'context_used': assistant_message.cached,
+            }
+            
+            # اضافه کردن file_analysis اگر وجود داشته باشد
+            if 'file_analysis' in response:
+                response_data['file_analysis'] = response['file_analysis']
+            
+            return Response(response_data, status=status.HTTP_200_OK)
             
         except RateLimitException as e:
             assistant_message.status = 'failed'

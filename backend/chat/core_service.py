@@ -33,54 +33,36 @@ class CoreAPIService:
         token: str,
         conversation_id: Optional[str] = None,
         language: str = 'fa',
-        stream: bool = False,
-        filters: Optional[Dict[str, Any]] = None,
-        user_preferences: Optional[Dict[str, Any]] = None,
         file_attachments: Optional[list] = None,
     ) -> Dict[str, Any]:
         """
-        Send a query to Core API.
+        ارسال سوال به سیستم مرکزی RAG Core.
         
         Args:
-            query: User's question
+            query: سوال کاربر (1-2000 کاراکتر)
             token: JWT token
-            conversation_id: Optional conversation ID for context
-            language: Query language (fa, en, ar)
-            stream: Whether to stream the response
-            filters: Optional filters (jurisdiction, category, date_range, etc.)
-            user_preferences: User's custom preferences for response style
-            file_attachments: Optional list of file attachments from MinIO
+            conversation_id: شناسه مکالمه برای استفاده از حافظه
+            language: زبان (پیش‌فرض: fa)
+            file_attachments: لیست فایل‌های ضمیمه (حداکثر 5)
             
         Returns:
-            Query response with answer and sources
+            پاسخ شامل answer, file_analysis, conversation_id و غیره
         """
-        # همیشه از endpoint اصلی استفاده می‌کنیم (v2 حذف شده)
-        url = f"{self.base_url}/api/v1/query/stream" if stream else f"{self.base_url}/api/v1/query/"
+        url = f"{self.base_url}/api/v1/query/"
         
-        # ساخت payload مطابق با مستندات RAG Core
+        # ساخت payload مطابق با API سیستم مرکزی
         payload = {
             "query": query,
             "language": language,
-            "max_results": 5,  # پیش‌فرض
-            "use_cache": True,
-            "use_reranking": True,
         }
         
-        # Add conversation_id if provided
+        # اضافه کردن conversation_id برای استفاده از حافظه
         if conversation_id:
             payload["conversation_id"] = conversation_id
         
-        # Add file attachments if provided (حداکثر 5 فایل)
+        # اضافه کردن فایل‌های ضمیمه (حداکثر 5)
         if file_attachments and len(file_attachments) > 0:
-            payload["file_attachments"] = file_attachments[:5]  # محدود به 5 فایل
-        
-        # Add filters if provided
-        if filters:
-            payload["filters"] = filters
-        
-        # Add user preferences if provided
-        if user_preferences:
-            payload["user_preferences"] = user_preferences
+            payload["file_attachments"] = file_attachments[:5]
         
         try:
             async with httpx.AsyncClient(timeout=self.timeout) as client:

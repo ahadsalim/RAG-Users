@@ -143,33 +143,16 @@ class FileAttachmentSerializer(serializers.Serializer):
 
 
 class QueryRequestSerializer(serializers.Serializer):
-    """Serializer برای درخواست پرسش - مطابق با مستندات RAG Core"""
-    query = serializers.CharField(required=True, min_length=3, max_length=5000)
-    language = serializers.CharField(default='fa', required=False)
-    max_results = serializers.IntegerField(default=5, min_value=1, max_value=20)
+    """Serializer برای درخواست پرسش - مطابق با API سیستم مرکزی"""
+    # فیلدهای الزامی
+    query = serializers.CharField(required=True, min_length=1, max_length=2000)
+    
+    # فیلدهای اختیاری
     conversation_id = serializers.UUIDField(required=False, allow_null=True)
-    use_cache = serializers.BooleanField(default=True)
-    use_reranking = serializers.BooleanField(default=True)
+    language = serializers.CharField(default='fa', required=False)
     
     # فایل‌های ضمیمه (اختیاری - حداکثر 5)
     file_attachments = FileAttachmentSerializer(many=True, required=False, allow_null=True)
-    
-    # فیلدهای داخلی (برای سیستم کاربران)
-    response_mode = serializers.ChoiceField(
-        choices=['simple_explanation', 'legal_reference', 'action_checklist'],
-        default='simple_explanation',
-        required=False
-    )
-    stream = serializers.BooleanField(default=False, required=False)
-    
-    # فیلترهای جستجو (اختیاری)
-    filters = serializers.JSONField(required=False, default=dict)
-    
-    # تنظیمات LLM (اختیاری)
-    llm_config = serializers.JSONField(required=False, default=dict)
-    
-    # Context اضافی
-    context = serializers.JSONField(required=False, default=dict)
     
     def validate_file_attachments(self, value):
         """اعتبارسنجی فایل‌های ضمیمه - حداکثر 5 فایل"""
@@ -179,47 +162,13 @@ class QueryRequestSerializer(serializers.Serializer):
     
     def validate_query(self, value):
         """اعتبارسنجی متن سوال"""
-        # حذف فضاهای خالی اضافی
         value = value.strip()
         
-        # بررسی طول
-        if len(value) < 3:
-            raise serializers.ValidationError(_('سوال باید حداقل 3 کاراکتر داشته باشد'))
+        if len(value) < 1:
+            raise serializers.ValidationError(_('سوال نمی‌تواند خالی باشد'))
         
-        if len(value) > 5000:
-            raise serializers.ValidationError(_('سوال نباید بیشتر از 5000 کاراکتر باشد'))
-        
-        return value
-    
-    def validate_filters(self, value):
-        """اعتبارسنجی فیلترها"""
-        allowed_filters = [
-            'document_type', 'jurisdiction', 'authority', 'date_range'
-        ]
-        
-        for key in value.keys():
-            if key not in allowed_filters:
-                raise serializers.ValidationError(
-                    f'فیلتر {key} مجاز نیست'
-                )
-        
-        return value
-    
-    def validate_llm_config(self, value):
-        """اعتبارسنجی تنظیمات LLM"""
-        if 'temperature' in value:
-            temp = value['temperature']
-            if not (0 <= temp <= 2):
-                raise serializers.ValidationError(
-                    'temperature باید بین 0 و 2 باشد'
-                )
-        
-        if 'max_tokens' in value:
-            tokens = value['max_tokens']
-            if not (100 <= tokens <= 8192):
-                raise serializers.ValidationError(
-                    'max_tokens باید بین 100 و 8192 باشد'
-                )
+        if len(value) > 2000:
+            raise serializers.ValidationError(_('سوال نباید بیشتر از 2000 کاراکتر باشد'))
         
         return value
 
