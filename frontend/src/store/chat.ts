@@ -101,12 +101,17 @@ export const useChatStore = create<ChatState>((set, get) => ({
   
   archiveConversation: async (conversationId: string) => {
     try {
+      const state = get()
+      const conversation = state.conversations.find(c => c.id === conversationId)
+      const isArchived = conversation?.is_archived || false
+      
+      // Toggle archive status
       await axios.post(`${API_URL}/api/v1/chat/conversations/${conversationId}/archive/`)
       
-      // Update local state
+      // Update local state - toggle the archive status
       set(state => ({
         conversations: state.conversations.map(c =>
-          c.id === conversationId ? { ...c, is_archived: true } : c
+          c.id === conversationId ? { ...c, is_archived: !isArchived } : c
         ),
       }))
     } catch (error: any) {

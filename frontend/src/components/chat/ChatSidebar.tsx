@@ -24,7 +24,8 @@ export function ChatSidebar({
   const [searchQuery, setSearchQuery] = useState('')
   const [showArchived, setShowArchived] = useState(false)
   const [isSettingsOpen, setIsSettingsOpen] = useState(false)
-  const { conversations, loadConversations, loadConversation, deleteConversation } = useChatStore()
+  const [openMenuId, setOpenMenuId] = useState<string | null>(null)
+  const { conversations, loadConversations, loadConversation, deleteConversation, archiveConversation } = useChatStore()
   const { user, logout } = useAuthStore()
   
   useEffect(() => {
@@ -48,7 +49,59 @@ export function ChatSidebar({
     e.stopPropagation()
     if (confirm('آیا از حذف این گفتگو اطمینان دارید؟')) {
       await deleteConversation(conversationId)
+      setOpenMenuId(null)
     }
+  }
+  
+  const handleArchiveConversation = async (e: React.MouseEvent, conversationId: string) => {
+    e.stopPropagation()
+    await archiveConversation(conversationId)
+    setOpenMenuId(null)
+  }
+  
+  const handleShareConversation = async (e: React.MouseEvent, conversation: Conversation) => {
+    e.stopPropagation()
+    
+    // ساخت متن گفتگو
+    let shareText = `گفتگو: ${conversation.title}\n\n`
+    
+    if (conversation.messages && conversation.messages.length > 0) {
+      conversation.messages.forEach((msg, index) => {
+        const role = msg.role === 'user' ? '👤 کاربر' : '🤖 دستیار'
+        shareText += `${role}:\n${msg.content}\n\n`
+      })
+    } else {
+      shareText += 'این گفتگو هنوز پیامی ندارد.\n'
+    }
+    
+    shareText += `\n---\nتاریخ: ${new Date(conversation.updated_at).toLocaleDateString('fa-IR')}`
+    
+    // استفاده از Web Share API
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: conversation.title,
+          text: shareText,
+        })
+      } catch (err) {
+        console.log('اشتراک‌گذاری لغو شد')
+      }
+    } else {
+      // Fallback: کپی به کلیپبورد
+      try {
+        await navigator.clipboard.writeText(shareText)
+        alert('متن گفتگو در کلیپبورد کپی شد')
+      } catch (err) {
+        alert('خطا در کپی متن')
+      }
+    }
+    
+    setOpenMenuId(null)
+  }
+  
+  const toggleMenu = (e: React.MouseEvent, conversationId: string) => {
+    e.stopPropagation()
+    setOpenMenuId(openMenuId === conversationId ? null : conversationId)
   }
   
   const handleLogout = () => {
@@ -160,13 +213,43 @@ export function ChatSidebar({
                       {new Date(conversation.updated_at).toLocaleDateString('fa-IR')}
                     </p>
                   </div>
-                  <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                  
+                  {/* 3-dot Menu */}
+                  <div className="relative flex items-center opacity-0 group-hover:opacity-100 transition-opacity">
                     <button
-                      onClick={(e) => handleDeleteConversation(e, conversation.id)}
+                      onClick={(e) => toggleMenu(e, conversation.id)}
                       className="p-1 hover:bg-gray-700 rounded"
+                      title="منو"
                     >
-                      <span className="text-gray-400 hover:text-red-400">🗑️</span>
+                      <span className="text-gray-400 text-lg">⋮</span>
                     </button>
+                    
+                    {/* Dropdown Menu */}
+                    {openMenuId === conversation.id && (
+                      <div className="absolute left-0 top-8 bg-gray-800 border border-gray-700 rounded-lg shadow-lg py-1 z-10 min-w-[160px]">
+                        <button
+                          onClick={(e) => handleShareConversation(e, conversation)}
+                          className="w-full flex items-center gap-2 px-3 py-2 hover:bg-gray-700 text-right text-sm"
+                        >
+                          <span>🔗</span>
+                          <span>اشتراک‌گذاری</span>
+                        </button>
+                        <button
+                          onClick={(e) => handleArchiveConversation(e, conversation.id)}
+                          className="w-full flex items-center gap-2 px-3 py-2 hover:bg-gray-700 text-right text-sm"
+                        >
+                          <span>📦</span>
+                          <span>{conversation.is_archived ? 'خروج از آرشیو' : 'آرشیو'}</span>
+                        </button>
+                        <button
+                          onClick={(e) => handleDeleteConversation(e, conversation.id)}
+                          className="w-full flex items-center gap-2 px-3 py-2 hover:bg-gray-700 text-red-400 text-right text-sm"
+                        >
+                          <span>🗑️</span>
+                          <span>حذف</span>
+                        </button>
+                      </div>
+                    )}
                   </div>
                 </div>
               ))
