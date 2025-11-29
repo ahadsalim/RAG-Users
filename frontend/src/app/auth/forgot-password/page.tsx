@@ -39,6 +39,8 @@ export default function ForgotPasswordPage() {
     }
     
     setIsLoading(true)
+    console.log('Sending forgot password request to:', `${API_URL}/api/v1/auth/forgot-password/`)
+    console.log('Email:', email)
     
     try {
       const response = await fetch(`${API_URL}/api/v1/auth/forgot-password/`, {
@@ -49,14 +51,21 @@ export default function ForgotPasswordPage() {
         body: JSON.stringify({ email })
       })
       
+      console.log('Response status:', response.status)
+      console.log('Response ok:', response.ok)
+      
       if (response.ok) {
+        const data = await response.json()
+        console.log('Success response:', data)
         setEmailSent(true)
         toast.success('لینک بازیابی رمز عبور به ایمیل شما ارسال شد')
       } else {
         const data = await response.json()
+        console.error('Error response:', data)
         toast.error(data.message || 'خطا در ارسال ایمیل')
       }
     } catch (err) {
+      console.error('Fetch error:', err)
       toast.error('خطا در ارتباط با سرور')
     } finally {
       setIsLoading(false)
