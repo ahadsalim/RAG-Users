@@ -81,45 +81,41 @@ export function ChatMessages({ messages, isLoading, isTyping }: ChatMessagesProp
               
               {/* File Attachments */}
               {message.attachments && message.attachments.length > 0 && (
-                <div className="mb-3 flex flex-wrap gap-2">
+                <div className="mb-2 flex flex-wrap gap-1.5">
                   {message.attachments.map((attachment, idx) => {
-                    const isProcessing = attachment.extraction_status === 'processing'
+                    // فقط در حالت processing نمایش دهیم اگر assistant message هنوز processing است
+                    const isProcessing = message.status === 'processing' && attachment.extraction_status === 'processing'
                     return (
                       <div 
                         key={idx}
-                        className={`relative flex flex-col items-center gap-1 px-3 py-2 rounded-lg text-sm transition-all ${
+                        className={`relative flex items-center gap-1.5 px-2 py-1 rounded text-xs transition-all ${
                           isProcessing 
-                            ? 'bg-gray-50 dark:bg-gray-900 border-2 border-dashed border-gray-300 dark:border-gray-700' 
+                            ? 'bg-gray-50 dark:bg-gray-900 border border-dashed border-gray-300 dark:border-gray-700' 
                             : 'bg-gray-100 dark:bg-gray-800'
                         }`}
                       >
-                        {/* File Icon */}
-                        <div className={`text-3xl ${isProcessing ? 'opacity-40 animate-pulse' : ''}`}>
+                        {/* File Icon - کوچک‌تر */}
+                        <span className={`text-base ${isProcessing ? 'opacity-40 animate-pulse' : ''}`}>
                           {attachment.file_type === 'image' ? '🖼️' : 
                            attachment.file_type === 'pdf' ? '📄' : 
                            attachment.file_type === 'document' ? '📝' : '📎'}
-                        </div>
+                        </span>
                         
-                        {/* File Name */}
-                        <span className="text-gray-700 dark:text-gray-300 truncate max-w-[150px] text-xs font-medium">
+                        {/* File Name - کوچک‌تر */}
+                        <span className="text-gray-700 dark:text-gray-300 truncate max-w-[120px] font-medium">
                           {attachment.file_name}
                         </span>
                         
-                        {/* File Size */}
-                        <span className="text-xs text-gray-500">
-                          {Math.round(attachment.file_size / 1024)} KB
+                        {/* File Size - کوچک‌تر */}
+                        <span className="text-gray-500">
+                          ({Math.round(attachment.file_size / 1024)}KB)
                         </span>
                         
-                        {/* Processing Indicator */}
+                        {/* Processing Indicator - فقط موقع processing */}
                         {isProcessing && (
-                          <div className="absolute inset-0 flex items-center justify-center bg-white/50 dark:bg-gray-900/50 rounded-lg">
-                            <div className="flex flex-col items-center gap-1">
-                              <div className="text-2xl animate-spin">⏳</div>
-                              <span className="text-xs text-gray-600 dark:text-gray-400 font-medium">
-                                در حال آنالیز
-                              </span>
-                            </div>
-                          </div>
+                          <span className="text-xs text-gray-600 dark:text-gray-400 animate-pulse mr-1">
+                            ⏳
+                          </span>
                         )}
                       </div>
                     )
