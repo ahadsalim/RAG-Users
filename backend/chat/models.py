@@ -100,7 +100,10 @@ class Message(models.Model):
     sources = models.JSONField(default=list, blank=True)
     chunks = models.JSONField(default=list, blank=True)
     
-    # متادیتا
+    # متادیتا اضافی (برای ذخیره file_analysis و سایر اطلاعات)
+    metadata = models.JSONField(default=dict, blank=True)
+    
+    # وضعیت
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
     error_message = models.TextField(blank=True)
     
