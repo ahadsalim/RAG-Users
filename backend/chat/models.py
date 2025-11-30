@@ -248,10 +248,10 @@ class MessageAttachment(models.Model):
     message = models.ForeignKey(Message, on_delete=models.CASCADE, related_name='attachments')
     
     file = models.FileField(upload_to='chat/attachments/%Y/%m/')
-    file_name = models.CharField(max_length=255)
+    file_name = models.CharField(max_length=500)  # افزایش برای نام فایل‌های طولانی
     file_size = models.IntegerField()  # in bytes
     file_type = models.CharField(max_length=20, choices=ATTACHMENT_TYPE_CHOICES)
-    mime_type = models.CharField(max_length=100)
+    mime_type = models.CharField(max_length=200)  # افزایش برای mime type های طولانی
     
     # برای تصاویر
     thumbnail = models.ImageField(upload_to='chat/thumbnails/%Y/%m/', blank=True, null=True)
