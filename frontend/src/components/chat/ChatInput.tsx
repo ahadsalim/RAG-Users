@@ -42,6 +42,25 @@ export function ChatInput({ onSendMessage, isLoading, disabled }: ChatInputProps
     const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'
     const token = accessToken
     
+    // بررسی وجود token
+    if (!token) {
+      console.error('No access token found!')
+      const error = 'لطفاً ابتدا وارد شوید'
+      setUploadProgress(prev => {
+        const newMap = new Map(prev)
+        newMap.set(file.name, {
+          file,
+          progress: 0,
+          uploaded: false,
+          error
+        })
+        return newMap
+      })
+      return Promise.reject(new Error(error))
+    }
+    
+    console.log('Uploading file with token:', token.substring(0, 20) + '...')
+    
     return new Promise((resolve, reject) => {
       const xhr = new XMLHttpRequest()
       
