@@ -82,24 +82,48 @@ export function ChatMessages({ messages, isLoading, isTyping }: ChatMessagesProp
               {/* File Attachments */}
               {message.attachments && message.attachments.length > 0 && (
                 <div className="mb-3 flex flex-wrap gap-2">
-                  {message.attachments.map((attachment, idx) => (
-                    <div 
-                      key={idx}
-                      className="flex items-center gap-2 px-3 py-2 bg-gray-100 dark:bg-gray-800 rounded-lg text-sm"
-                    >
-                      <span className="text-lg">
-                        {attachment.file_type === 'image' ? '🖼️' : 
-                         attachment.file_type === 'pdf' ? '📄' : 
-                         attachment.file_type === 'document' ? '📝' : '📎'}
-                      </span>
-                      <span className="text-gray-700 dark:text-gray-300 truncate max-w-[200px]">
-                        {attachment.file_name}
-                      </span>
-                      <span className="text-xs text-gray-500">
-                        ({Math.round(attachment.file_size / 1024)} KB)
-                      </span>
-                    </div>
-                  ))}
+                  {message.attachments.map((attachment, idx) => {
+                    const isProcessing = attachment.extraction_status === 'processing'
+                    return (
+                      <div 
+                        key={idx}
+                        className={`relative flex flex-col items-center gap-1 px-3 py-2 rounded-lg text-sm transition-all ${
+                          isProcessing 
+                            ? 'bg-gray-50 dark:bg-gray-900 border-2 border-dashed border-gray-300 dark:border-gray-700' 
+                            : 'bg-gray-100 dark:bg-gray-800'
+                        }`}
+                      >
+                        {/* File Icon */}
+                        <div className={`text-3xl ${isProcessing ? 'opacity-40 animate-pulse' : ''}`}>
+                          {attachment.file_type === 'image' ? '🖼️' : 
+                           attachment.file_type === 'pdf' ? '📄' : 
+                           attachment.file_type === 'document' ? '📝' : '📎'}
+                        </div>
+                        
+                        {/* File Name */}
+                        <span className="text-gray-700 dark:text-gray-300 truncate max-w-[150px] text-xs font-medium">
+                          {attachment.file_name}
+                        </span>
+                        
+                        {/* File Size */}
+                        <span className="text-xs text-gray-500">
+                          {Math.round(attachment.file_size / 1024)} KB
+                        </span>
+                        
+                        {/* Processing Indicator */}
+                        {isProcessing && (
+                          <div className="absolute inset-0 flex items-center justify-center bg-white/50 dark:bg-gray-900/50 rounded-lg">
+                            <div className="flex flex-col items-center gap-1">
+                              <div className="text-2xl animate-spin">⏳</div>
+                              <span className="text-xs text-gray-600 dark:text-gray-400 font-medium">
+                                در حال آنالیز
+                              </span>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    )
+                  })}
                 </div>
               )}
               

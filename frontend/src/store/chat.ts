@@ -143,7 +143,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
     set({ isLoading: true, error: null })
     
     try {
-      // Create user message locally
+      // Create user message locally with attachments
       const userMessage: Message = {
         id: `temp-${Date.now()}`,
         conversation: conversationId || '',
@@ -154,6 +154,16 @@ export const useChatStore = create<ChatState>((set, get) => ({
         tokens: 0,
         processing_time_ms: 0,
         cached: false,
+        attachments: fileAttachments ? fileAttachments.map((f: any) => ({
+          id: `temp-${Date.now()}-${Math.random()}`,
+          file: f.minio_url,
+          file_name: f.filename,
+          file_size: f.size_bytes,
+          file_type: f.file_type.startsWith('image/') ? 'image' : 'document',
+          mime_type: f.file_type,
+          extraction_status: 'processing',
+          created_at: new Date().toISOString(),
+        })) : undefined,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
       }
