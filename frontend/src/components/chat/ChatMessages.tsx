@@ -79,6 +79,30 @@ export function ChatMessages({ messages, isLoading, isTyping }: ChatMessagesProp
                 )}
               </div>
               
+              {/* File Attachments */}
+              {message.attachments && message.attachments.length > 0 && (
+                <div className="mb-3 flex flex-wrap gap-2">
+                  {message.attachments.map((attachment, idx) => (
+                    <div 
+                      key={idx}
+                      className="flex items-center gap-2 px-3 py-2 bg-gray-100 dark:bg-gray-800 rounded-lg text-sm"
+                    >
+                      <span className="text-lg">
+                        {attachment.file_type === 'image' ? '🖼️' : 
+                         attachment.file_type === 'pdf' ? '📄' : 
+                         attachment.file_type === 'document' ? '📝' : '📎'}
+                      </span>
+                      <span className="text-gray-700 dark:text-gray-300 truncate max-w-[200px]">
+                        {attachment.file_name}
+                      </span>
+                      <span className="text-xs text-gray-500">
+                        ({Math.round(attachment.file_size / 1024)} KB)
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              )}
+              
               {/* Message Content */}
               <div className="prose prose-sm dark:prose-invert max-w-none">
                 {message.status === 'processing' ? (
