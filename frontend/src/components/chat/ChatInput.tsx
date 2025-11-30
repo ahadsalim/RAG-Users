@@ -190,15 +190,23 @@ export function ChatInput({ onSendMessage, isLoading, disabled }: ChatInputProps
   
   const handleSubmit = () => {
     if ((message.trim() || attachedFiles.length > 0) && !isLoading && !disabled && !isUploading) {
-      // جمع‌آوری اطلاعات فایل‌های آپلود شده
-      const fileAttachments = Array.from(uploadProgress.values())
-        .filter(p => p.uploaded && p.objectKey)
-        .map(p => ({
-          filename: p.file.name,
-          minio_url: p.objectKey,
-          file_type: p.file.type,
-          size_bytes: p.file.size
-        }))
+      // جمع‌آوری اطلاعات فایل‌های آپلود شده از uploadProgress
+      const fileAttachments = attachedFiles
+        .map(file => {
+          const progress = uploadProgress.get(file.name)
+          if (progress && progress.uploaded && progress.objectKey) {
+            return {
+              filename: file.name,
+              minio_url: progress.objectKey,
+              file_type: file.type,
+              size_bytes: file.size
+            }
+          }
+          return null
+        })
+        .filter(f => f !== null)
+      
+      console.log('Sending message with files:', fileAttachments)
       
       onSendMessage(message, fileAttachments.length > 0 ? fileAttachments : undefined)
       setMessage('')
