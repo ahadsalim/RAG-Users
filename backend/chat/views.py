@@ -272,6 +272,24 @@ class QueryView(APIView):
                 {'error': str(e), 'code': 'rag_core_error'},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
+        except httpx.HTTPStatusError as e:
+            logger.error(f"RAG Core HTTP error: {e.response.status_code} - {e.response.text}")
+            assistant_message.status = 'failed'
+            
+            # پیام خطای کاربرپسند
+            if e.response.status_code == 500:
+                error_msg = 'خطای داخلی سرور پردازش. لطفاً دوباره تلاش کنید.'
+            elif e.response.status_code == 503:
+                error_msg = 'سرور پردازش در دسترس نیست.'
+            else:
+                error_msg = f'خطا در پردازش درخواست (کد {e.response.status_code})'
+            
+            assistant_message.error_message = error_msg
+            assistant_message.save()
+            return Response(
+                {'error': error_msg, 'code': 'rag_core_http_error'},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
         except httpx.TimeoutException as e:
             logger.error(f"RAG Core timeout: {str(e)}")
             assistant_message.status = 'failed'
