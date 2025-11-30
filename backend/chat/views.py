@@ -121,6 +121,20 @@ class QueryView(APIView):
             status='completed'
         )
         
+        # ذخیره file attachments برای پیام کاربر
+        if 'file_attachments' in data and data['file_attachments']:
+            from chat.models import MessageAttachment
+            for file_data in data['file_attachments']:
+                MessageAttachment.objects.create(
+                    message=user_message,
+                    file=file_data['minio_url'],  # object_key در MinIO
+                    file_name=file_data['filename'],
+                    file_size=file_data.get('size_bytes', 0),
+                    file_type='image' if file_data['file_type'].startswith('image/') else 'document',
+                    mime_type=file_data['file_type'],
+                    extraction_status='pending'
+                )
+        
         # ایجاد پیام assistant (در حالت processing)
         assistant_message = Message.objects.create(
             conversation=conversation,
