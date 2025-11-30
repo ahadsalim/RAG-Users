@@ -247,7 +247,7 @@ class MessageAttachment(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     message = models.ForeignKey(Message, on_delete=models.CASCADE, related_name='attachments')
     
-    file = models.FileField(upload_to='chat/attachments/%Y/%m/')
+    file = models.CharField(max_length=500)  # MinIO object key یا مسیر فایل
     file_name = models.CharField(max_length=500)  # افزایش برای نام فایل‌های طولانی
     file_size = models.IntegerField()  # in bytes
     file_type = models.CharField(max_length=20, choices=ATTACHMENT_TYPE_CHOICES)
