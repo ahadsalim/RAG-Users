@@ -232,10 +232,10 @@ export const useChatStore = create<ChatState>((set, get) => ({
                 sources: response.data.sources,
                 chunks: response.data.chunks,
                 status: 'completed',
-                tokens: response.data.metadata.tokens,
-                processing_time_ms: response.data.metadata.processing_time_ms,
-                model_used: response.data.metadata.model_used,
-                cached: response.data.metadata.cached,
+                tokens: response.data.tokens_used || 0,
+                processing_time_ms: response.data.processing_time_ms || 0,
+                model_used: response.data.model_used || '',
+                cached: response.data.context_used || false,
               }
             : msg
         ),
