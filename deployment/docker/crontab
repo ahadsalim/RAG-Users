@@ -1,8 +1,0 @@
-# Cron jobs for backend container
-# Format: minute hour day month weekday command
-
-# پاک‌سازی فایل‌های قدیمی‌تر از 24 ساعت - هر روز ساعت 2 صبح
-0 2 * * * cd /app && python3 /srv/cleanup_old_files.py --hours 24 >> /var/log/cron.log 2>&1
-
-# پاک‌سازی فایل‌های قدیمی‌تر از 7 روز - هر هفته یکشنبه ساعت 3 صبح
-0 3 * * 0 cd /app && python3 /srv/cleanup_old_files.py --hours 168 >> /var/log/cron.log 2>&1
