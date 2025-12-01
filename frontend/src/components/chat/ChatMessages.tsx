@@ -172,11 +172,11 @@ export function ChatMessages({ messages, isLoading, isTyping }: ChatMessagesProp
                   >
                     {message.content}
                   </ReactMarkdown>
-                    {message.status === 'processing' && (
-                      <span className="inline-flex items-center gap-1 text-gray-500 text-sm ml-1">
-                        <span className="animate-pulse">●</span>
-                      </span>
-                    )}
+                  {message.status === 'processing' && (
+                    <span className="inline-flex items-center gap-1 text-gray-500 text-sm ml-1">
+                      <span className="animate-pulse">●</span>
+                    </span>
+                  )}
                   </>
                 )}
               </div>
