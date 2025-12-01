@@ -18,6 +18,7 @@ interface ChatState {
   pinConversation: (conversationId: string, pin: boolean) => Promise<void>
   
   sendMessage: (content: string, conversationId?: string, mode?: string, fileAttachments?: any[]) => Promise<void>
+  sendMessageStreaming: (content: string, conversationId?: string, mode?: string, fileAttachments?: any[]) => Promise<void>
   loadMessages: (conversationId: string) => Promise<void>
   sendFeedback: (messageId: string, rating: number, feedback?: string) => Promise<void>
   
@@ -258,6 +259,223 @@ export const useChatStore = create<ChatState>((set, get) => ({
         errorMessage = error.response.data.error
       } else if (error.response?.data?.detail) {
         errorMessage = error.response.data.detail
+      }
+      
+      // Update assistant message with error
+      set(state => ({
+        messages: state.messages.map((msg, idx, arr) =>
+          idx === arr.length - 1 && msg.role === 'assistant'
+            ? {
+                ...msg,
+                status: 'failed',
+                error_message: errorMessage,
+              }
+            : msg
+        ),
+        isLoading: false,
+        error: errorMessage,
+      }))
+    }
+  },
+  
+  sendMessageStreaming: async (content: string, conversationId?: string, mode = 'simple_explanation', fileAttachments?: any[]) => {
+    set({ isLoading: true, error: null })
+    
+    try {
+      // Create user message locally with attachments
+      const userMessage: Message = {
+        id: `temp-${Date.now()}`,
+        conversation: conversationId || '',
+        role: 'user',
+        content,
+        response_mode: mode as any,
+        status: 'completed',
+        tokens: 0,
+        processing_time_ms: 0,
+        cached: false,
+        attachments: fileAttachments ? fileAttachments.map((f: any) => ({
+          id: `temp-${Date.now()}-${Math.random()}`,
+          file: f.minio_url,
+          file_name: f.filename,
+          file_size: f.size_bytes,
+          file_type: f.file_type.startsWith('image/') ? 'image' : 'document',
+          mime_type: f.file_type,
+          extraction_status: 'processing',
+          created_at: new Date().toISOString(),
+        })) : undefined,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      }
+      
+      set(state => ({
+        messages: [...state.messages, userMessage],
+      }))
+      
+      // Create assistant message placeholder
+      const assistantMessage: Message = {
+        id: `temp-${Date.now() + 1}`,
+        conversation: conversationId || '',
+        role: 'assistant',
+        content: '',
+        status: 'processing',
+        tokens: 0,
+        processing_time_ms: 0,
+        cached: false,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      }
+      
+      set(state => ({
+        messages: [...state.messages, assistantMessage],
+      }))
+      
+      // Prepare request payload
+      const payload: any = {
+        query: content,
+        conversation_id: conversationId || get().currentConversation?.id,
+        response_mode: mode,
+      }
+      
+      // Add file attachments if provided
+      if (fileAttachments && fileAttachments.length > 0) {
+        payload.file_attachments = fileAttachments
+      }
+      
+      // Get token from localStorage
+      const token = localStorage.getItem('access_token')
+      
+      // Use fetch for streaming
+      const response = await fetch(`${API_URL}/api/v1/chat/query/stream/`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(payload),
+      })
+      
+      // اگر streaming موجود نیست (404)، fallback به حالت عادی
+      if (response.status === 404) {
+        console.warn('Streaming not available, falling back to normal mode')
+        // استفاده از sendMessage عادی
+        set({ isLoading: false })
+        await get().sendMessage(content, conversationId, mode, fileAttachments)
+        return
+      }
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`)
+      }
+      
+      const reader = response.body?.getReader()
+      const decoder = new TextDecoder()
+      
+      let fullContent = ''
+      let messageId = assistantMessage.id
+      let conversationIdFromServer = conversationId
+      
+      if (!reader) {
+        throw new Error('Response body is not readable')
+      }
+      
+      while (true) {
+        const { done, value } = await reader.read()
+        if (done) break
+        
+        const chunk = decoder.decode(value)
+        const lines = chunk.split('\n')
+        
+        for (const line of lines) {
+          if (line.startsWith('data: ')) {
+            try {
+              const data = JSON.parse(line.slice(6))
+              
+              if (data.type === 'start') {
+                // Update conversation and message IDs
+                messageId = data.message_id
+                conversationIdFromServer = data.conversation_id
+              } else if (data.type === 'chunk') {
+                // Append content character by character
+                fullContent += data.content
+                set(state => ({
+                  messages: state.messages.map(msg =>
+                    msg.id === assistantMessage.id
+                      ? { ...msg, content: fullContent }
+                      : msg
+                  ),
+                }))
+              } else if (data.type === 'sources') {
+                // Update sources
+                set(state => ({
+                  messages: state.messages.map(msg =>
+                    msg.id === assistantMessage.id
+                      ? { ...msg, sources: data.sources }
+                      : msg
+                  ),
+                }))
+              } else if (data.type === 'end') {
+                // Finalize message
+                set(state => ({
+                  messages: state.messages.map(msg =>
+                    msg.id === assistantMessage.id
+                      ? {
+                          ...msg,
+                          id: messageId,
+                          status: 'completed',
+                          tokens: data.metadata?.tokens || 0,
+                          processing_time_ms: data.metadata?.processing_time_ms || 0,
+                          model_used: data.metadata?.model_used || '',
+                          cached: data.metadata?.cached || false,
+                        }
+                      : msg
+                  ),
+                  isLoading: false,
+                }))
+              } else if (data.type === 'error') {
+                // Handle error
+                set(state => ({
+                  messages: state.messages.map(msg =>
+                    msg.id === assistantMessage.id
+                      ? {
+                          ...msg,
+                          status: 'failed',
+                          error_message: data.error,
+                        }
+                      : msg
+                  ),
+                  isLoading: false,
+                  error: data.error,
+                }))
+              }
+            } catch (e) {
+              console.error('Error parsing SSE data:', e)
+            }
+          }
+        }
+      }
+      
+      // Update conversation ID if new
+      if (!conversationId && conversationIdFromServer) {
+        set(state => ({
+          currentConversation: {
+            ...state.currentConversation,
+            id: conversationIdFromServer,
+          } as Conversation,
+        }))
+      }
+      
+      // Reload conversations to update list
+      await get().loadConversations()
+      
+    } catch (error: any) {
+      console.error('Streaming error:', error)
+      
+      let errorMessage = 'خطا در ارسال پیام'
+      
+      if (error.message?.includes('429')) {
+        errorMessage = 'محدودیت تعداد درخواست. لطفا کمی صبر کنید.'
+      } else if (error.message?.includes('403')) {
+        errorMessage = 'شما اشتراک فعالی ندارید'
       }
       
       // Update assistant message with error

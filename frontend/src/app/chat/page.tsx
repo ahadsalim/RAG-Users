@@ -19,6 +19,7 @@ export default function ChatPage() {
     messages,
     isLoading,
     sendMessage,
+    sendMessageStreaming,
     createNewConversation,
     loadConversation
   } = useChatStore()
@@ -65,12 +66,12 @@ export default function ChatPage() {
     if (!content.trim() && (!fileAttachments || fileAttachments.length === 0)) return
     
     try {
-      // ارسال پیام با فایل‌های آپلود شده
-      await sendMessage(content, currentConversation?.id, undefined, fileAttachments)
+      // ارسال پیام با streaming برای تجربه بهتر
+      await sendMessageStreaming(content, currentConversation?.id, undefined, fileAttachments)
     } catch (error) {
       console.error('Error sending message:', error)
     }
-  }, [sendMessage, currentConversation])
+  }, [sendMessageStreaming, currentConversation])
 
   // Handle new conversation
   const handleNewChat = useCallback(() => {
