@@ -244,10 +244,14 @@ export const useChatStore = create<ChatState>((set, get) => ({
         isLoading: false,
       }))
       
-      // Reload conversations to update sidebar (safe)
-      const currentState = get()
-      if (currentState?.loadConversations) {
-        currentState.loadConversations()
+      // Reload conversations to update sidebar
+      try {
+        const response = await axios.get(`${API_URL}/api/v1/chat/conversations/`)
+        set({
+          conversations: response.data.results || response.data,
+        })
+      } catch (err) {
+        console.error('Failed to reload conversations:', err)
       }
     } catch (error: any) {
       // تشخیص نوع خطا
@@ -484,10 +488,14 @@ export const useChatStore = create<ChatState>((set, get) => ({
         }))
       }
       
-      // Reload conversations to update list (safe)
-      const currentState = get()
-      if (currentState?.loadConversations) {
-        await currentState.loadConversations()
+      // Reload conversations to update list
+      try {
+        const response = await axios.get(`${API_URL}/api/v1/chat/conversations/`)
+        set({
+          conversations: response.data.results || response.data,
+        })
+      } catch (err) {
+        console.error('Failed to reload conversations:', err)
       }
       
     } catch (error: any) {
