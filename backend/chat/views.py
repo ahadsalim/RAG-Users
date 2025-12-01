@@ -10,6 +10,7 @@ from django.utils.translation import gettext_lazy as _
 from django.utils import timezone
 from django.db.models import Q, Count
 from django.http import StreamingHttpResponse, HttpResponse
+from asgiref.sync import sync_to_async
 import asyncio
 import json
 import uuid
@@ -450,9 +451,25 @@ class StreamingQueryView(APIView):
                 assistant_message.error_message = str(e)
                 await asyncio.get_event_loop().run_in_executor(None, assistant_message.save)
         
+        # تبدیل async generator به sync generator
+        def sync_stream():
+            """Wrapper برای تبدیل async generator به sync"""
+            loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(loop)
+            try:
+                async_gen = generate_stream()
+                while True:
+                    try:
+                        chunk = loop.run_until_complete(async_gen.__anext__())
+                        yield chunk
+                    except StopAsyncIteration:
+                        break
+            finally:
+                loop.close()
+        
         # برگرداندن streaming response
         response = StreamingHttpResponse(
-            generate_stream(),
+            sync_stream(),
             content_type='text/event-stream'
         )
         response['Cache-Control'] = 'no-cache'
