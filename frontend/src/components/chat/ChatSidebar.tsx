@@ -32,7 +32,10 @@ export function ChatSidebar({
     loadConversations()
   }, [loadConversations])
   
-  const filteredConversations = (conversations || []).filter(conv => {
+  // Safe guard against undefined conversations
+  const safeConversations = Array.isArray(conversations) ? conversations : []
+  
+  const filteredConversations = safeConversations.filter(conv => {
     const matchesSearch = conv.title?.toLowerCase().includes(searchQuery.toLowerCase())
     const matchesArchived = showArchived ? conv.is_archived : !conv.is_archived
     return matchesSearch && matchesArchived
