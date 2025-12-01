@@ -10,7 +10,8 @@ from django.utils.translation import gettext_lazy as _
 from django.utils import timezone
 from django.db.models import Q, Count
 from django.http import StreamingHttpResponse, HttpResponse
-from asgiref.sync import sync_to_async
+from asgiref.sync import sync_to_async, async_to_sync
+from channels.generic.http import AsyncHttpConsumer
 import asyncio
 import json
 import uuid
@@ -456,20 +457,48 @@ class StreamingQueryView(APIView):
                 await sync_to_async(assistant_message.save)()
         
         # تبدیل async generator به sync generator
+        import threading
+        
         def sync_stream():
             """Wrapper برای تبدیل async generator به sync"""
+            # ساخت event loop جدید در thread جدید
             loop = asyncio.new_event_loop()
-            asyncio.set_event_loop(loop)
-            try:
+            
+            def run_async_gen():
+                asyncio.set_event_loop(loop)
                 async_gen = generate_stream()
+                
                 while True:
                     try:
                         chunk = loop.run_until_complete(async_gen.__anext__())
-                        yield chunk
+                        queue.put(chunk)
                     except StopAsyncIteration:
+                        queue.put(None)
                         break
-            finally:
-                loop.close()
+                    except Exception as e:
+                        logger.error(f"Error in async generator: {str(e)}")
+                        queue.put(f"data: {json.dumps({'type': 'error', 'error': str(e)})}\n\n")
+                        queue.put(None)
+                        break
+                finally:
+                    loop.close()
+            
+            # استفاده از queue برای انتقال داده بین thread ها
+            import queue as queue_module
+            queue = queue_module.Queue()
+            
+            # اجرای async generator در thread جدید
+            thread = threading.Thread(target=run_async_gen)
+            thread.start()
+            
+            # خواندن از queue و yield کردن
+            while True:
+                chunk = queue.get()
+                if chunk is None:
+                    break
+                yield chunk
+            
+            thread.join()
         
         # برگرداندن streaming response
         response = StreamingHttpResponse(
