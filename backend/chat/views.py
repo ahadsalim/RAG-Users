@@ -444,8 +444,16 @@ class StreamingQueryView(APIView):
                 assistant_message.cached = metadata.get('cached', False)
                 await sync_to_async(assistant_message.save)()
                 
-                # به‌روزرسانی conversation
-                await sync_to_async(conversation.update_stats)()
+                # به‌روزرسانی آمار conversation
+                def update_conversation_stats():
+                    conversation.message_count = conversation.messages.count()
+                    conversation.token_usage = conversation.messages.aggregate(
+                        total=Count('tokens')
+                    )['total'] or 0
+                    conversation.last_message_at = timezone.now()
+                    conversation.save()
+                
+                await sync_to_async(update_conversation_stats)()
                 
             except Exception as e:
                 logger.error(f"Error in streaming: {str(e)}")
