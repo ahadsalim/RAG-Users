@@ -245,7 +245,10 @@ export const useChatStore = create<ChatState>((set, get) => ({
       }))
       
       // Reload conversations to update sidebar
-      get().loadConversations()
+      const currentState = get()
+      if (currentState && typeof currentState.loadConversations === 'function') {
+        currentState.loadConversations()
+      }
     } catch (error: any) {
       // تشخیص نوع خطا
       let errorMessage = 'خطا در ارسال پیام'
@@ -482,7 +485,10 @@ export const useChatStore = create<ChatState>((set, get) => ({
       }
       
       // Reload conversations to update list
-      await get().loadConversations()
+      const currentState = get()
+      if (currentState && typeof currentState.loadConversations === 'function') {
+        await currentState.loadConversations()
+      }
       
     } catch (error: any) {
       console.error('Streaming error:', error)
