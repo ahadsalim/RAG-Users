@@ -280,7 +280,6 @@ export const useChatStore = create<ChatState>((set, get) => ({
   },
   
   sendMessageStreaming: async (content: string, conversationId?: string, mode = 'simple_explanation', fileAttachments?: any[]) => {
-    console.log('🚀 Starting streaming message...', { content, conversationId, mode })
     set({ isLoading: true, error: null })
     
     try {
@@ -351,7 +350,6 @@ export const useChatStore = create<ChatState>((set, get) => ({
       }
       
       // Use fetch for streaming
-      console.log('📡 Fetching streaming endpoint...', `${API_URL}/api/v1/chat/query/stream/`)
       const response = await fetch(`${API_URL}/api/v1/chat/query/stream/`, {
         method: 'POST',
         headers: {
@@ -360,7 +358,6 @@ export const useChatStore = create<ChatState>((set, get) => ({
         },
         body: JSON.stringify(payload),
       })
-      console.log('📥 Response status:', response.status)
       
       // اگر streaming موجود نیست (404) یا مشکل authentication (401)، fallback به حالت عادی
       if (response.status === 404 || response.status === 401) {
@@ -387,13 +384,9 @@ export const useChatStore = create<ChatState>((set, get) => ({
         throw new Error('Response body is not readable')
       }
       
-      console.log('🔄 Starting to read stream...')
       while (true) {
         const { done, value } = await reader.read()
-        if (done) {
-          console.log('✅ Stream completed')
-          break
-        }
+        if (done) break
         
         const chunk = decoder.decode(value, { stream: true })
         buffer += chunk
@@ -414,12 +407,10 @@ export const useChatStore = create<ChatState>((set, get) => ({
                 
                 if (data.type === 'start') {
                   // Update conversation and message IDs
-                  console.log('🎬 Stream started:', data)
                   messageId = data.message_id
                   conversationIdFromServer = data.conversation_id
                 } else if (data.type === 'chunk') {
                   // Append content character by character
-                  console.log('📝 Chunk received:', data.content)
                   fullContent += data.content
                   set(state => ({
                     messages: state.messages.map(msg =>
