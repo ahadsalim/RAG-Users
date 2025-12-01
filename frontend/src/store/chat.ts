@@ -404,64 +404,64 @@ export const useChatStore = create<ChatState>((set, get) => ({
             if (line.startsWith('data: ')) {
               try {
                 const data = JSON.parse(line.slice(6))
-              
-              if (data.type === 'start') {
-                // Update conversation and message IDs
-                messageId = data.message_id
-                conversationIdFromServer = data.conversation_id
-              } else if (data.type === 'chunk') {
-                // Append content character by character
-                fullContent += data.content
-                set(state => ({
-                  messages: state.messages.map(msg =>
-                    msg.id === assistantMessage.id
-                      ? { ...msg, content: fullContent }
-                      : msg
-                  ),
-                }))
-              } else if (data.type === 'sources') {
-                // Update sources
-                set(state => ({
-                  messages: state.messages.map(msg =>
-                    msg.id === assistantMessage.id
-                      ? { ...msg, sources: data.sources }
-                      : msg
-                  ),
-                }))
-              } else if (data.type === 'end') {
-                // Finalize message
-                set(state => ({
-                  messages: state.messages.map(msg =>
-                    msg.id === assistantMessage.id
-                      ? {
-                          ...msg,
-                          id: messageId,
-                          status: 'completed',
-                          tokens: data.metadata?.tokens || 0,
-                          processing_time_ms: data.metadata?.processing_time_ms || 0,
-                          model_used: data.metadata?.model_used || '',
-                          cached: data.metadata?.cached || false,
-                        }
-                      : msg
-                  ),
-                  isLoading: false,
-                }))
-              } else if (data.type === 'error') {
-                // Handle error
-                set(state => ({
-                  messages: state.messages.map(msg =>
-                    msg.id === assistantMessage.id
-                      ? {
-                          ...msg,
-                          status: 'failed',
-                          error_message: data.error,
-                        }
-                      : msg
-                  ),
-                  isLoading: false,
-                  error: data.error,
-                }))
-              }
+                
+                if (data.type === 'start') {
+                  // Update conversation and message IDs
+                  messageId = data.message_id
+                  conversationIdFromServer = data.conversation_id
+                } else if (data.type === 'chunk') {
+                  // Append content character by character
+                  fullContent += data.content
+                  set(state => ({
+                    messages: state.messages.map(msg =>
+                      msg.id === assistantMessage.id
+                        ? { ...msg, content: fullContent }
+                        : msg
+                    ),
+                  }))
+                } else if (data.type === 'sources') {
+                  // Update sources
+                  set(state => ({
+                    messages: state.messages.map(msg =>
+                      msg.id === assistantMessage.id
+                        ? { ...msg, sources: data.sources }
+                        : msg
+                    ),
+                  }))
+                } else if (data.type === 'end') {
+                  // Finalize message
+                  set(state => ({
+                    messages: state.messages.map(msg =>
+                      msg.id === assistantMessage.id
+                        ? {
+                            ...msg,
+                            id: messageId,
+                            status: 'completed',
+                            tokens: data.metadata?.tokens || 0,
+                            processing_time_ms: data.metadata?.processing_time_ms || 0,
+                            model_used: data.metadata?.model_used || '',
+                            cached: data.metadata?.cached || false,
+                          }
+                        : msg
+                    ),
+                    isLoading: false,
+                  }))
+                } else if (data.type === 'error') {
+                  // Handle error
+                  set(state => ({
+                    messages: state.messages.map(msg =>
+                      msg.id === assistantMessage.id
+                        ? {
+                            ...msg,
+                            status: 'failed',
+                            error_message: data.error,
+                          }
+                        : msg
+                    ),
+                    isLoading: false,
+                    error: data.error,
+                  }))
+                }
               } catch (e) {
                 console.error('Error parsing SSE data:', e)
               }
