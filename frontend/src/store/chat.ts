@@ -4,7 +4,7 @@ import { Conversation, Message, QueryResponse } from '@/types/chat'
 import { useAuthStore } from './auth'
 
 interface ChatState {
-  conversations: Conversation[]
+  conversations: Conversation[] | undefined
   currentConversation: Conversation | null
   messages: Message[]
   isLoading: boolean
