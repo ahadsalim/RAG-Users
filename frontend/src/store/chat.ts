@@ -1,6 +1,7 @@
 import { create } from 'zustand'
 import axios from 'axios'
 import { Conversation, Message, QueryResponse } from '@/types/chat'
+import { useAuthStore } from './auth'
 
 interface ChatState {
   conversations: Conversation[]
@@ -377,6 +378,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
       let fullContent = ''
       let messageId = assistantMessage.id
       let conversationIdFromServer = conversationId
+      let buffer = '' // Buffer for incomplete SSE chunks
       
       if (!reader) {
         throw new Error('Response body is not readable')
@@ -386,13 +388,22 @@ export const useChatStore = create<ChatState>((set, get) => ({
         const { done, value } = await reader.read()
         if (done) break
         
-        const chunk = decoder.decode(value)
-        const lines = chunk.split('\n')
+        const chunk = decoder.decode(value, { stream: true })
+        buffer += chunk
         
-        for (const line of lines) {
-          if (line.startsWith('data: ')) {
-            try {
-              const data = JSON.parse(line.slice(6))
+        // Split by double newline (SSE event separator)
+        const events = buffer.split('\n\n')
+        
+        // Keep the last incomplete event in buffer
+        buffer = events.pop() || ''
+        
+        for (const event of events) {
+          const lines = event.split('\n')
+          
+          for (const line of lines) {
+            if (line.startsWith('data: ')) {
+              try {
+                const data = JSON.parse(line.slice(6))
               
               if (data.type === 'start') {
                 // Update conversation and message IDs
@@ -451,8 +462,9 @@ export const useChatStore = create<ChatState>((set, get) => ({
                   error: data.error,
                 }))
               }
-            } catch (e) {
-              console.error('Error parsing SSE data:', e)
+              } catch (e) {
+                console.error('Error parsing SSE data:', e)
+              }
             }
           }
         }
@@ -475,11 +487,20 @@ export const useChatStore = create<ChatState>((set, get) => ({
       console.error('Streaming error:', error)
       
       let errorMessage = 'خطا در ارسال پیام'
+      const errorText = error.message || error.toString()
       
-      if (error.message?.includes('429')) {
-        errorMessage = 'محدودیت تعداد درخواست. لطفا کمی صبر کنید.'
-      } else if (error.message?.includes('403')) {
+      if (errorText.includes('429')) {
+        errorMessage = 'محدودیت تعداد درخواست. لطفاً کمی صبر کنید.'
+      } else if (errorText.includes('403')) {
         errorMessage = 'شما اشتراک فعالی ندارید'
+      } else if (errorText.includes('401') || errorText.includes('token not valid') || errorText.includes('authentication')) {
+        errorMessage = 'نشست شما منقضی شده است. لطفاً دوباره وارد شوید.'
+        const authStore = useAuthStore.getState()
+        authStore.logout()
+      } else if (errorText.includes('502') || errorText.includes('Bad Gateway')) {
+        errorMessage = 'سرور موقتاً در دسترس نیست. لطفاً دوباره تلاش کنید.'
+      } else if (errorText.includes('504') || errorText.includes('timeout')) {
+        errorMessage = 'زمان انتظار تمام شد. لطفاً دوباره تلاش کنید.'
       }
       
       // Update assistant message with error
