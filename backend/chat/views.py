@@ -367,6 +367,13 @@ class StreamingQueryView(APIView):
             status='processing'
         )
         
+        # دریافت مقادیر sync قبل از async generator
+        conversation_id = str(conversation.id)
+        assistant_message_id = str(assistant_message.id)
+        rag_conversation_id = conversation.rag_conversation_id
+        query_text = data['query']
+        filters = data.get('filters')
+        
         async def generate_stream():
             """Generator برای streaming response"""
             try:
@@ -391,15 +398,15 @@ class StreamingQueryView(APIView):
                 metadata = {}
                 
                 # ارسال اطلاعات اولیه
-                yield f"data: {json.dumps({'type': 'start', 'conversation_id': str(conversation.id), 'message_id': str(assistant_message.id)})}\n\n"
+                yield f"data: {json.dumps({'type': 'start', 'conversation_id': conversation_id, 'message_id': assistant_message_id})}\n\n"
                 
                 # دریافت stream از RAG Core
                 async for chunk_text in core_service.send_query_stream(
-                    query=data['query'],
+                    query=query_text,
                     token=access_token,
-                    conversation_id=conversation.rag_conversation_id,
+                    conversation_id=rag_conversation_id,
                     language='fa',
-                    filters=data.get('filters'),
+                    filters=filters,
                     user_preferences=user_preferences
                 ):
                     # Parse JSON chunk
