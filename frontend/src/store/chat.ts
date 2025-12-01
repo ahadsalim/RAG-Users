@@ -244,9 +244,9 @@ export const useChatStore = create<ChatState>((set, get) => ({
         isLoading: false,
       }))
       
-      // Reload conversations to update sidebar
+      // Reload conversations to update sidebar (safe)
       const currentState = get()
-      if (currentState && typeof currentState.loadConversations === 'function') {
+      if (currentState?.loadConversations) {
         currentState.loadConversations()
       }
     } catch (error: any) {
@@ -484,9 +484,9 @@ export const useChatStore = create<ChatState>((set, get) => ({
         }))
       }
       
-      // Reload conversations to update list
+      // Reload conversations to update list (safe)
       const currentState = get()
-      if (currentState && typeof currentState.loadConversations === 'function') {
+      if (currentState?.loadConversations) {
         await currentState.loadConversations()
       }
       
