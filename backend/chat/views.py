@@ -410,28 +410,39 @@ class StreamingQueryView(APIView):
                     filters=filters,
                     user_preferences=user_preferences
                 ):
-                    # Parse JSON chunk
-                    try:
-                        chunk_data = json.loads(chunk_text)
-                        chunk_type = chunk_data.get('type')
-                        
-                        if chunk_type == 'chunk':
-                            content = chunk_data.get('content', '')
-                            full_content += content
-                            yield f"data: {json.dumps({'type': 'chunk', 'content': content})}\n\n"
-                        
-                        elif chunk_type == 'sources':
-                            sources = chunk_data.get('sources', [])
-                            yield f"data: {json.dumps({'type': 'sources', 'sources': sources})}\n\n"
-                        
-                        elif chunk_type == 'end':
-                            metadata = chunk_data.get('metadata', {})
-                            chunks = chunk_data.get('chunks', [])
-                            yield f"data: {json.dumps({'type': 'end', 'metadata': metadata})}\n\n"
-                    except json.JSONDecodeError:
-                        # اگر JSON نبود، مستقیم به عنوان content ارسال کن
-                        full_content += chunk_text
-                        yield f"data: {json.dumps({'type': 'chunk', 'content': chunk_text})}\n\n"
+                    # Parse SSE chunks from RAG Core
+                    # RAG Core sends: data: {"type": "token", "content": "..."}\n\n
+                    for line in chunk_text.split('\n'):
+                        if line.startswith('data: '):
+                            try:
+                                chunk_data = json.loads(line[6:])  # Remove "data: " prefix
+                                chunk_type = chunk_data.get('type')
+                                
+                                if chunk_type == 'token':
+                                    # Token from RAG Core - accumulate and send as chunk
+                                    content = chunk_data.get('content', '')
+                                    full_content += content
+                                    yield f"data: {json.dumps({'type': 'chunk', 'content': content})}\n\n"
+                                
+                                elif chunk_type == 'sources':
+                                    sources = chunk_data.get('sources', [])
+                                    yield f"data: {json.dumps({'type': 'sources', 'sources': sources})}\n\n"
+                                
+                                elif chunk_type == 'metadata':
+                                    metadata = chunk_data
+                                    chunks = chunk_data.get('chunks', [])
+                                
+                                elif chunk_type == 'error':
+                                    error_msg = chunk_data.get('message', 'Unknown error')
+                                    yield f"data: {json.dumps({'type': 'error', 'error': error_msg})}\n\n"
+                                    break
+                                    
+                            except json.JSONDecodeError:
+                                logger.error(f"Failed to parse SSE chunk: {line}")
+                                continue
+                
+                # ارسال end event
+                yield f"data: {json.dumps({'type': 'end', 'metadata': metadata})}\n\n"
                 
                 # به‌روزرسانی پیام در دیتابیس
                 assistant_message.content = full_content
