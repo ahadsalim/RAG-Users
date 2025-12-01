@@ -19,17 +19,16 @@ No 'Access-Control-Allow-Origin' header is present on the requested resource.
 
 ## ✅ راه‌حل
 
-### 1. تغییر Environment Variable
+### 1. تنظیم صحیح Environment Variable
 
 در فایل `/srv/deployment/.env`:
 
 ```bash
-# ❌ قبل
+# ✅ صحیح - Backend در admin.tejarat.chat است
 NEXT_PUBLIC_API_URL=https://admin.tejarat.chat
-
-# ✅ بعد
-NEXT_PUBLIC_API_URL=https://api.tejarat.chat
 ```
+
+**نکته مهم:** `api.tejarat.chat` وجود ندارد! Backend در `admin.tejarat.chat` است.
 
 ### 2. Restart Docker Stack
 
@@ -43,7 +42,20 @@ docker-compose up -d
 
 ```bash
 docker exec app_frontend env | grep NEXT_PUBLIC_API_URL
-# خروجی: NEXT_PUBLIC_API_URL=https://api.tejarat.chat
+# خروجی: NEXT_PUBLIC_API_URL=https://admin.tejarat.chat
+```
+
+### 4. تست CORS
+
+```bash
+curl -I -H "Origin: https://tejarat.chat" \
+  https://admin.tejarat.chat/api/v1/chat/conversations/
+```
+
+باید header زیر را ببینید:
+```
+access-control-allow-origin: https://tejarat.chat
+access-control-allow-credentials: true
 ```
 
 ---
@@ -55,7 +67,7 @@ docker exec app_frontend env | grep NEXT_PUBLIC_API_URL
 ```
 Frontend (https://tejarat.chat)
         ↓
-Backend API (https://api.tejarat.chat)
+Backend API (https://admin.tejarat.chat) ← ✅ درست
         ↓
 RAG Core (https://core.tejarat.chat)
 ```
@@ -77,10 +89,10 @@ RAG Core (https://core.tejarat.chat)
 
 ```bash
 # Backend API URL (برای frontend)
-NEXT_PUBLIC_API_URL=https://api.tejarat.chat
+NEXT_PUBLIC_API_URL=https://admin.tejarat.chat
 
 # WebSocket URL (برای real-time features)
-NEXT_PUBLIC_WS_URL=wss://api.tejarat.chat
+NEXT_PUBLIC_WS_URL=wss://admin.tejarat.chat
 
 # Backend URL (برای SSR)
 BACKEND_URL=https://admin.tejarat.chat
@@ -108,13 +120,14 @@ docker exec app_frontend env | grep NEXT_PUBLIC
 ### 3. چک کردن CORS Headers
 
 ```bash
-curl -I https://api.tejarat.chat/api/v1/chat/query/stream/ \
+curl -I https://admin.tejarat.chat/api/v1/chat/conversations/ \
   -H "Origin: https://tejarat.chat"
 ```
 
 باید header زیر را ببینید:
 ```
-Access-Control-Allow-Origin: https://tejarat.chat
+access-control-allow-origin: https://tejarat.chat
+access-control-allow-credentials: true
 ```
 
 ---
