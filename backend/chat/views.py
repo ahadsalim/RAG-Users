@@ -370,8 +370,8 @@ class StreamingQueryView(APIView):
         async def generate_stream():
             """Generator برای streaming response"""
             try:
-                # Generate JWT token for Core API
-                refresh = RefreshToken.for_user(user)
+                # Generate JWT token for Core API (sync operation)
+                refresh = await sync_to_async(RefreshToken.for_user)(user)
                 access_token = str(refresh.access_token)
                 
                 # Get user preferences as object
@@ -434,13 +434,10 @@ class StreamingQueryView(APIView):
                 assistant_message.processing_time_ms = metadata.get('processing_time_ms', 0)
                 assistant_message.model_used = metadata.get('model_used', '')
                 assistant_message.cached = metadata.get('cached', False)
-                await asyncio.get_event_loop().run_in_executor(None, assistant_message.save)
+                await sync_to_async(assistant_message.save)()
                 
                 # به‌روزرسانی conversation
-                await asyncio.get_event_loop().run_in_executor(
-                    None,
-                    lambda: conversation.update_stats()
-                )
+                await sync_to_async(conversation.update_stats)()
                 
             except Exception as e:
                 logger.error(f"Error in streaming: {str(e)}")
@@ -449,7 +446,7 @@ class StreamingQueryView(APIView):
                 # به‌روزرسانی وضعیت خطا
                 assistant_message.status = 'failed'
                 assistant_message.error_message = str(e)
-                await asyncio.get_event_loop().run_in_executor(None, assistant_message.save)
+                await sync_to_async(assistant_message.save)()
         
         # تبدیل async generator به sync generator
         def sync_stream():
