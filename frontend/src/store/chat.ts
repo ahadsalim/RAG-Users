@@ -1,5 +1,6 @@
 import { create } from 'zustand'
 import axios from 'axios'
+import { flushSync } from 'react-dom'
 import { Conversation, Message, QueryResponse } from '@/types/chat'
 import { useAuthStore } from './auth'
 
@@ -419,14 +420,17 @@ export const useChatStore = create<ChatState>((set, get) => ({
                 } else if (data.type === 'chunk') {
                   // Append content character by character
                   fullContent += data.content
-                  // Immediate update without batching
-                  set(state => ({
-                    messages: state.messages.map(msg =>
-                      msg.id === assistantMessage.id
-                        ? { ...msg, content: fullContent }
-                        : msg
-                    ),
-                  }), true) // Replace entire state to force re-render
+                  console.log('📝 Chunk received:', data.content.length, 'chars, total:', fullContent.length)
+                  // Force immediate synchronous render
+                  flushSync(() => {
+                    set(state => ({
+                      messages: state.messages.map(msg =>
+                        msg.id === assistantMessage.id
+                          ? { ...msg, content: fullContent }
+                          : msg
+                      ),
+                    }), true)
+                  })
                 } else if (data.type === 'sources') {
                   // Update sources
                   set(state => ({
@@ -438,6 +442,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
                   }))
                 } else if (data.type === 'end') {
                   // Finalize message
+                  console.log('✅ Stream ended, setting isLoading to false')
                   set(state => ({
                     messages: state.messages.map(msg =>
                       msg.id === assistantMessage.id
