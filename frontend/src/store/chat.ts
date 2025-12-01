@@ -1,6 +1,5 @@
 import { create } from 'zustand'
 import axios from 'axios'
-import { flushSync } from 'react-dom'
 import { Conversation, Message, QueryResponse } from '@/types/chat'
 import { useAuthStore } from './auth'
 
@@ -387,6 +386,8 @@ export const useChatStore = create<ChatState>((set, get) => ({
       let messageId = assistantMessage.id
       let conversationIdFromServer = conversationId
       let buffer = '' // Buffer for incomplete SSE chunks
+      let lastUpdateTime = 0
+      const UPDATE_INTERVAL = 50 // Update UI every 50ms
       
       if (!reader) {
         throw new Error('Response body is not readable')
@@ -394,7 +395,19 @@ export const useChatStore = create<ChatState>((set, get) => ({
       
       while (true) {
         const { done, value } = await reader.read()
-        if (done) break
+        if (done) {
+          console.log('🏁 Stream done, final update')
+          // Final update with complete content
+          set(state => ({
+            messages: state.messages.map(msg =>
+              msg.id === assistantMessage.id
+                ? { ...msg, content: fullContent, status: 'completed' }
+                : msg
+            ),
+            isLoading: false,
+          }))
+          break
+        }
         
         const chunk = decoder.decode(value, { stream: true })
         buffer += chunk
@@ -418,19 +431,22 @@ export const useChatStore = create<ChatState>((set, get) => ({
                   messageId = data.message_id
                   conversationIdFromServer = data.conversation_id
                 } else if (data.type === 'chunk') {
-                  // Append content character by character
+                  // Append content
                   fullContent += data.content
                   console.log('📝 Chunk received:', data.content.length, 'chars, total:', fullContent.length)
-                  // Force immediate synchronous render
-                  flushSync(() => {
+                  
+                  // Throttle UI updates to every 50ms
+                  const now = Date.now()
+                  if (now - lastUpdateTime >= UPDATE_INTERVAL) {
+                    lastUpdateTime = now
                     set(state => ({
                       messages: state.messages.map(msg =>
                         msg.id === assistantMessage.id
                           ? { ...msg, content: fullContent }
                           : msg
                       ),
-                    }), true)
-                  })
+                    }))
+                  }
                 } else if (data.type === 'sources') {
                   // Update sources
                   set(state => ({
