@@ -32,8 +32,8 @@ export function ChatSidebar({
     loadConversations()
   }, [loadConversations])
   
-  const filteredConversations = conversations.filter(conv => {
-    const matchesSearch = conv.title.toLowerCase().includes(searchQuery.toLowerCase())
+  const filteredConversations = (conversations || []).filter(conv => {
+    const matchesSearch = conv.title?.toLowerCase().includes(searchQuery.toLowerCase())
     const matchesArchived = showArchived ? conv.is_archived : !conv.is_archived
     return matchesSearch && matchesArchived
   })
