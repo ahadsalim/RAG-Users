@@ -341,8 +341,12 @@ export const useChatStore = create<ChatState>((set, get) => ({
         payload.file_attachments = fileAttachments
       }
       
-      // Get token from localStorage
-      const token = localStorage.getItem('access_token')
+      // Get token from axios default headers (set by auth store)
+      const token = axios.defaults.headers.common['Authorization']?.toString().replace('Bearer ', '')
+      
+      if (!token) {
+        throw new Error('No authentication token found')
+      }
       
       // Use fetch for streaming
       const response = await fetch(`${API_URL}/api/v1/chat/query/stream/`, {
@@ -354,10 +358,10 @@ export const useChatStore = create<ChatState>((set, get) => ({
         body: JSON.stringify(payload),
       })
       
-      // اگر streaming موجود نیست (404)، fallback به حالت عادی
-      if (response.status === 404) {
-        console.warn('Streaming not available, falling back to normal mode')
-        // استفاده از sendMessage عادی
+      // اگر streaming موجود نیست (404) یا مشکل authentication (401)، fallback به حالت عادی
+      if (response.status === 404 || response.status === 401) {
+        console.warn(`Streaming not available (${response.status}), falling back to normal mode`)
+        // استفاده از sendMessage عادی که از axios استفاده می‌کند
         set({ isLoading: false })
         await get().sendMessage(content, conversationId, mode, fileAttachments)
         return
