@@ -125,18 +125,15 @@ export function ChatMessages({ messages, isLoading, isTyping }: ChatMessagesProp
               
               {/* Message Content */}
               <div className="prose prose-sm dark:prose-invert max-w-none">
-                {message.status === 'processing' ? (
-                  <div className="flex items-center gap-2 text-gray-500">
-                    <span>⏳ در حال پردازش...</span>
-                  </div>
-                ) : message.status === 'failed' ? (
+                {message.status === 'failed' ? (
                   <div className="text-red-600 dark:text-red-400">
                     خطا: {message.error_message || 'خطای نامشخص'}
                   </div>
                 ) : (
-                  <ReactMarkdown 
-                    remarkPlugins={[remarkGfm]}
-                    components={{
+                  <>
+                    <ReactMarkdown 
+                      remarkPlugins={[remarkGfm]}
+                      components={{
                       // Custom rendering for code blocks
                       code: ({ node, inline, className, children, ...props }: any) => {
                         const match = /language-(\w+)/.exec(className || '')
@@ -175,6 +172,12 @@ export function ChatMessages({ messages, isLoading, isTyping }: ChatMessagesProp
                   >
                     {message.content}
                   </ReactMarkdown>
+                    {message.status === 'processing' && (
+                      <span className="inline-flex items-center gap-1 text-gray-500 text-sm ml-1">
+                        <span className="animate-pulse">●</span>
+                      </span>
+                    )}
+                  </>
                 )}
               </div>
               
