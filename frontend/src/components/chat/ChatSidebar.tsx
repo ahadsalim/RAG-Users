@@ -138,6 +138,7 @@ export function ChatSidebar({
                 width={24} 
                 height={24}
                 className="rounded"
+                style={{ width: 'auto', height: 'auto' }}
               />
               <h2 className="text-lg font-bold">گفتگوها</h2>
             </div>

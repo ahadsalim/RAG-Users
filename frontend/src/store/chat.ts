@@ -412,13 +412,16 @@ export const useChatStore = create<ChatState>((set, get) => ({
                 } else if (data.type === 'chunk') {
                   // Append content character by character
                   fullContent += data.content
-                  set(state => ({
-                    messages: state.messages.map(msg =>
-                      msg.id === assistantMessage.id
-                        ? { ...msg, content: fullContent }
-                        : msg
-                    ),
-                  }))
+                  // Force immediate update for streaming effect
+                  requestAnimationFrame(() => {
+                    set(state => ({
+                      messages: state.messages.map(msg =>
+                        msg.id === assistantMessage.id
+                          ? { ...msg, content: fullContent }
+                          : msg
+                      ),
+                    }))
+                  })
                 } else if (data.type === 'sources') {
                   // Update sources
                   set(state => ({
