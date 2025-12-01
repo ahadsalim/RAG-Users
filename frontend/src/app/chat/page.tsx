@@ -14,15 +14,16 @@ import { Message, Conversation } from '@/types/chat'
 export default function ChatPage() {
   const router = useRouter()
   const { isAuthenticated, user, isLoading: authLoading } = useAuthStore()
-  const { 
-    currentConversation,
-    messages,
-    isLoading,
-    sendMessage,
-    sendMessageStreaming,
-    createNewConversation,
-    loadConversation
-  } = useChatStore()
+  const store = useChatStore()
+  
+  // Extract with fallback
+  const currentConversation = store?.currentConversation ?? null
+  const messages = store?.messages ?? []
+  const isLoading = store?.isLoading ?? false
+  const sendMessage = store?.sendMessage ?? (async () => {})
+  const sendMessageStreaming = store?.sendMessageStreaming ?? (async () => {})
+  const createNewConversation = store?.createNewConversation ?? (() => {})
+  const loadConversation = store?.loadConversation ?? (async () => {})
   
   const [isSidebarOpen, setIsSidebarOpen] = useState(false) // Start closed for faster load
   const [isTyping, setIsTyping] = useState(false)
