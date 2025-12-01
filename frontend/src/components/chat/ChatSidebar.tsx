@@ -25,11 +25,20 @@ export function ChatSidebar({
   const [showArchived, setShowArchived] = useState(false)
   const [isSettingsOpen, setIsSettingsOpen] = useState(false)
   const [openMenuId, setOpenMenuId] = useState<string | null>(null)
-  const { conversations, loadConversations, loadConversation, deleteConversation, archiveConversation } = useChatStore()
+  const store = useChatStore()
   const { user, logout } = useAuthStore()
   
+  // Extract with fallback
+  const conversations = store?.conversations ?? []
+  const loadConversations = store?.loadConversations ?? (() => {})
+  const loadConversation = store?.loadConversation ?? (() => {})
+  const deleteConversation = store?.deleteConversation ?? (async () => {})
+  const archiveConversation = store?.archiveConversation ?? (async () => {})
+  
   useEffect(() => {
-    loadConversations()
+    if (loadConversations) {
+      loadConversations()
+    }
   }, [loadConversations])
   
   // Safe guard against undefined conversations
