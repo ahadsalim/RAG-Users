@@ -700,82 +700,75 @@ const NotificationsTab: React.FC = () => {
   }
 
   const channels = [
-    { key: 'email_enabled' as const, label: 'ایمیل', icon: '📧', description: 'دریافت اعلان از طریق ایمیل' },
-    { key: 'sms_enabled' as const, label: 'پیامک', icon: '📱', description: 'دریافت اعلان از طریق پیامک' },
-    { key: 'push_enabled' as const, label: 'Push', icon: '🔔', description: 'دریافت Push Notification' },
-    { key: 'in_app_enabled' as const, label: 'داخل برنامه', icon: '💬', description: 'نمایش اعلان در برنامه' },
+    { key: 'email_enabled' as const, label: 'ایمیل', icon: '📧' },
+    { key: 'sms_enabled' as const, label: 'پیامک', icon: '📱' },
+    { key: 'push_enabled' as const, label: 'Push', icon: '🔔' },
+    { key: 'in_app_enabled' as const, label: 'داخل برنامه', icon: '💬' },
   ];
 
   const categories = [
-    { key: 'system_notifications' as const, label: 'سیستمی', description: 'اعلان‌های مربوط به سیستم' },
-    { key: 'payment_notifications' as const, label: 'پرداخت', description: 'اعلان‌های مربوط به پرداخت' },
-    { key: 'subscription_notifications' as const, label: 'اشتراک', description: 'اعلان‌های مربوط به اشتراک' },
-    { key: 'chat_notifications' as const, label: 'چت', description: 'اعلان‌های مربوط به گفتگو' },
-    { key: 'account_notifications' as const, label: 'حساب کاربری', description: 'اعلان‌های مربوط به حساب' },
-    { key: 'security_notifications' as const, label: 'امنیت', description: 'اعلان‌های امنیتی' },
-    { key: 'marketing_notifications' as const, label: 'بازاریابی', description: 'اعلان‌های تبلیغاتی' },
-    { key: 'support_notifications' as const, label: 'پشتیبانی', description: 'اعلان‌های پشتیبانی' },
+    { key: 'system_notifications' as const, label: 'سیستمی' },
+    { key: 'payment_notifications' as const, label: 'پرداخت' },
+    { key: 'subscription_notifications' as const, label: 'اشتراک' },
+    { key: 'chat_notifications' as const, label: 'چت' },
+    { key: 'account_notifications' as const, label: 'حساب کاربری' },
+    { key: 'security_notifications' as const, label: 'امنیت' },
+    { key: 'marketing_notifications' as const, label: 'بازاریابی' },
+    { key: 'support_notifications' as const, label: 'پشتیبانی' },
   ];
 
+  // Toggle Switch Component
+  const ToggleSwitch = ({ checked, onChange }: { checked: boolean; onChange: () => void }) => (
+    <button
+      type="button"
+      onClick={onChange}
+      className={`relative w-9 h-5 rounded-full transition-colors flex-shrink-0 ${
+        checked ? 'bg-blue-500' : 'bg-gray-300 dark:bg-gray-600'
+      }`}
+    >
+      <span className={`absolute top-0.5 w-4 h-4 rounded-full bg-white shadow transition-all ${
+        checked ? 'right-0.5' : 'left-0.5'
+      }`} />
+    </button>
+  );
+
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       {/* کانال‌های اعلان */}
-      <div className="bg-gray-50 dark:bg-gray-800 rounded-xl p-6">
-        <h4 className="text-lg font-semibold mb-4 text-gray-900 dark:text-white">کانال‌های اعلان‌رسانی</h4>
-        <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">انتخاب کنید از کدام کانال‌ها اعلان دریافت کنید</p>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4">
+        <h4 className="text-sm font-semibold mb-3 text-gray-900 dark:text-white">کانال‌های اعلان‌رسانی</h4>
+        <div className="grid grid-cols-2 gap-2">
           {channels.map((channel) => (
             <div 
               key={channel.key}
-              className={`flex items-center justify-between p-4 rounded-lg border-2 transition-all cursor-pointer ${
+              className={`flex items-center justify-between p-2 rounded-lg border transition-all cursor-pointer ${
                 preferences[channel.key]
                   ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20'
                   : 'border-gray-200 dark:border-gray-700'
               }`}
               onClick={() => handleToggle(channel.key)}
             >
-              <div className="flex items-center gap-3">
-                <span className="text-2xl">{channel.icon}</span>
-                <div>
-                  <p className="font-medium text-gray-900 dark:text-white">{channel.label}</p>
-                  <p className="text-xs text-gray-500">{channel.description}</p>
-                </div>
+              <div className="flex items-center gap-2">
+                <span className="text-base">{channel.icon}</span>
+                <span className="text-xs font-medium text-gray-900 dark:text-white">{channel.label}</span>
               </div>
-              <div className={`w-12 h-6 rounded-full transition-colors ${
-                preferences[channel.key] ? 'bg-blue-500' : 'bg-gray-300 dark:bg-gray-600'
-              }`}>
-                <div className={`w-5 h-5 rounded-full bg-white shadow-md transform transition-transform mt-0.5 ${
-                  preferences[channel.key] ? 'translate-x-6' : 'translate-x-0.5'
-                }`} />
-              </div>
+              <ToggleSwitch checked={preferences[channel.key]} onChange={() => handleToggle(channel.key)} />
             </div>
           ))}
         </div>
       </div>
 
       {/* دسته‌بندی اعلان‌ها */}
-      <div className="bg-gray-50 dark:bg-gray-800 rounded-xl p-6">
-        <h4 className="text-lg font-semibold mb-4 text-gray-900 dark:text-white">دسته‌بندی اعلان‌ها</h4>
-        <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">انتخاب کنید کدام نوع اعلان‌ها را دریافت کنید</p>
-        <div className="space-y-3">
+      <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4">
+        <h4 className="text-sm font-semibold mb-3 text-gray-900 dark:text-white">دسته‌بندی اعلان‌ها</h4>
+        <div className="grid grid-cols-2 gap-2">
           {categories.map((category) => (
             <div 
               key={category.key}
-              className="flex items-center justify-between p-3 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+              className="flex items-center justify-between p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
             >
-              <div>
-                <p className="font-medium text-gray-900 dark:text-white">{category.label}</p>
-                <p className="text-xs text-gray-500">{category.description}</p>
-              </div>
-              <label className="relative inline-flex items-center cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={preferences[category.key]}
-                  onChange={() => handleToggle(category.key)}
-                  className="sr-only peer"
-                />
-                <div className="w-11 h-6 bg-gray-300 dark:bg-gray-600 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-500"></div>
-              </label>
+              <span className="text-xs font-medium text-gray-900 dark:text-white">{category.label}</span>
+              <ToggleSwitch checked={preferences[category.key]} onChange={() => handleToggle(category.key)} />
             </div>
           ))}
         </div>
