@@ -32,9 +32,24 @@ export function ChatHeader({ onToggleSidebar, conversation, isConnected }: ChatH
       const response = await axios.get('/api/v1/subscriptions/usage/')
       if (response.data?.usage) {
         setUsage(response.data.usage)
+      } else {
+        // اگر داده‌ای نبود، مقادیر پیش‌فرض
+        setUsage({
+          daily_used: 0,
+          daily_limit: 0,
+          monthly_used: 0,
+          monthly_limit: 0
+        })
       }
     } catch (error) {
       console.error('Error loading usage:', error)
+      // در صورت خطا هم مقادیر پیش‌فرض
+      setUsage({
+        daily_used: 0,
+        daily_limit: 0,
+        monthly_used: 0,
+        monthly_limit: 0
+      })
     } finally {
       setLoadingUsage(false)
     }

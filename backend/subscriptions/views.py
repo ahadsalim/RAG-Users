@@ -124,11 +124,35 @@ class SubscriptionViewSet(viewsets.ModelViewSet):
             end_date__gt=timezone.now()
         ).first()
         
+        # اگر اشتراک فعال نیست، اطلاعات پیش‌فرض برگردان
         if not subscription:
-            return Response(
-                {'error': 'اشتراک فعالی ندارید'},
-                status=status.HTTP_404_NOT_FOUND
-            )
+            # تلاش برای پیدا کردن آخرین اشتراک
+            last_subscription = user.subscriptions.order_by('-created_at').first()
+            
+            return Response({
+                'subscription': {
+                    'plan': last_subscription.plan.name if last_subscription else 'بدون اشتراک',
+                    'status': 'inactive',
+                    'start_date': last_subscription.start_date if last_subscription else None,
+                    'end_date': last_subscription.end_date if last_subscription else None,
+                    'days_remaining': 0
+                },
+                'usage': {
+                    'daily_used': 0,
+                    'daily_limit': 0,
+                    'daily_remaining': 0,
+                    'monthly_used': 0,
+                    'monthly_limit': 0,
+                    'monthly_remaining': 0
+                },
+                'quota_percentage': {'daily': 0, 'monthly': 0},
+                'can_query': False,
+                'message': 'اشتراک فعالی ندارید',
+                'stats': {},
+                'user': {
+                    'date_joined': user.date_joined
+                }
+            })
         
         # دریافت آمار مصرف
         can_query, message, usage_info = UsageService.check_quota(user, subscription)
@@ -139,6 +163,7 @@ class SubscriptionViewSet(viewsets.ModelViewSet):
             'subscription': {
                 'plan': subscription.plan.name,
                 'status': subscription.status,
+                'start_date': subscription.start_date,
                 'end_date': subscription.end_date,
                 'days_remaining': (subscription.end_date - timezone.now()).days
             },
@@ -146,7 +171,10 @@ class SubscriptionViewSet(viewsets.ModelViewSet):
             'quota_percentage': quota_percentage,
             'can_query': can_query,
             'message': message if not can_query else None,
-            'stats': stats
+            'stats': stats,
+            'user': {
+                'date_joined': user.date_joined
+            }
         })
 
 

@@ -350,9 +350,13 @@ const SubscriptionTab: React.FC<{ subscription: SubscriptionInfo | null; loading
     const loadData = async () => {
       setLoading(true);
       try {
-        // بارگذاری پلن‌ها
-        const plansResponse = await axios.get('/api/v1/plans/');
-        setPlans(plansResponse.data);
+        // بارگذاری پلن‌ها - URL صحیح
+        const plansResponse = await axios.get('/api/v1/subscriptions/plans/');
+        if (plansResponse.data?.results) {
+          setPlans(plansResponse.data.results);
+        } else if (Array.isArray(plansResponse.data)) {
+          setPlans(plansResponse.data);
+        }
 
         // بارگذاری آمار مصرف
         const usageResponse = await axios.get('/api/v1/subscriptions/usage/');
@@ -379,28 +383,51 @@ const SubscriptionTab: React.FC<{ subscription: SubscriptionInfo | null; loading
   const usage = usageStats?.usage || {};
   const stats = usageStats?.stats || {};
 
+  // فرمت تاریخ
+  const formatDate = (dateStr: string | null) => {
+    if (!dateStr) return '-';
+    return new Date(dateStr).toLocaleDateString('fa-IR');
+  };
+
   return (
     <div className="space-y-6">
-      {/* Current Plan */}
-      <div className="bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl p-6 text-white">
-        <h4 className="text-lg font-semibold mb-2">پلن فعلی</h4>
-        <p className="text-3xl font-bold mb-4">{usageStats?.subscription?.plan || subscription?.plan_name || 'رایگان'}</p>
-        <div className="grid grid-cols-2 gap-4 text-sm">
-          <div>
-            <p className="opacity-80">وضعیت</p>
-            <p className="font-semibold">{usageStats?.subscription?.status === 'active' ? 'فعال' : 'غیرفعال'}</p>
+      {/* Current Plan - Compact & Beautiful */}
+      <div className="bg-gradient-to-l from-blue-600 via-purple-600 to-indigo-600 rounded-xl p-4 text-white shadow-lg">
+        <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center">
+              <span className="text-xl">👑</span>
+            </div>
+            <div>
+              <p className="text-xs opacity-80">پلن فعلی</p>
+              <p className="text-xl font-bold">{usageStats?.subscription?.plan || subscription?.plan_name || 'رایگان'}</p>
+            </div>
           </div>
-          <div>
-            <p className="opacity-80">تاریخ انقضا</p>
-            <p className="font-semibold">
-              {usageStats?.subscription?.end_date 
-                ? new Date(usageStats.subscription.end_date).toLocaleDateString('fa-IR')
-                : '-'}
-            </p>
+          <div className={`px-3 py-1 rounded-full text-xs font-medium ${
+            usageStats?.subscription?.status === 'active' 
+              ? 'bg-green-400/20 text-green-100' 
+              : 'bg-red-400/20 text-red-100'
+          }`}>
+            {usageStats?.subscription?.status === 'active' ? '✓ فعال' : '✗ غیرفعال'}
           </div>
-          <div>
-            <p className="opacity-80">روزهای باقیمانده</p>
-            <p className="font-semibold">{usageStats?.subscription?.days_remaining || 0} روز</p>
+        </div>
+        
+        <div className="grid grid-cols-4 gap-2 text-xs">
+          <div className="bg-white/10 rounded-lg p-2 text-center">
+            <p className="opacity-70">عضویت</p>
+            <p className="font-medium">{formatDate(usageStats?.user?.date_joined)}</p>
+          </div>
+          <div className="bg-white/10 rounded-lg p-2 text-center">
+            <p className="opacity-70">شروع پلن</p>
+            <p className="font-medium">{formatDate(usageStats?.subscription?.start_date)}</p>
+          </div>
+          <div className="bg-white/10 rounded-lg p-2 text-center">
+            <p className="opacity-70">انقضا</p>
+            <p className="font-medium">{formatDate(usageStats?.subscription?.end_date)}</p>
+          </div>
+          <div className="bg-white/10 rounded-lg p-2 text-center">
+            <p className="opacity-70">باقیمانده</p>
+            <p className="font-medium">{usageStats?.subscription?.days_remaining || 0} روز</p>
           </div>
         </div>
       </div>
