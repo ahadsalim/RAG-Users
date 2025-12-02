@@ -2,6 +2,7 @@ from django.contrib import admin
 from django.utils.html import format_html
 from django.utils import timezone
 from .models import Plan, Subscription
+from .usage import UsageLog
 
 
 @admin.register(Plan)
@@ -117,3 +118,32 @@ class SubscriptionAdmin(admin.ModelAdmin):
             count += 1
         self.message_user(request, f'{count} اشتراک 30 روز تمدید شد.')
     extend_subscription.short_description = 'تمدید 30 روزه'
+
+
+@admin.register(UsageLog)
+class UsageLogAdmin(admin.ModelAdmin):
+    list_display = ['user_info', 'action_type', 'tokens_used', 'subscription_plan', 'created_at']
+    list_filter = ['action_type', 'created_at']
+    search_fields = ['user__email', 'user__phone_number', 'user__first_name', 'user__last_name']
+    date_hierarchy = 'created_at'
+    readonly_fields = ['id', 'user', 'subscription', 'action_type', 'tokens_used', 'metadata', 'ip_address', 'user_agent', 'created_at']
+    
+    def user_info(self, obj):
+        return format_html(
+            '<strong>{}</strong><br/><small>{}</small>',
+            obj.user.get_full_name() or obj.user.email or obj.user.phone_number,
+            obj.user.phone_number or obj.user.email
+        )
+    user_info.short_description = 'کاربر'
+    
+    def subscription_plan(self, obj):
+        if obj.subscription:
+            return obj.subscription.plan.name
+        return '-'
+    subscription_plan.short_description = 'پلن'
+    
+    def has_add_permission(self, request):
+        return False
+    
+    def has_change_permission(self, request, obj=None):
+        return False

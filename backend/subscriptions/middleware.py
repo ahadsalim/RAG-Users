@@ -2,7 +2,11 @@ from django.utils import timezone
 from django.http import JsonResponse
 from rest_framework import status
 from .models import Subscription
+from .usage import UsageService
 import json
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 class SubscriptionMiddleware:
@@ -66,19 +70,14 @@ class SubscriptionMiddleware:
                     status=status.HTTP_403_FORBIDDEN
                 )
             
-            # Check if user can query
-            can_query, message = subscription.can_query()
+            # Check if user can query using UsageService
+            can_query, message, usage_info = UsageService.check_quota(request.user, subscription)
             if not can_query:
                 return JsonResponse(
                     {
                         'error': message,
                         'code': 'QUOTA_EXCEEDED',
-                        'usage': {
-                            'daily_used': subscription.queries_used_today,
-                            'daily_limit': subscription.plan.max_queries_per_day,
-                            'monthly_used': subscription.queries_used_month,
-                            'monthly_limit': subscription.plan.max_queries_per_month,
-                        }
+                        'usage': usage_info
                     },
                     status=status.HTTP_429_TOO_MANY_REQUESTS
                 )
@@ -94,30 +93,28 @@ class SubscriptionMiddleware:
                 try:
                     # Extract tokens from response if available
                     tokens = 0
+                    model_used = 'unknown'
                     if hasattr(response, 'data') and isinstance(response.data, dict):
                         tokens = response.data.get('metadata', {}).get('tokens', 0)
+                        model_used = response.data.get('metadata', {}).get('model_used', 'unknown')
                     
-                    # Increment usage
-                    # request.subscription.increment_usage(tokens=tokens)
+                    # Log usage using UsageService
+                    UsageService.log_usage(
+                        user=request.user,
+                        action_type='query',
+                        tokens_used=tokens,
+                        subscription=request.subscription,
+                        metadata={
+                            'path': request.path,
+                            'model': model_used
+                        },
+                        ip_address=self.get_client_ip(request),
+                        user_agent=request.META.get('HTTP_USER_AGENT', '')
+                    )
                     
-                    # Log usage - TODO: Implement when UsageLog model is ready
-                    # UsageLog.objects.create(
-                    #     subscription=request.subscription,
-                    #     user=request.user,
-                    #     action_type='query',
-                    #     tokens_used=tokens,
-                    #     metadata={
-                    #         'path': request.path,
-                    #         'model': response.data.get('metadata', {}).get('model_used', 'unknown')
-                    #     },
-                    #     ip_address=self.get_client_ip(request),
-                    #     user_agent=request.META.get('HTTP_USER_AGENT', '')
-                    # )
-                    pass
+                    logger.info(f"Query logged for user {request.user.phone_number}: {tokens} tokens")
+                    
                 except Exception as e:
-                    # Don't break the response, just log the error
-                    import logging
-                    logger = logging.getLogger(__name__)
                     logger.error(f"Error logging usage: {e}")
         
         return response
