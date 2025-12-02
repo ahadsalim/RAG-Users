@@ -595,12 +595,179 @@ const PreferencesTab: React.FC<{ settings: UserSettings; setSettings: React.Disp
 };
 
 // Notifications Tab
+interface NotificationPreferences {
+  email_enabled: boolean;
+  sms_enabled: boolean;
+  push_enabled: boolean;
+  in_app_enabled: boolean;
+  system_notifications: boolean;
+  payment_notifications: boolean;
+  subscription_notifications: boolean;
+  chat_notifications: boolean;
+  account_notifications: boolean;
+  security_notifications: boolean;
+  marketing_notifications: boolean;
+  support_notifications: boolean;
+}
+
 const NotificationsTab: React.FC = () => {
+  const [preferences, setPreferences] = React.useState<NotificationPreferences>({
+    email_enabled: true,
+    sms_enabled: true,
+    push_enabled: true,
+    in_app_enabled: true,
+    system_notifications: true,
+    payment_notifications: true,
+    subscription_notifications: true,
+    chat_notifications: true,
+    account_notifications: true,
+    security_notifications: true,
+    marketing_notifications: false,
+    support_notifications: true,
+  });
+  const [loading, setLoading] = React.useState(true);
+  const [saving, setSaving] = React.useState(false);
+  const [message, setMessage] = React.useState('');
+
+  // بارگذاری تنظیمات
+  React.useEffect(() => {
+    const loadPreferences = async () => {
+      try {
+        const response = await axios.get('/api/v1/notifications/preferences/');
+        setPreferences(response.data);
+      } catch (error) {
+        console.error('Error loading notification preferences:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadPreferences();
+  }, []);
+
+  // ذخیره تنظیمات
+  const savePreferences = async () => {
+    try {
+      setSaving(true);
+      await axios.put('/api/v1/notifications/preferences/', preferences);
+      setMessage('✓ تنظیمات ذخیره شد');
+      setTimeout(() => setMessage(''), 3000);
+    } catch (error) {
+      console.error('Error saving notification preferences:', error);
+      setMessage('✗ خطا در ذخیره تنظیمات');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleToggle = (key: keyof NotificationPreferences) => {
+    setPreferences(prev => ({ ...prev, [key]: !prev[key] }));
+  };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <div className="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+      </div>
+    );
+  }
+
+  const channels = [
+    { key: 'email_enabled' as const, label: 'ایمیل', icon: '📧', description: 'دریافت اعلان از طریق ایمیل' },
+    { key: 'sms_enabled' as const, label: 'پیامک', icon: '📱', description: 'دریافت اعلان از طریق پیامک' },
+    { key: 'push_enabled' as const, label: 'Push', icon: '🔔', description: 'دریافت Push Notification' },
+    { key: 'in_app_enabled' as const, label: 'داخل برنامه', icon: '💬', description: 'نمایش اعلان در برنامه' },
+  ];
+
+  const categories = [
+    { key: 'system_notifications' as const, label: 'سیستمی', description: 'اعلان‌های مربوط به سیستم' },
+    { key: 'payment_notifications' as const, label: 'پرداخت', description: 'اعلان‌های مربوط به پرداخت' },
+    { key: 'subscription_notifications' as const, label: 'اشتراک', description: 'اعلان‌های مربوط به اشتراک' },
+    { key: 'chat_notifications' as const, label: 'چت', description: 'اعلان‌های مربوط به گفتگو' },
+    { key: 'account_notifications' as const, label: 'حساب کاربری', description: 'اعلان‌های مربوط به حساب' },
+    { key: 'security_notifications' as const, label: 'امنیت', description: 'اعلان‌های امنیتی' },
+    { key: 'marketing_notifications' as const, label: 'بازاریابی', description: 'اعلان‌های تبلیغاتی' },
+    { key: 'support_notifications' as const, label: 'پشتیبانی', description: 'اعلان‌های پشتیبانی' },
+  ];
+
   return (
     <div className="space-y-6">
+      {/* کانال‌های اعلان */}
       <div className="bg-gray-50 dark:bg-gray-800 rounded-xl p-6">
-        <h4 className="text-lg font-semibold mb-4 text-gray-900 dark:text-white">تنظیمات اعلان</h4>
-        <p className="text-gray-600 dark:text-gray-400">به زودی...</p>
+        <h4 className="text-lg font-semibold mb-4 text-gray-900 dark:text-white">کانال‌های اعلان‌رسانی</h4>
+        <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">انتخاب کنید از کدام کانال‌ها اعلان دریافت کنید</p>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {channels.map((channel) => (
+            <div 
+              key={channel.key}
+              className={`flex items-center justify-between p-4 rounded-lg border-2 transition-all cursor-pointer ${
+                preferences[channel.key]
+                  ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20'
+                  : 'border-gray-200 dark:border-gray-700'
+              }`}
+              onClick={() => handleToggle(channel.key)}
+            >
+              <div className="flex items-center gap-3">
+                <span className="text-2xl">{channel.icon}</span>
+                <div>
+                  <p className="font-medium text-gray-900 dark:text-white">{channel.label}</p>
+                  <p className="text-xs text-gray-500">{channel.description}</p>
+                </div>
+              </div>
+              <div className={`w-12 h-6 rounded-full transition-colors ${
+                preferences[channel.key] ? 'bg-blue-500' : 'bg-gray-300 dark:bg-gray-600'
+              }`}>
+                <div className={`w-5 h-5 rounded-full bg-white shadow-md transform transition-transform mt-0.5 ${
+                  preferences[channel.key] ? 'translate-x-6' : 'translate-x-0.5'
+                }`} />
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* دسته‌بندی اعلان‌ها */}
+      <div className="bg-gray-50 dark:bg-gray-800 rounded-xl p-6">
+        <h4 className="text-lg font-semibold mb-4 text-gray-900 dark:text-white">دسته‌بندی اعلان‌ها</h4>
+        <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">انتخاب کنید کدام نوع اعلان‌ها را دریافت کنید</p>
+        <div className="space-y-3">
+          {categories.map((category) => (
+            <div 
+              key={category.key}
+              className="flex items-center justify-between p-3 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+            >
+              <div>
+                <p className="font-medium text-gray-900 dark:text-white">{category.label}</p>
+                <p className="text-xs text-gray-500">{category.description}</p>
+              </div>
+              <label className="relative inline-flex items-center cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={preferences[category.key]}
+                  onChange={() => handleToggle(category.key)}
+                  className="sr-only peer"
+                />
+                <div className="w-11 h-6 bg-gray-300 dark:bg-gray-600 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-500"></div>
+              </label>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* دکمه ذخیره */}
+      <div className="flex items-center justify-between">
+        {message && (
+          <span className={`text-sm ${message.includes('✓') ? 'text-green-600' : 'text-red-600'}`}>
+            {message}
+          </span>
+        )}
+        <button
+          onClick={savePreferences}
+          disabled={saving}
+          className="px-6 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:opacity-50 transition-colors font-medium"
+        >
+          {saving ? 'در حال ذخیره...' : 'ذخیره تنظیمات'}
+        </button>
       </div>
     </div>
   );
