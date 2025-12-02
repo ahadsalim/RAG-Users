@@ -12,6 +12,8 @@ class Plan(models.Model):
     description = models.TextField(_("توضیحات"), blank=True)
     price = models.DecimalField(_("قیمت"), max_digits=10, decimal_places=2)
     duration_days = models.IntegerField(_("مدت به روز"), default=30)
+    max_queries_per_day = models.IntegerField(_("سوال/روز"), default=10)
+    max_queries_per_month = models.IntegerField(_("سوال/ماه"), default=300)
     features = models.JSONField(_("ویژگی‌ها"), default=dict, blank=True)
     is_active = models.BooleanField(_("فعال"), default=True)
     created_at = models.DateTimeField(_("تاریخ ایجاد"), auto_now_add=True)

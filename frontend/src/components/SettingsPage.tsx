@@ -537,8 +537,8 @@ const SubscriptionTab: React.FC<{ subscription: SubscriptionInfo | null; loading
                 </p>
                 <div className="text-sm text-gray-600 dark:text-gray-400 mb-4 space-y-1">
                   <p>📅 {plan.duration_days} روز</p>
-                  <p>📊 {plan.features?.max_queries_per_day || 10} سوال/روز</p>
-                  <p>📈 {plan.features?.max_queries_per_month || 300} سوال/ماه</p>
+                  <p>📊 {plan.max_queries_per_day || 10} سوال/روز</p>
+                  <p>📈 {plan.max_queries_per_month || 300} سوال/ماه</p>
                 </div>
                 {!isCurrentPlan && (
                   <button className="w-full py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors">

@@ -7,10 +7,10 @@ from .usage import UsageLog
 
 @admin.register(Plan)
 class PlanAdmin(admin.ModelAdmin):
-    list_display = ['name', 'price', 'duration_days', 'queries_per_day', 'queries_per_month', 'is_active', 'colored_status']
+    list_display = ['name', 'price', 'duration_days', 'max_queries_per_day', 'max_queries_per_month', 'is_active', 'colored_status']
     list_filter = ['is_active', 'created_at']
     search_fields = ['name', 'description']
-    list_editable = ['price', 'duration_days', 'is_active']
+    list_editable = ['price', 'duration_days', 'max_queries_per_day', 'max_queries_per_month', 'is_active']
     ordering = ['price']
     
     fieldsets = (
@@ -18,18 +18,14 @@ class PlanAdmin(admin.ModelAdmin):
             'fields': ('name', 'description', 'price', 'duration_days', 'is_active')
         }),
         ('محدودیت‌های استفاده', {
+            'fields': ('max_queries_per_day', 'max_queries_per_month'),
+        }),
+        ('ویژگی‌های اضافی', {
             'fields': ('features',),
-            'description': 'تنظیمات JSON برای محدودیت‌ها. مثال: {"max_queries_per_day": 10, "max_queries_per_month": 300, "gpt_3_5_access": true, "gpt_4_access": false}'
+            'classes': ('collapse',),
+            'description': 'تنظیمات JSON اضافی. مثال: {"gpt_3_5_access": true, "gpt_4_access": false}'
         }),
     )
-    
-    def queries_per_day(self, obj):
-        return obj.features.get('max_queries_per_day', '-') if obj.features else '-'
-    queries_per_day.short_description = 'سوال/روز'
-    
-    def queries_per_month(self, obj):
-        return obj.features.get('max_queries_per_month', '-') if obj.features else '-'
-    queries_per_month.short_description = 'سوال/ماه'
     
     def colored_status(self, obj):
         if obj.is_active:
