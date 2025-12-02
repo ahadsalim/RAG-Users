@@ -21,7 +21,6 @@ export default function ChatPage() {
   const messages = store?.messages ?? []
   const isLoading = store?.isLoading ?? false
   const sendMessage = store?.sendMessage ?? (async () => {})
-  const sendMessageStreaming = store?.sendMessageStreaming ?? (async () => {})
   const createNewConversation = store?.createNewConversation ?? (() => {})
   const loadConversation = store?.loadConversation ?? (async () => {})
   
@@ -68,12 +67,12 @@ export default function ChatPage() {
     if (!content.trim() && (!fileAttachments || fileAttachments.length === 0)) return
     
     try {
-      // ارسال پیام با streaming برای تجربه بهتر
-      await sendMessageStreaming(content, currentConversation?.id, undefined, fileAttachments)
+      // ارسال پیام با API عادی (غیر استریم)
+      await sendMessage(content, currentConversation?.id, undefined, fileAttachments)
     } catch (error) {
       console.error('Error sending message:', error)
     }
-  }, [sendMessageStreaming, currentConversation])
+  }, [sendMessage, currentConversation])
 
   // Handle new conversation
   const handleNewChat = useCallback(() => {

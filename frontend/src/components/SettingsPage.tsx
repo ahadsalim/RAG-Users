@@ -327,25 +327,80 @@ const ProfileTab: React.FC<{ settings: UserSettings; setSettings: React.Dispatch
 };
 
 // Subscription Tab
-const SubscriptionTab: React.FC<{ subscription: SubscriptionInfo | null; loading: boolean }> = ({ subscription, loading }) => {
+interface Plan {
+  id: string;
+  name: string;
+  price: number;
+  duration_days: number;
+  features: {
+    max_queries_per_day?: number;
+    max_queries_per_month?: number;
+    [key: string]: any;
+  };
+  is_active: boolean;
+}
+
+const SubscriptionTab: React.FC<{ subscription: SubscriptionInfo | null; loading: boolean }> = ({ subscription, loading: initialLoading }) => {
+  const [plans, setPlans] = React.useState<Plan[]>([]);
+  const [usageStats, setUsageStats] = React.useState<any>(null);
+  const [loading, setLoading] = React.useState(initialLoading);
+
+  // بارگذاری پلن‌ها و آمار مصرف
+  React.useEffect(() => {
+    const loadData = async () => {
+      setLoading(true);
+      try {
+        // بارگذاری پلن‌ها
+        const plansResponse = await axios.get('/api/v1/plans/');
+        setPlans(plansResponse.data);
+
+        // بارگذاری آمار مصرف
+        const usageResponse = await axios.get('/api/v1/subscriptions/usage/');
+        setUsageStats(usageResponse.data);
+      } catch (error) {
+        console.error('Error loading subscription data:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadData();
+  }, []);
+
   if (loading) {
-    return <div className="text-center py-12">در حال بارگذاری...</div>;
+    return (
+      <div className="flex items-center justify-center py-12">
+        <div className="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+        <span className="mr-3 text-gray-600 dark:text-gray-400">در حال بارگذاری...</span>
+      </div>
+    );
   }
+
+  const usage = usageStats?.usage || {};
+  const stats = usageStats?.stats || {};
 
   return (
     <div className="space-y-6">
       {/* Current Plan */}
       <div className="bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl p-6 text-white">
         <h4 className="text-lg font-semibold mb-2">پلن فعلی</h4>
-        <p className="text-3xl font-bold mb-4">{subscription?.plan_name || 'رایگان'}</p>
+        <p className="text-3xl font-bold mb-4">{usageStats?.subscription?.plan || subscription?.plan_name || 'رایگان'}</p>
         <div className="grid grid-cols-2 gap-4 text-sm">
           <div>
             <p className="opacity-80">وضعیت</p>
-            <p className="font-semibold">{subscription?.status === 'active' ? 'فعال' : 'غیرفعال'}</p>
+            <p className="font-semibold">{usageStats?.subscription?.status === 'active' ? 'فعال' : 'غیرفعال'}</p>
           </div>
           <div>
             <p className="opacity-80">تاریخ انقضا</p>
-            <p className="font-semibold">{subscription?.end_date || '-'}</p>
+            <p className="font-semibold">
+              {usageStats?.subscription?.end_date 
+                ? new Date(usageStats.subscription.end_date).toLocaleDateString('fa-IR')
+                : '-'}
+            </p>
+          </div>
+          <div>
+            <p className="opacity-80">روزهای باقیمانده</p>
+            <p className="font-semibold">{usageStats?.subscription?.days_remaining || 0} روز</p>
           </div>
         </div>
       </div>
@@ -358,51 +413,100 @@ const SubscriptionTab: React.FC<{ subscription: SubscriptionInfo | null; loading
             <div className="flex justify-between text-sm mb-2">
               <span className="text-gray-600 dark:text-gray-400">استفاده امروز</span>
               <span className="font-semibold text-gray-900 dark:text-white">
-                {subscription?.queries_used_today || 0} / {subscription?.max_queries_per_day || 10}
+                {usage.daily_used || 0} / {usage.daily_limit || 10}
               </span>
             </div>
             <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
               <div 
-                className="bg-blue-500 h-2 rounded-full transition-all"
-                style={{ width: `${((subscription?.queries_used_today || 0) / (subscription?.max_queries_per_day || 10)) * 100}%` }}
+                className={`h-2 rounded-full transition-all ${
+                  (usage.daily_used / usage.daily_limit) > 0.8 ? 'bg-red-500' : 'bg-blue-500'
+                }`}
+                style={{ width: `${Math.min(100, ((usage.daily_used || 0) / (usage.daily_limit || 10)) * 100)}%` }}
               />
             </div>
+            <p className="text-xs text-gray-500 mt-1">
+              {usage.daily_remaining || 0} سوال باقیمانده امروز
+            </p>
           </div>
           <div>
             <div className="flex justify-between text-sm mb-2">
               <span className="text-gray-600 dark:text-gray-400">استفاده ماهانه</span>
               <span className="font-semibold text-gray-900 dark:text-white">
-                {subscription?.queries_used_month || 0} / {subscription?.max_queries_per_month || 300}
+                {usage.monthly_used || 0} / {usage.monthly_limit || 300}
               </span>
             </div>
             <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
               <div 
-                className="bg-purple-500 h-2 rounded-full transition-all"
-                style={{ width: `${((subscription?.queries_used_month || 0) / (subscription?.max_queries_per_month || 300)) * 100}%` }}
+                className={`h-2 rounded-full transition-all ${
+                  (usage.monthly_used / usage.monthly_limit) > 0.8 ? 'bg-red-500' : 'bg-purple-500'
+                }`}
+                style={{ width: `${Math.min(100, ((usage.monthly_used || 0) / (usage.monthly_limit || 300)) * 100)}%` }}
               />
             </div>
+            <p className="text-xs text-gray-500 mt-1">
+              {usage.monthly_remaining || 0} سوال باقیمانده این ماه
+            </p>
           </div>
         </div>
+
+        {/* Stats Summary */}
+        {stats.total_queries !== undefined && (
+          <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+            <div className="grid grid-cols-2 gap-4 text-sm">
+              <div>
+                <p className="text-gray-600 dark:text-gray-400">کل سوالات (30 روز)</p>
+                <p className="font-semibold text-gray-900 dark:text-white">{stats.total_queries || 0}</p>
+              </div>
+              <div>
+                <p className="text-gray-600 dark:text-gray-400">کل توکن مصرفی</p>
+                <p className="font-semibold text-gray-900 dark:text-white">{stats.total_tokens?.toLocaleString() || 0}</p>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Available Plans */}
       <div>
         <h4 className="text-lg font-semibold mb-4 text-gray-900 dark:text-white">پلن‌های موجود</h4>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {[
-            { name: 'رایگان', price: '0', queries: '10 سوال/روز' },
-            { name: 'پایه', price: '299,000', queries: '50 سوال/روز' },
-            { name: 'حرفه‌ای', price: '799,000', queries: '200 سوال/روز' },
-          ].map((plan) => (
-            <div key={plan.name} className="border border-gray-200 dark:border-gray-700 rounded-xl p-4 hover:border-blue-500 transition-colors">
-              <h5 className="font-semibold text-gray-900 dark:text-white mb-2">{plan.name}</h5>
-              <p className="text-2xl font-bold text-blue-500 mb-2">{plan.price} <span className="text-sm">تومان</span></p>
-              <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">{plan.queries}</p>
-              <button className="w-full py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors">
-                ارتقا
-              </button>
+          {plans.length > 0 ? plans.map((plan) => {
+            const isCurrentPlan = usageStats?.subscription?.plan === plan.name;
+            return (
+              <div 
+                key={plan.id} 
+                className={`border rounded-xl p-4 transition-all ${
+                  isCurrentPlan 
+                    ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20' 
+                    : 'border-gray-200 dark:border-gray-700 hover:border-blue-500'
+                }`}
+              >
+                {isCurrentPlan && (
+                  <span className="inline-block px-2 py-1 text-xs bg-blue-500 text-white rounded-full mb-2">
+                    پلن فعلی
+                  </span>
+                )}
+                <h5 className="font-semibold text-gray-900 dark:text-white mb-2">{plan.name}</h5>
+                <p className="text-2xl font-bold text-blue-500 mb-2">
+                  {plan.price === 0 ? 'رایگان' : `${plan.price.toLocaleString()} تومان`}
+                </p>
+                <div className="text-sm text-gray-600 dark:text-gray-400 mb-4 space-y-1">
+                  <p>📅 {plan.duration_days} روز</p>
+                  <p>📊 {plan.features?.max_queries_per_day || 10} سوال/روز</p>
+                  <p>📈 {plan.features?.max_queries_per_month || 300} سوال/ماه</p>
+                </div>
+                {!isCurrentPlan && (
+                  <button className="w-full py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors">
+                    {plan.price === 0 ? 'انتخاب' : 'ارتقا'}
+                  </button>
+                )}
+              </div>
+            );
+          }) : (
+            <div className="col-span-3 text-center py-8 text-gray-500">
+              پلنی یافت نشد
             </div>
-          ))}
+          )}
         </div>
       </div>
     </div>
