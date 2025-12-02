@@ -3,6 +3,8 @@ import { X, User, Bell, Shield, CreditCard, Palette, Globe, HelpCircle } from 'l
 import axios from 'axios';
 import { useAuthStore } from '@/store/auth';
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL || '';
+
 interface SettingsPageProps {
   isOpen: boolean;
   onClose: () => void;
@@ -351,7 +353,7 @@ const SubscriptionTab: React.FC<{ subscription: SubscriptionInfo | null; loading
       setLoading(true);
       try {
         // بارگذاری پلن‌ها - URL صحیح
-        const plansResponse = await axios.get('/api/v1/subscriptions/plans/');
+        const plansResponse = await axios.get(`${API_URL}/api/v1/subscriptions/plans/`);
         console.log('Plans response:', plansResponse.data);
         if (plansResponse.data?.results) {
           setPlans(plansResponse.data.results);
@@ -364,7 +366,7 @@ const SubscriptionTab: React.FC<{ subscription: SubscriptionInfo | null; loading
 
       try {
         // بارگذاری آمار مصرف
-        const usageResponse = await axios.get('/api/v1/subscriptions/usage/');
+        const usageResponse = await axios.get(`${API_URL}/api/v1/subscriptions/usage/stats/`);
         setUsageStats(usageResponse.data);
       } catch (error) {
         console.error('Error loading usage:', error);
