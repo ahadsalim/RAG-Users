@@ -352,20 +352,25 @@ const SubscriptionTab: React.FC<{ subscription: SubscriptionInfo | null; loading
       try {
         // بارگذاری پلن‌ها - URL صحیح
         const plansResponse = await axios.get('/api/v1/subscriptions/plans/');
+        console.log('Plans response:', plansResponse.data);
         if (plansResponse.data?.results) {
           setPlans(plansResponse.data.results);
         } else if (Array.isArray(plansResponse.data)) {
           setPlans(plansResponse.data);
         }
+      } catch (error) {
+        console.error('Error loading plans:', error);
+      }
 
+      try {
         // بارگذاری آمار مصرف
         const usageResponse = await axios.get('/api/v1/subscriptions/usage/');
         setUsageStats(usageResponse.data);
       } catch (error) {
-        console.error('Error loading subscription data:', error);
-      } finally {
-        setLoading(false);
+        console.error('Error loading usage:', error);
       }
+      
+      setLoading(false);
     };
 
     loadData();
@@ -403,13 +408,11 @@ const SubscriptionTab: React.FC<{ subscription: SubscriptionInfo | null; loading
               <p className="text-xl font-bold">{usageStats?.subscription?.plan || subscription?.plan_name || 'رایگان'}</p>
             </div>
           </div>
-          <div className={`px-3 py-1 rounded-full text-xs font-medium ${
-            usageStats?.subscription?.status === 'active' 
-              ? 'bg-green-400/20 text-green-100' 
-              : 'bg-red-400/20 text-red-100'
-          }`}>
-            {usageStats?.subscription?.status === 'active' ? '✓ فعال' : '✗ غیرفعال'}
-          </div>
+          {usageStats?.subscription?.status === 'active' && (
+            <div className="px-3 py-1 rounded-full text-xs font-medium bg-green-400/20 text-green-100">
+              ✓ فعال
+            </div>
+          )}
         </div>
         
         <div className="grid grid-cols-4 gap-2 text-xs">
@@ -417,18 +420,33 @@ const SubscriptionTab: React.FC<{ subscription: SubscriptionInfo | null; loading
             <p className="opacity-70">عضویت</p>
             <p className="font-medium">{formatDate(usageStats?.user?.date_joined)}</p>
           </div>
-          <div className="bg-white/10 rounded-lg p-2 text-center">
-            <p className="opacity-70">شروع پلن</p>
-            <p className="font-medium">{formatDate(usageStats?.subscription?.start_date)}</p>
-          </div>
-          <div className="bg-white/10 rounded-lg p-2 text-center">
-            <p className="opacity-70">انقضا</p>
-            <p className="font-medium">{formatDate(usageStats?.subscription?.end_date)}</p>
-          </div>
-          <div className="bg-white/10 rounded-lg p-2 text-center">
-            <p className="opacity-70">باقیمانده</p>
-            <p className="font-medium">{usageStats?.subscription?.days_remaining || 0} روز</p>
-          </div>
+          {usageStats?.subscription?.status === 'active' ? (
+            <>
+              <div className="bg-white/10 rounded-lg p-2 text-center">
+                <p className="opacity-70">شروع پلن</p>
+                <p className="font-medium">{formatDate(usageStats?.subscription?.start_date)}</p>
+              </div>
+              <div className="bg-white/10 rounded-lg p-2 text-center">
+                <p className="opacity-70">انقضا</p>
+                <p className="font-medium">{formatDate(usageStats?.subscription?.end_date)}</p>
+              </div>
+              <div className="bg-white/10 rounded-lg p-2 text-center">
+                <p className="opacity-70">باقیمانده</p>
+                <p className="font-medium">{usageStats?.subscription?.days_remaining || 0} روز</p>
+              </div>
+            </>
+          ) : (
+            <>
+              <div className="bg-white/10 rounded-lg p-2 text-center col-span-2">
+                <p className="opacity-70">وضعیت</p>
+                <p className="font-medium">نامحدود</p>
+              </div>
+              <div className="bg-white/10 rounded-lg p-2 text-center">
+                <p className="opacity-70">نوع</p>
+                <p className="font-medium">آزاد</p>
+              </div>
+            </>
+          )}
         </div>
       </div>
 
