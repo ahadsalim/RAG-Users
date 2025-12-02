@@ -355,6 +355,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
       }
       
       // Use fetch for streaming
+      console.log('🚀 Starting streaming request...')
       const response = await fetch(`${API_URL}/api/v1/chat/query/stream/`, {
         method: 'POST',
         headers: {
@@ -363,6 +364,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
         },
         body: JSON.stringify(payload),
       })
+      console.log('📡 Response received:', response.status, response.ok)
       
       // اگر streaming موجود نیست (404) یا مشکل authentication (401)، fallback به حالت عادی
       if (response.status === 404 || response.status === 401) {
@@ -389,9 +391,13 @@ export const useChatStore = create<ChatState>((set, get) => ({
         throw new Error('Response body is not readable')
       }
       
+      console.log('📖 Starting to read stream...')
       while (true) {
         const { done, value } = await reader.read()
-        if (done) break
+        if (done) {
+          console.log('🏁 Stream finished')
+          break
+        }
         
         const chunk = decoder.decode(value, { stream: true })
         buffer += chunk
@@ -411,12 +417,14 @@ export const useChatStore = create<ChatState>((set, get) => ({
                 const data = JSON.parse(line.slice(6))
                 
                 if (data.type === 'start') {
+                  console.log('🎬 Stream started:', data)
                   // Update conversation and message IDs
                   messageId = data.message_id
                   conversationIdFromServer = data.conversation_id
                 } else if (data.type === 'chunk') {
                   // Just accumulate content, don't update UI yet
                   fullContent += data.content
+                  console.log('📝 Chunk:', data.content.length, 'chars, total:', fullContent.length)
                 } else if (data.type === 'sources') {
                   // Update sources
                   set(state => ({
@@ -427,6 +435,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
                     ),
                   }))
                 } else if (data.type === 'end') {
+                  console.log('✅ Stream ended, showing complete message')
                   // Show complete message at once
                   set(state => ({
                     messages: state.messages.map(msg =>
@@ -446,6 +455,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
                     isLoading: false,
                   }))
                 } else if (data.type === 'error') {
+                  console.error('❌ Stream error:', data.error)
                   // Handle error
                   set(state => ({
                     messages: state.messages.map(msg =>
