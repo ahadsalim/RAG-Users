@@ -247,9 +247,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
       // Reload conversations to update sidebar
       try {
         const response = await axios.get(`${API_URL}/api/v1/chat/conversations/`)
-        set({
-          conversations: response.data.results || response.data,
-        })
+        set({ conversations: response.data.results || response.data })
       } catch (err) {
         console.error('Failed to reload conversations:', err)
       }
@@ -386,8 +384,6 @@ export const useChatStore = create<ChatState>((set, get) => ({
       let messageId = assistantMessage.id
       let conversationIdFromServer = conversationId
       let buffer = '' // Buffer for incomplete SSE chunks
-      let lastUpdateTime = 0
-      const UPDATE_INTERVAL = 50 // Update UI every 50ms
       
       if (!reader) {
         throw new Error('Response body is not readable')
@@ -395,19 +391,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
       
       while (true) {
         const { done, value } = await reader.read()
-        if (done) {
-          console.log('🏁 Stream done, final update')
-          // Final update with complete content
-          set(state => ({
-            messages: state.messages.map(msg =>
-              msg.id === assistantMessage.id
-                ? { ...msg, content: fullContent, status: 'completed' }
-                : msg
-            ),
-            isLoading: false,
-          }))
-          break
-        }
+        if (done) break
         
         const chunk = decoder.decode(value, { stream: true })
         buffer += chunk
@@ -431,22 +415,8 @@ export const useChatStore = create<ChatState>((set, get) => ({
                   messageId = data.message_id
                   conversationIdFromServer = data.conversation_id
                 } else if (data.type === 'chunk') {
-                  // Append content
+                  // Just accumulate content, don't update UI yet
                   fullContent += data.content
-                  console.log('📝 Chunk received:', data.content.length, 'chars, total:', fullContent.length)
-                  
-                  // Throttle UI updates to every 50ms
-                  const now = Date.now()
-                  if (now - lastUpdateTime >= UPDATE_INTERVAL) {
-                    lastUpdateTime = now
-                    set(state => ({
-                      messages: state.messages.map(msg =>
-                        msg.id === assistantMessage.id
-                          ? { ...msg, content: fullContent }
-                          : msg
-                      ),
-                    }))
-                  }
                 } else if (data.type === 'sources') {
                   // Update sources
                   set(state => ({
@@ -457,14 +427,14 @@ export const useChatStore = create<ChatState>((set, get) => ({
                     ),
                   }))
                 } else if (data.type === 'end') {
-                  // Finalize message
-                  console.log('✅ Stream ended, setting isLoading to false')
+                  // Show complete message at once
                   set(state => ({
                     messages: state.messages.map(msg =>
                       msg.id === assistantMessage.id
                         ? {
                             ...msg,
                             id: messageId,
+                            content: fullContent,
                             status: 'completed',
                             tokens: data.metadata?.tokens || 0,
                             processing_time_ms: data.metadata?.processing_time_ms || 0,
@@ -512,9 +482,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
       // Reload conversations to update list
       try {
         const response = await axios.get(`${API_URL}/api/v1/chat/conversations/`)
-        set({
-          conversations: response.data.results || response.data,
-        })
+        set({ conversations: response.data.results || response.data })
       } catch (err) {
         console.error('Failed to reload conversations:', err)
       }
