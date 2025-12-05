@@ -59,8 +59,8 @@ class Subscription(models.Model):
     updated_at = models.DateTimeField(_("تاریخ به‌روزرسانی"), auto_now=True)
     
     class Meta:
-        verbose_name = _("اشتراک")
-        verbose_name_plural = _("اشتراک‌ها")
+        verbose_name = _("اشتراک کاربر")
+        verbose_name_plural = _("اشتراک کاربران")
         ordering = ['-created_at']
     
     def __str__(self):

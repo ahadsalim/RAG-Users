@@ -84,8 +84,8 @@ class UsageLog(models.Model):
     created_at = models.DateTimeField(auto_now_add=True, verbose_name='زمان ایجاد')
     
     class Meta:
-        verbose_name = 'لاگ مصرف'
-        verbose_name_plural = 'لاگ‌های مصرف'
+        verbose_name = 'لاگ کاربر'
+        verbose_name_plural = 'لاگ کاربران'
         ordering = ['-created_at']
         indexes = [
             models.Index(fields=['user', 'action_type', 'created_at']),
