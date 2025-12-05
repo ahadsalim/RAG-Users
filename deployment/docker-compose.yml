@@ -234,7 +234,7 @@ services:
     environment:
       NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:8000}
       NEXT_PUBLIC_WS_URL: ${NEXT_PUBLIC_WS_URL:-ws://localhost:8000}
-      BACKEND_URL: ${BACKEND_URL:-https://admin.tejarat.chat}
+      BACKEND_URL: ${BACKEND_URL:-http://backend:8000}
     expose:
       - "3000"  # Only exposed to docker network, not host
     networks:
