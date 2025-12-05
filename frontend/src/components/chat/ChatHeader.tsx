@@ -28,7 +28,9 @@ export function ChatHeader({ onToggleSidebar, conversation, isConnected }: ChatH
     
     try {
       setLoadingUsage(true)
-      const response = await axios.get('/api/v1/subscriptions/usage/')
+      const response = await axios.get('/api/v1/subscriptions/usage/', {
+        headers: { 'Cache-Control': 'no-cache' }
+      })
       if (response.data?.usage) {
         setUsage(response.data.usage)
       } else {
