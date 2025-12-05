@@ -463,6 +463,36 @@ export default function LoginPage() {
       textDecoration: 'none',
       borderBottom: '1px solid transparent',
       transition: 'border-color 0.3s ease'
+    },
+    footerSection: {
+      marginTop: '20px',
+      paddingTop: '16px',
+      borderTop: theme === 'light'
+        ? '1px solid rgba(255, 255, 255, 0.3)'
+        : '1px solid rgba(113, 128, 150, 0.3)',
+      textAlign: 'center' as const,
+      fontSize: '12px',
+      color: theme === 'light' ? 'rgba(255, 255, 255, 0.9)' : '#a0aec0'
+    },
+    footerLinks: {
+      display: 'flex',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      marginTop: '10px',
+      fontSize: '13px'
+    },
+    footerLink: {
+      color: theme === 'light' ? '#fff' : '#e2e8f0',
+      textDecoration: 'none',
+      fontWeight: '500',
+      transition: 'opacity 0.3s ease'
+    },
+    supportContact: {
+      display: 'flex',
+      alignItems: 'center',
+      gap: '8px',
+      color: theme === 'light' ? '#fff' : '#e2e8f0',
+      fontSize: '13px'
     }
   }
 
@@ -799,11 +829,32 @@ export default function LoginPage() {
           )}
         </div>
 
-        {/* Support Contact Info */}
-        <div style={styles.supportInfo}>
-          <div style={styles.supportTitle}>تماس با پشتیبانی</div>
-          <div style={styles.phoneNumbers}>
-            <a href="tel:02191097737" style={styles.phoneNumber}>021-91097737</a>
+        {/* Footer Section */}
+        <div style={styles.footerSection}>
+          <p style={{ margin: 0 }}>
+            با ورود به سامانه، شما{' '}
+            <Link href="/terms" style={{...styles.footerLink, textDecoration: 'underline'}}>قوانین</Link>
+            {' '}و{' '}
+            <Link href="/privacy" style={{...styles.footerLink, textDecoration: 'underline'}}>حریم خصوصی</Link>
+            {' '}استفاده را می‌پذیرید.
+          </p>
+          
+          <div style={styles.footerLinks}>
+            <Link 
+              href="/about" 
+              style={styles.footerLink}
+              onMouseOver={(e) => { e.currentTarget.style.opacity = '0.8' }}
+              onMouseOut={(e) => { e.currentTarget.style.opacity = '1' }}
+            >
+              درباره ما
+            </Link>
+            
+            <div style={styles.supportContact}>
+              <span>تماس با پشتیبانی:</span>
+              <a href="tel:02191097737" style={{...styles.footerLink, fontFamily: 'monospace', direction: 'ltr' as const}}>
+                021-91097737
+              </a>
+            </div>
           </div>
         </div>
       </div>
