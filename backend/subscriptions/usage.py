@@ -52,6 +52,14 @@ class UsageLog(models.Model):
     # مصرف
     tokens_used = models.IntegerField(default=0, verbose_name='توکن مصرفی')
     
+    # نام پلن در زمان ثبت (برای گزارش‌گیری)
+    plan_name = models.CharField(
+        max_length=100,
+        blank=True,
+        verbose_name='نام پلن',
+        help_text='نام پلن در زمان ثبت لاگ'
+    )
+    
     # متادیتا
     metadata = models.JSONField(
         default=dict,
@@ -111,11 +119,17 @@ class UsageService:
                 end_date__gt=timezone.now()
             ).first()
         
+        # نام پلن در زمان ثبت
+        plan_name = ''
+        if subscription and subscription.plan:
+            plan_name = subscription.plan.name
+        
         log = UsageLog.objects.create(
             user=user,
             subscription=subscription,
             action_type=action_type,
             tokens_used=tokens_used,
+            plan_name=plan_name,
             metadata=metadata or {},
             ip_address=ip_address,
             user_agent=user_agent or ''
@@ -125,31 +139,43 @@ class UsageService:
         return log
     
     @staticmethod
-    def get_daily_usage(user, date=None) -> int:
-        """تعداد query های یک روز خاص"""
+    def get_daily_usage(user, subscription=None, date=None) -> int:
+        """تعداد query های یک روز خاص برای اشتراک فعلی"""
         if date is None:
             date = timezone.now().date()
         
-        return UsageLog.objects.filter(
+        queryset = UsageLog.objects.filter(
             user=user,
             action_type='query',
             created_at__date=date
-        ).count()
+        )
+        
+        # فقط مصرف اشتراک فعلی را بشمار
+        if subscription:
+            queryset = queryset.filter(subscription=subscription)
+        
+        return queryset.count()
     
     @staticmethod
-    def get_monthly_usage(user, year=None, month=None) -> int:
-        """تعداد query های یک ماه خاص"""
-        now = timezone.now()
-        if year is None:
-            year = now.year
-        if month is None:
-            month = now.month
+    def get_monthly_usage(user, subscription=None) -> int:
+        """تعداد query های اشتراک فعلی (از تاریخ شروع اشتراک)"""
         
+        # اگر اشتراک داده نشده، اشتراک فعال را پیدا کن
+        if subscription is None:
+            subscription = user.subscriptions.filter(
+                status__in=['active', 'trial'],
+                end_date__gt=timezone.now()
+            ).first()
+        
+        if not subscription:
+            return 0
+        
+        # مصرف از تاریخ شروع اشتراک
         return UsageLog.objects.filter(
             user=user,
             action_type='query',
-            created_at__year=year,
-            created_at__month=month
+            subscription=subscription,
+            created_at__gte=subscription.start_date
         ).count()
     
     @staticmethod
@@ -235,9 +261,9 @@ class UsageService:
         max_daily = features.get('max_queries_per_day', 10)
         max_monthly = features.get('max_queries_per_month', 300)
         
-        # مصرف فعلی
-        daily_used = UsageService.get_daily_usage(user)
-        monthly_used = UsageService.get_monthly_usage(user)
+        # مصرف فعلی - فقط برای اشتراک فعلی
+        daily_used = UsageService.get_daily_usage(user, subscription)
+        monthly_used = UsageService.get_monthly_usage(user, subscription)
         
         usage_info = {
             'daily_used': daily_used,
@@ -274,8 +300,8 @@ class UsageService:
         max_daily = features.get('max_queries_per_day', 10)
         max_monthly = features.get('max_queries_per_month', 300)
         
-        daily_used = UsageService.get_daily_usage(user)
-        monthly_used = UsageService.get_monthly_usage(user)
+        daily_used = UsageService.get_daily_usage(user, subscription)
+        monthly_used = UsageService.get_monthly_usage(user, subscription)
         
         return {
             'daily': min(100, int((daily_used / max_daily) * 100)) if max_daily > 0 else 0,

@@ -133,6 +133,10 @@ class UsageLogAdmin(admin.ModelAdmin):
     user_info.short_description = 'کاربر'
     
     def subscription_plan(self, obj):
+        # اول از plan_name ذخیره شده استفاده کن (نام پلن در زمان ثبت)
+        if obj.plan_name:
+            return obj.plan_name
+        # اگر نبود، از اشتراک فعلی بخوان (برای لاگ‌های قدیمی)
         if obj.subscription:
             return obj.subscription.plan.name
         return '-'
