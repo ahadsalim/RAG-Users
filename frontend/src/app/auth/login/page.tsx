@@ -97,6 +97,8 @@ export default function LoginPage() {
         const methodText = methodUsed === 'bale' ? 'پیام‌رسان (بله)' : 'پیامک'
         
         setOtpSent(true)
+        setOtpTimer(300) // 5 minutes
+        setCanResend(false)
         toast.success(`کد تایید از طریق ${methodText} به شماره ${phoneNumber} ارسال شد`, {
           duration: 6000,
         })
