@@ -25,7 +25,6 @@ export function ChatHeader({ onToggleSidebar, conversation, isConnected }: ChatH
 
   // بارگذاری اطلاعات مصرف هنگام hover
   const loadUsage = async () => {
-    if (usage) return // اگر قبلاً بارگذاری شده، دوباره نخوان
     
     try {
       setLoadingUsage(true)
@@ -81,11 +80,6 @@ export function ChatHeader({ onToggleSidebar, conversation, isConnected }: ChatH
             <h1 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
               {conversation?.title || 'گفتگوی جدید'}
             </h1>
-            {conversation && (
-              <p className="text-sm text-gray-500 dark:text-gray-400">
-                {conversation.message_count || 0} پیام
-              </p>
-            )}
           </div>
         </div>
         
