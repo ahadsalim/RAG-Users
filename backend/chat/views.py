@@ -199,8 +199,8 @@ class QueryView(APIView):
             
             assistant_message.save()
             
-            # به‌روزرسانی آمار conversation
-            conversation.message_count = conversation.messages.count()
+            # به‌روزرسانی آمار conversation - فقط پیام‌های کاربر
+            conversation.message_count = conversation.messages.filter(role='user').count()
             conversation.token_usage = conversation.messages.aggregate(
                 total=Count('tokens')
             )['total'] or 0
@@ -221,25 +221,20 @@ class QueryView(APIView):
             )
             
             # به‌روزرسانی مصرف اشتراک
-            if not user.is_superuser and 'active_subscription' in locals():
-                # active_subscription.increment_usage(tokens=assistant_message.tokens)
-                
-                # TODO: Implement usage logging when UsageLog model is ready
-                # from subscriptions.models import UsageLog
-                # UsageLog.objects.create(
-                #     subscription=active_subscription,
-                #     user=user,
-                #     action_type='query',
-                #     tokens_used=assistant_message.tokens,
-                #     metadata={
-                #         'conversation_id': str(conversation.id),
-                #         'message_id': str(assistant_message.id),
-                #         'model': assistant_message.model_used
-                #     },
-                #     ip_address=request.META.get('REMOTE_ADDR'),
-                #     user_agent=request.META.get('HTTP_USER_AGENT', '')
-                # )
-                pass
+            if 'active_subscription' in locals() and active_subscription:
+                from subscriptions.usage import UsageService
+                UsageService.log_usage(
+                    user=user,
+                    action_type='query',
+                    tokens_used=assistant_message.tokens or 0,
+                    subscription=active_subscription,
+                    metadata={
+                        'conversation_id': str(conversation.id),
+                        'message_id': str(assistant_message.id),
+                    },
+                    ip_address=request.META.get('REMOTE_ADDR'),
+                    user_agent=request.META.get('HTTP_USER_AGENT', '')
+                )
             
             # آماده‌سازی پاسخ - مطابق با API سیستم مرکزی
             response_data = {
@@ -332,6 +327,41 @@ class StreamingQueryView(APIView):
         
         data = serializer.validated_data
         user = request.user
+        
+        # بررسی اشتراک کاربر
+        active_subscription = None
+        from subscriptions.models import Subscription
+        active_subscription = user.subscriptions.filter(
+            status__in=['active', 'trial'],
+            end_date__gt=timezone.now()
+        ).first()
+        
+        if not active_subscription:
+            return Response(
+                {
+                    'error': 'شما اشتراک فعالی ندارید',
+                    'code': 'NO_ACTIVE_SUBSCRIPTION',
+                    'plans_url': '/api/v1/plans/'
+                },
+                status=status.HTTP_403_FORBIDDEN
+            )
+        
+        # بررسی محدودیت روزانه و ماهانه
+        can_query, message = active_subscription.can_query()
+        if not can_query:
+            return Response(
+                {
+                    'error': message,
+                    'code': 'QUOTA_EXCEEDED',
+                    'usage': {
+                        'daily_used': active_subscription.queries_used_today,
+                        'daily_limit': active_subscription.plan.max_queries_per_day,
+                        'monthly_used': active_subscription.queries_used_month,
+                        'monthly_limit': active_subscription.plan.max_queries_per_month,
+                    }
+                },
+                status=status.HTTP_429_TOO_MANY_REQUESTS
+            )
         
         # دریافت یا ایجاد conversation
         conversation_id = data.get('conversation_id')
@@ -455,9 +485,9 @@ class StreamingQueryView(APIView):
                 assistant_message.cached = metadata.get('cached', False)
                 await sync_to_async(assistant_message.save)()
                 
-                # به‌روزرسانی آمار conversation
+                # به‌روزرسانی آمار conversation - فقط پیام‌های کاربر
                 def update_conversation_stats():
-                    conversation.message_count = conversation.messages.count()
+                    conversation.message_count = conversation.messages.filter(role='user').count()
                     conversation.token_usage = conversation.messages.aggregate(
                         total=Count('tokens')
                     )['total'] or 0
@@ -465,6 +495,25 @@ class StreamingQueryView(APIView):
                     conversation.save()
                 
                 await sync_to_async(update_conversation_stats)()
+                
+                # ثبت مصرف
+                if active_subscription:
+                    from subscriptions.usage import UsageService
+                    def log_usage():
+                        UsageService.log_usage(
+                            user=user,
+                            action_type='query',
+                            tokens_used=metadata.get('tokens', 0),
+                            subscription=active_subscription,
+                            metadata={
+                                'conversation_id': conversation_id,
+                                'message_id': assistant_message_id,
+                                'streaming': True
+                            },
+                            ip_address=request.META.get('REMOTE_ADDR'),
+                            user_agent=request.META.get('HTTP_USER_AGENT', '')
+                        )
+                    await sync_to_async(log_usage)()
                 
             except Exception as e:
                 logger.error(f"Error in streaming: {str(e)}")
