@@ -87,7 +87,7 @@ export default function TermsPage() {
     <div style={styles.container}>
       <div style={styles.card}>
         <h1 style={styles.title}>شرایط استفاده و سیاست حریم خصوصی</h1>
-        <p style={styles.updateDate}>به‌روز‌رسانی: ۱۴۰۳/۰۹/۱۵</p>
+        <p style={styles.updateDate}>به‌روز‌رسانی: ۱۴۰۴/۰۹/۱۴</p>
         
         <div style={styles.content}>
           {/* بخش ۱ */}
