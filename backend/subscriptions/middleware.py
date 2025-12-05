@@ -49,6 +49,8 @@ class SubscriptionMiddleware:
         # Check if path requires query quota
         is_query_path = any(request.path.startswith(path) for path in self.QUERY_PATHS)
         
+        logger.info(f"Middleware check: path={request.path}, is_query_path={is_query_path}, method={request.method}")
+        
         if is_query_path and request.method == 'POST':
             # Get active subscription
             subscription = request.user.subscriptions.filter(
@@ -85,6 +87,7 @@ class SubscriptionMiddleware:
         
         # Log successful query
         if is_query_path and request.method == 'POST' and response.status_code == 200:
+            logger.info(f"Query success: has_subscription={hasattr(request, 'subscription')}")
             if hasattr(request, 'subscription'):
                 try:
                     # Extract tokens from response if available
