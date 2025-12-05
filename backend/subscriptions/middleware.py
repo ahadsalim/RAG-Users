@@ -49,31 +49,6 @@ class SubscriptionMiddleware:
         # Check if path requires query quota
         is_query_path = any(request.path.startswith(path) for path in self.QUERY_PATHS)
         
-        # For superusers, skip quota check but still log usage
-        if request.user.is_superuser:
-            response = self.get_response(request)
-            
-            # Log usage for superusers too
-            if is_query_path and request.method == 'POST' and response.status_code == 200:
-                try:
-                    UsageService.log_usage(
-                        user=request.user,
-                        action_type='query',
-                        tokens_used=0,
-                        subscription=None,
-                        metadata={
-                            'path': request.path,
-                            'is_superuser': True
-                        },
-                        ip_address=self.get_client_ip(request),
-                        user_agent=request.META.get('HTTP_USER_AGENT', '')
-                    )
-                    logger.info(f"Query logged for superuser {request.user}")
-                except Exception as e:
-                    logger.error(f"Error logging usage for superuser: {e}")
-            
-            return response
-        
         if is_query_path and request.method == 'POST':
             # Get active subscription
             subscription = request.user.subscriptions.filter(
