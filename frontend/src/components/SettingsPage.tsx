@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { X, User, Bell, Shield, CreditCard, Palette, Globe, HelpCircle } from 'lucide-react';
+import { X, User, Bell, Shield, CreditCard, Palette, Globe, HelpCircle, Brain } from 'lucide-react';
 import axios from 'axios';
 import { useAuthStore } from '@/store/auth';
+import MemorySection from '@/components/settings/MemorySection';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || '';
 
@@ -10,7 +11,7 @@ interface SettingsPageProps {
   onClose: () => void;
 }
 
-type SettingsTab = 'profile' | 'subscription' | 'preferences' | 'notifications' | 'security' | 'help';
+type SettingsTab = 'profile' | 'subscription' | 'memory' | 'preferences' | 'notifications' | 'security' | 'help';
 
 interface UserSettings {
   // Profile
@@ -145,6 +146,7 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ isOpen, onClose }) => {
   const tabs = [
     { id: 'profile' as SettingsTab, label: 'پروفایل', icon: User },
     { id: 'subscription' as SettingsTab, label: 'اشتراک', icon: CreditCard },
+    { id: 'memory' as SettingsTab, label: 'حافظه من', icon: Brain },
     { id: 'preferences' as SettingsTab, label: 'تنظیمات', icon: Palette },
     { id: 'notifications' as SettingsTab, label: 'اعلان‌ها', icon: Bell },
     { id: 'security' as SettingsTab, label: 'امنیت', icon: Shield },
@@ -248,6 +250,7 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ isOpen, onClose }) => {
           <div className="flex-1 overflow-y-auto p-6">
             {activeTab === 'profile' && <ProfileTab settings={settings} setSettings={setSettings} userPhone={user?.phone_number} userType={user?.user_type} />}
             {activeTab === 'subscription' && <SubscriptionTab subscription={subscription} loading={loading} />}
+            {activeTab === 'memory' && <MemorySection />}
             {activeTab === 'preferences' && <PreferencesTab settings={settings} setSettings={setSettings} />}
             {activeTab === 'notifications' && <NotificationsTab />}
             {activeTab === 'security' && <SecurityTab />}

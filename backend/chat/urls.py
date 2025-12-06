@@ -15,6 +15,12 @@ from .views import (
     SharedConversationView
 )
 from .upload_views import upload_file, upload_multiple_files
+from .memory_views import (
+    MemoryListView,
+    MemoryDetailView,
+    MemorySummarizeView,
+    MemoryContextView
+)
 
 # Router اصلی
 router = DefaultRouter()
@@ -39,6 +45,12 @@ urlpatterns = [
     
     # Shared conversations
     path('shared/<str:share_token>/', SharedConversationView.as_view(), name='shared-conversation'),
+    
+    # Memory endpoints (حافظه بلندمدت کاربر)
+    path('memory/', MemoryListView.as_view(), name='memory-list'),
+    path('memory/<str:memory_id>/', MemoryDetailView.as_view(), name='memory-detail'),
+    path('memory/summarize/', MemorySummarizeView.as_view(), name='memory-summarize'),
+    path('memory/context/', MemoryContextView.as_view(), name='memory-context'),
     
     # ViewSets
     path('', include(router.urls)),
