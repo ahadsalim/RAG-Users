@@ -121,9 +121,8 @@ class User(AbstractUser):
     """Custom User model with extended fields"""
     
     USER_TYPE_CHOICES = [
-        ('individual', _('فردی')),
-        ('legal', _('حقوقی')),
-        ('business', _('تجاری')),
+        ('individual', _('حقیقی')),
+        ('business', _('حقوقی')),
     ]
     
     LANGUAGE_CHOICES = [

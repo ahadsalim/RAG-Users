@@ -137,7 +137,7 @@ class VerifyOTPView(APIView):
         user, created = User.objects.get_or_create(
             phone_number=phone_number,
             defaults={
-                'user_type': 'real',  # Real user
+                'user_type': 'individual',  # حقیقی - phone login
                 'is_active': True,
                 'phone_verified': True,
             }

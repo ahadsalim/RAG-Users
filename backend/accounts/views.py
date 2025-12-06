@@ -191,7 +191,7 @@ class UserRegistrationView(generics.CreateAPIView):
         user_type = request.data.get('user_type', 'individual')
         
         # For legal users, send verification email and don't allow login until verified
-        if user_type == 'legal' or user_type == 'business':
+        if user_type == 'business':
             # Set user as inactive until email is verified
             user.is_active = False
             user.save()

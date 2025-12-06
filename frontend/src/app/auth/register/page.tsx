@@ -67,7 +67,7 @@ export default function RegisterPage() {
           password_confirm: confirmPassword,
           phone_number: phoneNumber,
           company_name: companyName,
-          user_type: 'legal'
+          user_type: 'business'
         })
       })
       

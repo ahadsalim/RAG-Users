@@ -133,7 +133,7 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
         phone_number = attrs.get('phone_number', '')
         
         # For legal users (business), email is required
-        if user_type == 'legal' or user_type == 'business':
+        if user_type == 'business':
             if not attrs.get('email'):
                 raise serializers.ValidationError({'email': _('ایمیل برای حساب‌های حقوقی الزامی است.')})
             
