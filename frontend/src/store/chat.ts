@@ -86,7 +86,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
       
       // Remove from local state
       set(state => ({
-        conversations: state.conversations.filter(c => c.id !== conversationId),
+        conversations: (state.conversations || []).filter(c => c.id !== conversationId),
         currentConversation: state.currentConversation?.id === conversationId 
           ? null 
           : state.currentConversation,
@@ -104,7 +104,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
   archiveConversation: async (conversationId: string) => {
     try {
       const state = get()
-      const conversation = state.conversations.find(c => c.id === conversationId)
+      const conversation = (state.conversations || []).find(c => c.id === conversationId)
       const isArchived = conversation?.is_archived || false
       
       // Toggle archive status
@@ -112,7 +112,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
       
       // Update local state - toggle the archive status
       set(state => ({
-        conversations: state.conversations.map(c =>
+        conversations: (state.conversations || []).map(c =>
           c.id === conversationId ? { ...c, is_archived: !isArchived } : c
         ),
       }))
@@ -130,7 +130,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
       
       // Update local state
       set(state => ({
-        conversations: state.conversations.map(c =>
+        conversations: (state.conversations || []).map(c =>
           c.id === conversationId ? { ...c, is_pinned: pin } : c
         ),
       }))

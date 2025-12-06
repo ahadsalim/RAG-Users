@@ -239,10 +239,12 @@ services:
       - "3000"  # Only exposed to docker network, not host
     networks:
       - app_network
-    volumes:
-      - ../frontend:/app
-      - /app/node_modules
-      - /app/.next
+    # Note: volumes removed for production mode
+    # For development, uncomment these:
+    # volumes:
+    #   - ../frontend:/app
+    #   - /app/node_modules
+    #   - /app/.next
 
   # Nginx Proxy Manager Database
   npm_db:

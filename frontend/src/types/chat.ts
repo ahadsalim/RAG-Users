@@ -44,6 +44,7 @@ export interface Conversation {
     content: string
     role: 'user' | 'assistant'
   }
+  messages?: Message[]
   created_at: string
   updated_at: string
 }
@@ -160,13 +161,18 @@ export interface QueryResponse {
   answer: string
   sources: string[]
   chunks: MessageChunk[]
-  metadata: {
+  tokens_used?: number
+  processing_time?: number
+  processing_time_ms?: number
+  model_used?: string
+  context_used?: boolean
+  metadata?: {
     tokens: number
     processing_time_ms: number
     model_used: string
     cached: boolean
   }
-  user_info: {
+  user_info?: {
     daily_queries_remaining: number
     total_queries: number
   }

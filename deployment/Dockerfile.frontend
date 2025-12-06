@@ -22,8 +22,11 @@ RUN \
 # Copy application code
 COPY . .
 
+# Set production environment
+ENV NODE_ENV=production
+
 # Build the application
-RUN npm run build || echo "Build will happen at runtime"
+RUN npm run build
 
 # Create non-root user
 RUN addgroup -g 1001 -S nodejs && \
@@ -39,4 +42,5 @@ EXPOSE 3000
 ENV PORT=3000
 ENV HOSTNAME="0.0.0.0"
 
-CMD ["npm", "run", "dev"]
+# Run in production mode
+CMD ["npm", "run", "start"]

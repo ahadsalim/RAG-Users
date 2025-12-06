@@ -334,7 +334,9 @@ interface Plan {
   name: string;
   price: number;
   duration_days: number;
-  features: {
+  max_queries_per_day?: number;
+  max_queries_per_month?: number;
+  features?: {
     max_queries_per_day?: number;
     max_queries_per_month?: number;
     [key: string]: any;
