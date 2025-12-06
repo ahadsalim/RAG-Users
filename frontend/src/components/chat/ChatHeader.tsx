@@ -2,8 +2,10 @@
 
 import { useState, useEffect } from 'react'
 import { Conversation } from '@/types/chat'
+import { useAuthStore } from '@/store/auth'
 import clsx from 'clsx'
 import axios from 'axios'
+import SettingsPage from '@/components/SettingsPage'
 
 interface ChatHeaderProps {
   onToggleSidebar: () => void
@@ -22,6 +24,22 @@ export function ChatHeader({ onToggleSidebar, conversation, isConnected }: ChatH
   const [showUsageTooltip, setShowUsageTooltip] = useState(false)
   const [usage, setUsage] = useState<UsageInfo | null>(null)
   const [loadingUsage, setLoadingUsage] = useState(false)
+  const [showUserMenu, setShowUserMenu] = useState(false)
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false)
+  const { user, logout } = useAuthStore()
+  
+  // Get user display name
+  const getUserDisplayName = () => {
+    const savedSettings = typeof window !== 'undefined' ? localStorage.getItem('userSettings') : null
+    if (savedSettings) {
+      try {
+        const settings = JSON.parse(savedSettings)
+        if (settings.full_name) return settings.full_name
+      } catch (e) {}
+    }
+    if (user?.first_name && user?.last_name) return `${user.first_name} ${user.last_name}`
+    return user?.email || 'کاربر'
+  }
 
   // بارگذاری اطلاعات مصرف هنگام hover
   const loadUsage = async () => {
@@ -66,6 +84,7 @@ export function ChatHeader({ onToggleSidebar, conversation, isConnected }: ChatH
   }
 
   return (
+    <>
     <header className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
       <div className="px-4 py-3 flex items-center justify-between">
         <div className="flex items-center gap-3">
@@ -86,7 +105,7 @@ export function ChatHeader({ onToggleSidebar, conversation, isConnected }: ChatH
         </div>
         
         {/* Actions */}
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-3">
           {/* Connection Status with Usage Tooltip */}
           <div 
             className="relative"
@@ -162,8 +181,74 @@ export function ChatHeader({ onToggleSidebar, conversation, isConnected }: ChatH
               </div>
             )}
           </div>
+          
+          {/* User Avatar with Menu */}
+          <div className="relative">
+            <button
+              onClick={() => setShowUserMenu(!showUserMenu)}
+              className="w-9 h-9 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center hover:ring-2 hover:ring-blue-400 transition-all shadow-md"
+              title={getUserDisplayName()}
+            >
+              <span className="text-sm font-bold text-white">
+                {getUserDisplayName().charAt(0).toUpperCase()}
+              </span>
+            </button>
+            
+            {/* User Dropdown Menu */}
+            {showUserMenu && (
+              <>
+                <div 
+                  className="fixed inset-0 z-40" 
+                  onClick={() => setShowUserMenu(false)}
+                />
+                <div className="absolute left-0 top-12 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-xl py-2 z-50 min-w-[220px]">
+                  {/* User Info */}
+                  <div className="px-4 py-3 border-b border-gray-200 dark:border-gray-700">
+                    <p className="font-medium text-gray-900 dark:text-white truncate">{getUserDisplayName()}</p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400 truncate">{user?.email || user?.phone_number}</p>
+                    <p className="text-xs mt-1">
+                      {user?.is_superuser ? (
+                        <span className="text-red-500 font-semibold">مدیر ارشد</span>
+                      ) : user?.is_staff ? (
+                        <span className="text-yellow-500">کارمند</span>
+                      ) : user?.user_type === 'business' ? (
+                        <span className="text-purple-500">کاربر حقوقی</span>
+                      ) : (
+                        <span className="text-blue-500">کاربر عادی</span>
+                      )}
+                    </p>
+                  </div>
+                  
+                  {/* Menu Items */}
+                  <div className="py-1">
+                    <button 
+                      onClick={() => { setIsSettingsOpen(true); setShowUserMenu(false); }}
+                      className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-gray-100 dark:hover:bg-gray-700 text-right text-sm text-gray-700 dark:text-gray-300"
+                    >
+                      <span>⚙️</span>
+                      <span>تنظیمات</span>
+                    </button>
+                    <button 
+                      onClick={() => { logout(); setShowUserMenu(false); }}
+                      className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-gray-100 dark:hover:bg-gray-700 text-red-500 text-right text-sm"
+                    >
+                      <span>🚪</span>
+                      <span>خروج</span>
+                    </button>
+                  </div>
+                </div>
+              </>
+            )}
+          </div>
         </div>
       </div>
     </header>
+    
+    {/* Settings Page */}
+    <SettingsPage 
+      isOpen={isSettingsOpen} 
+      onClose={() => setIsSettingsOpen(false)} 
+    />
+    </>
   )
 }

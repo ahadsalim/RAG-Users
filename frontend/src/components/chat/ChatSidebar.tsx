@@ -207,65 +207,6 @@ export function ChatSidebar({
               <h2 className="text-lg font-bold">گفتگوها</h2>
             </div>
             
-            {/* User Avatar with Menu */}
-            <div className="relative">
-              <button
-                onClick={() => setShowUserMenu(!showUserMenu)}
-                className="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center hover:ring-2 hover:ring-blue-400 transition-all"
-                title={getUserDisplayName()}
-              >
-                <span className="text-sm font-bold text-white">
-                  {getUserDisplayName().charAt(0).toUpperCase()}
-                </span>
-              </button>
-              
-              {/* User Dropdown Menu */}
-              {showUserMenu && (
-                <>
-                  <div 
-                    className="fixed inset-0 z-10" 
-                    onClick={() => setShowUserMenu(false)}
-                  />
-                  <div className="absolute left-0 top-10 bg-gray-800 border border-gray-700 rounded-xl shadow-xl py-2 z-20 min-w-[200px]">
-                    {/* User Info */}
-                    <div className="px-4 py-3 border-b border-gray-700">
-                      <p className="font-medium text-white truncate">{getUserDisplayName()}</p>
-                      <p className="text-xs text-gray-400 truncate">{user?.email || user?.phone_number}</p>
-                      <p className="text-xs mt-1">
-                        {user?.is_superuser ? (
-                          <span className="text-red-400 font-semibold">مدیر ارشد</span>
-                        ) : user?.is_staff ? (
-                          <span className="text-yellow-400">کارمند</span>
-                        ) : user?.user_type === 'business' ? (
-                          <span className="text-purple-400">کاربر حقوقی</span>
-                        ) : (
-                          <span className="text-blue-400">کاربر عادی</span>
-                        )}
-                      </p>
-                    </div>
-                    
-                    {/* Menu Items */}
-                    <div className="py-1">
-                      <button 
-                        onClick={() => { setIsSettingsOpen(true); setShowUserMenu(false); }}
-                        className="w-full flex items-center gap-3 px-4 py-2 hover:bg-gray-700 text-right text-sm"
-                      >
-                        <span>⚙️</span>
-                        <span>تنظیمات</span>
-                      </button>
-                      <button 
-                        onClick={() => { handleLogout(); setShowUserMenu(false); }}
-                        className="w-full flex items-center gap-3 px-4 py-2 hover:bg-gray-700 text-red-400 text-right text-sm"
-                      >
-                        <span>🚪</span>
-                        <span>خروج</span>
-                      </button>
-                    </div>
-                  </div>
-                </>
-              )}
-            </div>
-            
             <button
               onClick={onClose}
               className="md:hidden p-1 hover:bg-gray-800 rounded"
