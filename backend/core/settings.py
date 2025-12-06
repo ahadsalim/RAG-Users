@@ -294,6 +294,27 @@ CELERY_TIMEZONE = TIME_ZONE
 CELERY_TASK_TRACK_STARTED = True
 CELERY_TASK_TIME_LIMIT = 30 * 60
 
+# Celery Beat Schedule - تسک‌های زمان‌بندی شده
+from celery.schedules import crontab
+
+CELERY_BEAT_SCHEDULE = {
+    # بررسی اشتراک‌های در حال انقضا - هر روز ساعت 9 صبح
+    'check-expiring-subscriptions': {
+        'task': 'subscriptions.tasks.check_expiring_subscriptions',
+        'schedule': crontab(hour=9, minute=0),
+    },
+    # بررسی اشتراک‌های منقضی شده - هر روز ساعت 0:30
+    'check-expired-subscriptions': {
+        'task': 'subscriptions.tasks.check_expired_subscriptions',
+        'schedule': crontab(hour=0, minute=30),
+    },
+    # بررسی هشدارهای سهمیه - هر 6 ساعت
+    'check-quota-warnings': {
+        'task': 'subscriptions.tasks.check_quota_warnings',
+        'schedule': crontab(hour='*/6', minute=0),
+    },
+}
+
 # Payment Gateways
 ZARINPAL_MERCHANT_ID = config('ZARINPAL_MERCHANT_ID', default='')
 ZARINPAL_SANDBOX = config('ZARINPAL_SANDBOX', default=True, cast=bool)

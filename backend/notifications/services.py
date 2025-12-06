@@ -206,6 +206,7 @@ class SMSService:
     
     # تنظیمات Kavenegar
     KAVENEGAR_API_KEY = getattr(settings, 'KAVENEGAR_API_KEY', '')
+    KAVENEGAR_SENDER = getattr(settings, 'KAVENEGAR_SENDER', '')
     KAVENEGAR_API_URL = 'https://api.kavenegar.com/v1/{}/sms/send.json'
     
     @staticmethod
@@ -279,6 +280,7 @@ class SMSService:
         data = {
             'receptor': phone_number,
             'message': message,
+            'sender': SMSService.KAVENEGAR_SENDER,
         }
         
         try:
