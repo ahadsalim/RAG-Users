@@ -154,7 +154,7 @@ def send_otp_sms(phone_number, otp_code):
     try:
         # Get Kavenegar API key
         api_key = config('KAVENEGAR_API_KEY', default=None)
-        template_name = 'smskaveh'  # نام الگوی تعریف شده در کاوه نگار
+        template_name = 'otp'  # نام الگوی تعریف شده در کاوه نگار
         
         if not api_key or api_key == 'your-kavenegar-api-key':
             logger.warning("Kavenegar API key not configured - logging OTP instead")
