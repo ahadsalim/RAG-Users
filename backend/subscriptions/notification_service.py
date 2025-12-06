@@ -71,7 +71,7 @@ class SubscriptionNotificationService:
             'plan_name': subscription.plan.name,
             'days_remaining': days_remaining,
             'end_date': to_jalali(subscription.end_date),
-            'renewal_url': '/dashboard/subscription/renew',
+            'login_url': '/auth/login',
         }
         
         try:
@@ -95,7 +95,7 @@ class SubscriptionNotificationService:
         context = {
             'user_name': user.get_full_name() or user.phone_number,
             'plan_name': subscription.plan.name,
-            'renewal_url': '/dashboard/subscription/plans',
+            'login_url': '/auth/login',
         }
         
         try:
@@ -140,7 +140,7 @@ class SubscriptionNotificationService:
             'usage_percentage': usage_percentage,
             'quota_type': 'روزانه' if quota_type == 'daily' else 'ماهانه',
             'limit_text': limit_text,
-            'upgrade_url': '/dashboard/subscription/upgrade',
+            'login_url': '/auth/login',
         }
         
         try:
@@ -163,7 +163,7 @@ class SubscriptionNotificationService:
         context = {
             'user_name': user.get_full_name() or user.phone_number,
             'quota_type': 'روزانه' if quota_type == 'daily' else 'ماهانه',
-            'upgrade_url': '/dashboard/subscription/upgrade',
+            'login_url': '/auth/login',
         }
         
         try:
@@ -188,7 +188,7 @@ class SubscriptionNotificationService:
             'user_name': user.get_full_name() or user.phone_number,
             'plan_name': subscription.plan.name,
             'end_date': to_jalali(subscription.end_date),
-            'dashboard_url': '/dashboard',
+            'login_url': '/auth/login',
         }
         
         try:
@@ -212,7 +212,7 @@ class SubscriptionNotificationService:
             'user_name': user.get_full_name() or user.phone_number,
             'amount': f'{amount:,.0f}',
             'plan_name': plan_name,
-            'dashboard_url': '/dashboard',
+            'login_url': '/auth/login',
         }
         
         try:
@@ -236,7 +236,7 @@ class SubscriptionNotificationService:
             'user_name': user.get_full_name() or user.phone_number,
             'amount': f'{amount:,.0f}',
             'error_message': error_message,
-            'retry_url': '/dashboard/subscription/payment',
+            'login_url': '/auth/login',
         }
         
         try:
