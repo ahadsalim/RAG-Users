@@ -12,7 +12,8 @@ from .views import (
     MessageViewSet,
     ConversationFolderViewSet,
     ChatTemplateViewSet,
-    SharedConversationView
+    SharedConversationView,
+    HealthCheckView
 )
 from .upload_views import upload_file, upload_multiple_files
 from .memory_views import (
@@ -38,6 +39,9 @@ urlpatterns = [
     # Query endpoints
     path('query/', QueryView.as_view(), name='query'),
     path('query/stream/', StreamingQueryView.as_view(), name='query-stream'),
+    
+    # Health check
+    path('health/', HealthCheckView.as_view(), name='health-check'),
     
     # File upload endpoints
     path('upload/', upload_file, name='upload-file'),

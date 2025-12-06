@@ -348,6 +348,39 @@ class CoreAPIService:
             logger.error(f"❌ Error deleting conversation from Core RAG: {str(e)}")
             return False
 
+    async def health_check(self) -> Dict[str, Any]:
+        """
+        Check if Core RAG system is available.
+        
+        Returns:
+            Dict with status and details
+        """
+        try:
+            async with httpx.AsyncClient(timeout=5.0) as client:
+                response = await client.get(f"{self.base_url}/health/")
+                
+                if response.status_code == 200:
+                    return {
+                        'status': 'connected',
+                        'message': 'سیستم مرکزی متصل است'
+                    }
+                else:
+                    return {
+                        'status': 'error',
+                        'message': f'خطای سیستم مرکزی: {response.status_code}'
+                    }
+        except httpx.TimeoutException:
+            return {
+                'status': 'disconnected',
+                'message': 'اتصال به سیستم مرکزی قطع است (timeout)'
+            }
+        except Exception as e:
+            logger.error(f"❌ Health check failed: {str(e)}")
+            return {
+                'status': 'disconnected',
+                'message': 'اتصال به سیستم مرکزی قطع است'
+            }
+
 
 # Singleton instance
 core_service = CoreAPIService()

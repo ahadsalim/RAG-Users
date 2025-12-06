@@ -34,20 +34,41 @@ export default function ChatPage() {
     setIsHydrated(true)
   }, [])
   
-  // WebSocket connection (optional - won't block UI)
-  const [isConnected, setIsConnected] = useState(true) // Assume connected for better UX
+  // Core RAG connection status
+  const [isConnected, setIsConnected] = useState(true)
+  const [connectionMessage, setConnectionMessage] = useState('')
   
-  // Disable WebSocket for now to improve performance
-  // const { sendMessage: wsSendMessage, isConnected } = useWebSocket({
-  //   onMessage: (data) => {
-  //     console.log('WebSocket message:', data)
-  //   },
-  //   onTyping: (userId, isTyping) => {
-  //     if (userId !== user?.id) {
-  //       setIsTyping(isTyping)
-  //     }
-  //   }
-  // })
+  // Check Core RAG health periodically
+  useEffect(() => {
+    const checkHealth = async () => {
+      try {
+        const token = localStorage.getItem('access_token')
+        if (!token) return
+        
+        const response = await fetch('/api/v1/chat/health/', {
+          headers: { 'Authorization': `Bearer ${token}` }
+        })
+        
+        if (response.ok) {
+          const data = await response.json()
+          setIsConnected(data.status === 'connected')
+          setConnectionMessage(data.message || '')
+        } else {
+          setIsConnected(false)
+          setConnectionMessage('اتصال به سیستم مرکزی قطع است')
+        }
+      } catch (error) {
+        setIsConnected(false)
+        setConnectionMessage('اتصال به سیستم مرکزی قطع است')
+      }
+    }
+    
+    // Check immediately and then every 30 seconds
+    checkHealth()
+    const interval = setInterval(checkHealth, 30000)
+    
+    return () => clearInterval(interval)
+  }, [])
 
   // Scroll to bottom when new messages arrive
   useEffect(() => {

@@ -875,3 +875,16 @@ class SharedConversationView(APIView):
                 'allow_export': shared.allow_export
             }
         })
+
+
+class HealthCheckView(APIView):
+    """Check connection status to Core RAG system."""
+    permission_classes = [permissions.IsAuthenticated]
+    
+    async def get(self, request):
+        """Check if Core RAG is available."""
+        result = await core_service.health_check()
+        
+        status_code = status.HTTP_200_OK if result['status'] == 'connected' else status.HTTP_503_SERVICE_UNAVAILABLE
+        
+        return Response(result, status=status_code)
