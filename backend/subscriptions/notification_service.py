@@ -10,6 +10,18 @@ from notifications.models import NotificationPreference
 logger = logging.getLogger(__name__)
 
 
+def to_jalali(date):
+    """تبدیل تاریخ میلادی به شمسی"""
+    try:
+        import jdatetime
+        if hasattr(date, 'date'):
+            date = date.date()
+        j_date = jdatetime.date.fromgregorian(date=date)
+        return j_date.strftime('%Y/%m/%d')
+    except Exception:
+        return date.strftime('%Y/%m/%d')
+
+
 class SubscriptionNotificationService:
     """سرویس ارسال اعلان‌های مربوط به اشتراک"""
     
@@ -58,7 +70,7 @@ class SubscriptionNotificationService:
             'user_name': user.get_full_name() or user.phone_number,
             'plan_name': subscription.plan.name,
             'days_remaining': days_remaining,
-            'end_date': subscription.end_date.strftime('%Y/%m/%d'),
+            'end_date': to_jalali(subscription.end_date),
             'renewal_url': '/dashboard/subscription/renew',
         }
         
@@ -175,7 +187,7 @@ class SubscriptionNotificationService:
         context = {
             'user_name': user.get_full_name() or user.phone_number,
             'plan_name': subscription.plan.name,
-            'end_date': subscription.end_date.strftime('%Y/%m/%d'),
+            'end_date': to_jalali(subscription.end_date),
             'dashboard_url': '/dashboard',
         }
         
