@@ -25,6 +25,9 @@ export function ChatSidebar({
   const [showArchived, setShowArchived] = useState(false)
   const [isSettingsOpen, setIsSettingsOpen] = useState(false)
   const [openMenuId, setOpenMenuId] = useState<string | null>(null)
+  const [showUserMenu, setShowUserMenu] = useState(false)
+  const [editingTitleId, setEditingTitleId] = useState<string | null>(null)
+  const [editingTitle, setEditingTitle] = useState('')
   const store = useChatStore()
   const { user, logout } = useAuthStore()
   
@@ -120,6 +123,55 @@ export function ChatSidebar({
     logout()
   }
   
+  const handleEditTitle = (e: React.MouseEvent, conversation: Conversation) => {
+    e.stopPropagation()
+    setEditingTitleId(conversation.id)
+    setEditingTitle(conversation.title)
+    setOpenMenuId(null)
+  }
+  
+  const handleSaveTitle = async (e: React.MouseEvent | React.KeyboardEvent, conversationId: string) => {
+    e.stopPropagation()
+    if (editingTitle.trim()) {
+      // Call API to update title
+      try {
+        const token = useAuthStore.getState().accessToken
+        const API_URL = process.env.NEXT_PUBLIC_API_URL || ''
+        await fetch(`${API_URL}/api/v1/chat/conversations/${conversationId}/`, {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({ title: editingTitle.trim() })
+        })
+        // Reload conversations
+        loadConversations()
+      } catch (err) {
+        console.error('Error updating title:', err)
+      }
+    }
+    setEditingTitleId(null)
+  }
+  
+  const handleCancelEdit = (e: React.MouseEvent) => {
+    e.stopPropagation()
+    setEditingTitleId(null)
+  }
+  
+  // Get user display name
+  const getUserDisplayName = () => {
+    const savedSettings = typeof window !== 'undefined' ? localStorage.getItem('userSettings') : null
+    if (savedSettings) {
+      try {
+        const settings = JSON.parse(savedSettings)
+        if (settings.full_name) return settings.full_name
+      } catch (e) {}
+    }
+    if (user?.first_name && user?.last_name) return `${user.first_name} ${user.last_name}`
+    return user?.email || 'کاربر'
+  }
+  
   return (
     <>
       {/* Mobile overlay */}
@@ -154,6 +206,66 @@ export function ChatSidebar({
               />
               <h2 className="text-lg font-bold">گفتگوها</h2>
             </div>
+            
+            {/* User Avatar with Menu */}
+            <div className="relative">
+              <button
+                onClick={() => setShowUserMenu(!showUserMenu)}
+                className="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center hover:ring-2 hover:ring-blue-400 transition-all"
+                title={getUserDisplayName()}
+              >
+                <span className="text-sm font-bold text-white">
+                  {getUserDisplayName().charAt(0).toUpperCase()}
+                </span>
+              </button>
+              
+              {/* User Dropdown Menu */}
+              {showUserMenu && (
+                <>
+                  <div 
+                    className="fixed inset-0 z-10" 
+                    onClick={() => setShowUserMenu(false)}
+                  />
+                  <div className="absolute left-0 top-10 bg-gray-800 border border-gray-700 rounded-xl shadow-xl py-2 z-20 min-w-[200px]">
+                    {/* User Info */}
+                    <div className="px-4 py-3 border-b border-gray-700">
+                      <p className="font-medium text-white truncate">{getUserDisplayName()}</p>
+                      <p className="text-xs text-gray-400 truncate">{user?.email || user?.phone_number}</p>
+                      <p className="text-xs mt-1">
+                        {user?.is_superuser ? (
+                          <span className="text-red-400 font-semibold">مدیر ارشد</span>
+                        ) : user?.is_staff ? (
+                          <span className="text-yellow-400">کارمند</span>
+                        ) : user?.user_type === 'business' ? (
+                          <span className="text-purple-400">کاربر حقوقی</span>
+                        ) : (
+                          <span className="text-blue-400">کاربر عادی</span>
+                        )}
+                      </p>
+                    </div>
+                    
+                    {/* Menu Items */}
+                    <div className="py-1">
+                      <button 
+                        onClick={() => { setIsSettingsOpen(true); setShowUserMenu(false); }}
+                        className="w-full flex items-center gap-3 px-4 py-2 hover:bg-gray-700 text-right text-sm"
+                      >
+                        <span>⚙️</span>
+                        <span>تنظیمات</span>
+                      </button>
+                      <button 
+                        onClick={() => { handleLogout(); setShowUserMenu(false); }}
+                        className="w-full flex items-center gap-3 px-4 py-2 hover:bg-gray-700 text-red-400 text-right text-sm"
+                      >
+                        <span>🚪</span>
+                        <span>خروج</span>
+                      </button>
+                    </div>
+                  </div>
+                </>
+              )}
+            </div>
+            
             <button
               onClick={onClose}
               className="md:hidden p-1 hover:bg-gray-800 rounded"
@@ -208,38 +320,72 @@ export function ChatSidebar({
               filteredConversations.map((conversation) => (
                 <div
                   key={conversation.id}
-                  onClick={() => handleSelectConversation(conversation.id)}
+                  onClick={() => editingTitleId !== conversation.id && handleSelectConversation(conversation.id)}
                   className={clsx(
-                    'group flex items-start gap-3 p-3 rounded-lg cursor-pointer transition-colors',
+                    'group flex items-center gap-2 p-2 rounded-lg cursor-pointer transition-colors',
                     currentConversationId === conversation.id
                       ? 'bg-gray-700'
                       : 'hover:bg-gray-800'
                   )}
                 >
-                  <span className="text-gray-400">💬</span>
+                  <span className="text-gray-400 text-sm">💬</span>
                   <div className="flex-1 min-w-0">
-                    <h4 className="font-medium truncate">{conversation.title}</h4>
-                    <p className="text-sm text-gray-400 truncate">
-                      {conversation.last_message?.content || 'بدون پیام'}
-                    </p>
-                    <p className="text-xs text-gray-500 mt-1">
-                      {new Date(conversation.updated_at).toLocaleDateString('fa-IR')}
-                    </p>
+                    {editingTitleId === conversation.id ? (
+                      <div className="flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
+                        <input
+                          type="text"
+                          value={editingTitle}
+                          onChange={(e) => setEditingTitle(e.target.value)}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') handleSaveTitle(e, conversation.id)
+                            if (e.key === 'Escape') setEditingTitleId(null)
+                          }}
+                          className="flex-1 bg-gray-600 text-white text-sm px-2 py-1 rounded border border-gray-500 focus:outline-none focus:border-blue-500"
+                          autoFocus
+                        />
+                        <button
+                          onClick={(e) => handleSaveTitle(e, conversation.id)}
+                          className="p-1 text-green-400 hover:bg-gray-600 rounded"
+                        >
+                          ✓
+                        </button>
+                        <button
+                          onClick={handleCancelEdit}
+                          className="p-1 text-gray-400 hover:bg-gray-600 rounded"
+                        >
+                          ✕
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="flex items-center gap-2">
+                        <h4 className="font-medium truncate text-sm flex-1">{conversation.title}</h4>
+                        <span className="text-[10px] text-gray-500 flex-shrink-0">
+                          {new Date(conversation.updated_at).toLocaleDateString('fa-IR')}
+                        </span>
+                      </div>
+                    )}
                   </div>
                   
                   {/* 3-dot Menu */}
                   <div className="relative flex items-center opacity-0 group-hover:opacity-100 transition-opacity">
                     <button
                       onClick={(e) => toggleMenu(e, conversation.id)}
-                      className="p-1 hover:bg-gray-700 rounded"
+                      className="p-1 hover:bg-gray-600 rounded"
                       title="منو"
                     >
-                      <span className="text-gray-400 text-lg">⋮</span>
+                      <span className="text-gray-400">⋮</span>
                     </button>
                     
                     {/* Dropdown Menu */}
                     {openMenuId === conversation.id && (
                       <div className="absolute left-0 top-8 bg-gray-800 border border-gray-700 rounded-lg shadow-lg py-1 z-10 min-w-[160px]">
+                        <button
+                          onClick={(e) => handleEditTitle(e, conversation)}
+                          className="w-full flex items-center gap-2 px-3 py-2 hover:bg-gray-700 text-right text-sm"
+                        >
+                          <span>✏️</span>
+                          <span>ویرایش عنوان</span>
+                        </button>
                         <button
                           onClick={(e) => handleShareConversation(e, conversation)}
                           className="w-full flex items-center gap-2 px-3 py-2 hover:bg-gray-700 text-right text-sm"
@@ -270,76 +416,6 @@ export function ChatSidebar({
           </div>
         </div>
         
-        {/* Footer */}
-        <div className="p-2 border-t border-gray-700">
-          {/* User Info */}
-          <div className="flex items-center gap-2 mb-2">
-            <div className="w-8 h-8 bg-gray-700 rounded-full flex items-center justify-center flex-shrink-0">
-              <span className="text-xs font-bold">
-                {user?.first_name?.[0] || user?.email?.[0] || '?'}
-              </span>
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium truncate">
-                {(() => {
-                  // بارگذاری نام از localStorage
-                  const savedSettings = typeof window !== 'undefined' ? localStorage.getItem('userSettings') : null;
-                  let fullName = '';
-                  if (savedSettings) {
-                    try {
-                      const settings = JSON.parse(savedSettings);
-                      fullName = settings.full_name || '';
-                    } catch (e) {
-                      console.error('Error loading settings:', e);
-                    }
-                  }
-                  
-                  // اگر نام در localStorage بود
-                  if (fullName) {
-                    return fullName;
-                  }
-                  
-                  // اگر نام در user object بود
-                  if (user?.first_name && user?.last_name) {
-                    return `${user.first_name} ${user.last_name}`;
-                  }
-                  
-                  // در غیر این صورت ایمیل
-                  return user?.email || 'کاربر';
-                })()}
-              </p>
-              <p className="text-xs text-gray-400 truncate">
-                {user?.is_superuser ? (
-                  <span className="text-red-400 font-semibold">(مدیر ارشد)</span>
-                ) : user?.is_staff ? (
-                  <span className="text-yellow-400">(کارمند)</span>
-                ) : user?.user_type === 'business' ? (
-                  <span className="text-purple-400">(کاربر حقوقی)</span>
-                ) : (
-                  <span className="text-blue-400">(کاربر عادی)</span>
-                )}
-              </p>
-            </div>
-          </div>
-          
-          {/* Actions */}
-          <div className="space-y-0.5">
-            <button 
-              onClick={() => setIsSettingsOpen(true)}
-              className="w-full flex items-center gap-2 px-2 py-1.5 hover:bg-gray-800 rounded transition-colors text-sm"
-            >
-              <span className="text-gray-400 text-xs">⚙️</span>
-              <span>تنظیمات</span>
-            </button>
-            <button 
-              onClick={handleLogout}
-              className="w-full flex items-center gap-2 px-2 py-1.5 hover:bg-gray-800 rounded transition-colors text-red-400 text-sm"
-            >
-              <span className="text-xs">🚪</span>
-              <span>خروج</span>
-            </button>
-          </div>
-        </div>
       </aside>
       
       {/* Settings Page */}
