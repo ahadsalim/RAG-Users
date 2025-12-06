@@ -1,5 +1,5 @@
 import { create } from 'zustand'
-import axios from 'axios'
+import axiosInstance from '@/lib/axios'
 import { Conversation, Message, QueryResponse } from '@/types/chat'
 import { useAuthStore } from './auth'
 
@@ -41,7 +41,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
   loadConversations: async () => {
     set({ isLoading: true, error: null })
     try {
-      const response = await axios.get(`${API_URL}/api/v1/chat/conversations/`)
+      const response = await axiosInstance.get(`${API_URL}/api/v1/chat/conversations/`)
       set({
         conversations: response.data.results || response.data,
         isLoading: false,
@@ -57,7 +57,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
   loadConversation: async (conversationId: string) => {
     set({ isLoading: true, error: null })
     try {
-      const response = await axios.get(`${API_URL}/api/v1/chat/conversations/${conversationId}/`)
+      const response = await axiosInstance.get(`${API_URL}/api/v1/chat/conversations/${conversationId}/`)
       const conversation = response.data
       
       set({
@@ -82,7 +82,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
   
   deleteConversation: async (conversationId: string) => {
     try {
-      await axios.delete(`${API_URL}/api/v1/chat/conversations/${conversationId}/`)
+      await axiosInstance.delete(`${API_URL}/api/v1/chat/conversations/${conversationId}/`)
       
       // Remove from local state
       set(state => ({
@@ -108,7 +108,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
       const isArchived = conversation?.is_archived || false
       
       // Toggle archive status
-      await axios.post(`${API_URL}/api/v1/chat/conversations/${conversationId}/archive/`)
+      await axiosInstance.post(`${API_URL}/api/v1/chat/conversations/${conversationId}/archive/`)
       
       // Update local state - toggle the archive status
       set(state => ({
@@ -126,7 +126,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
   pinConversation: async (conversationId: string, pin: boolean) => {
     try {
       const endpoint = pin ? 'pin' : 'unpin'
-      await axios.post(`${API_URL}/api/v1/chat/conversations/${conversationId}/${endpoint}/`)
+      await axiosInstance.post(`${API_URL}/api/v1/chat/conversations/${conversationId}/${endpoint}/`)
       
       // Update local state
       set(state => ({
@@ -205,7 +205,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
       }
       
       // Send to API with 2 minute timeout
-      const response = await axios.post<QueryResponse>(
+      const response = await axiosInstance.post<QueryResponse>(
         `${API_URL}/api/v1/chat/query/`, 
         payload,
         {
@@ -246,7 +246,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
       
       // Reload conversations to update sidebar
       try {
-        const response = await axios.get(`${API_URL}/api/v1/chat/conversations/`)
+        const response = await axiosInstance.get(`${API_URL}/api/v1/chat/conversations/`)
         set({ conversations: response.data.results || response.data })
       } catch (err) {
         console.error('Failed to reload conversations:', err)
@@ -347,8 +347,8 @@ export const useChatStore = create<ChatState>((set, get) => ({
         payload.file_attachments = fileAttachments
       }
       
-      // Get token from axios default headers (set by auth store)
-      const token = axios.defaults.headers.common['Authorization']?.toString().replace('Bearer ', '')
+      // Get token from auth store
+      const token = useAuthStore.getState().accessToken
       
       if (!token) {
         throw new Error('No authentication token found')
@@ -369,7 +369,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
       // اگر streaming موجود نیست (404) یا مشکل authentication (401)، fallback به حالت عادی
       if (response.status === 404 || response.status === 401) {
         console.warn(`Streaming not available (${response.status}), falling back to normal mode`)
-        // استفاده از sendMessage عادی که از axios استفاده می‌کند
+        // استفاده از sendMessage عادی که از axiosInstance استفاده می‌کند
         set({ isLoading: false })
         await get().sendMessage(content, conversationId, mode, fileAttachments)
         return
@@ -491,7 +491,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
       
       // Reload conversations to update list
       try {
-        const response = await axios.get(`${API_URL}/api/v1/chat/conversations/`)
+        const response = await axiosInstance.get(`${API_URL}/api/v1/chat/conversations/`)
         set({ conversations: response.data.results || response.data })
       } catch (err) {
         console.error('Failed to reload conversations:', err)
@@ -537,7 +537,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
   loadMessages: async (conversationId: string) => {
     set({ isLoading: true, error: null })
     try {
-      const response = await axios.get(`${API_URL}/api/v1/chat/conversations/${conversationId}/messages/`)
+      const response = await axiosInstance.get(`${API_URL}/api/v1/chat/conversations/${conversationId}/messages/`)
       set({
         messages: response.data.results || response.data,
         isLoading: false,
@@ -555,7 +555,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
       const conversationId = get().currentConversation?.id
       if (!conversationId) return
       
-      await axios.post(
+      await axiosInstance.post(
         `${API_URL}/api/v1/chat/conversations/${conversationId}/messages/${messageId}/feedback/`,
         {
           rating,
