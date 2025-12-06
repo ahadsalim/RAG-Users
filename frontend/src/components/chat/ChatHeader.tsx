@@ -206,17 +206,19 @@ export function ChatHeader({ onToggleSidebar, conversation, isConnected }: ChatH
                   <div className="px-4 py-3 border-b border-gray-200 dark:border-gray-700">
                     <p className="font-medium text-gray-900 dark:text-white truncate">{getUserDisplayName()}</p>
                     <p className="text-xs text-gray-500 dark:text-gray-400 truncate">{user?.email || user?.phone_number}</p>
-                    <p className="text-xs mt-1">
-                      {user?.is_superuser ? (
-                        <span className="text-red-500 font-semibold">مدیر ارشد</span>
-                      ) : user?.is_staff ? (
-                        <span className="text-yellow-500">کارمند</span>
-                      ) : user?.user_type === 'business' ? (
-                        <span className="text-purple-500">کاربر حقوقی</span>
-                      ) : (
-                        <span className="text-blue-500">کاربر عادی</span>
-                      )}
-                    </p>
+                    {(user?.is_superuser || user?.is_staff || user?.user_type === 'business' || user?.user_type === 'legal') && (
+                      <p className="text-xs mt-1">
+                        {user?.is_superuser ? (
+                          <span className="text-red-500 font-semibold">مدیر ارشد</span>
+                        ) : user?.is_staff ? (
+                          <span className="text-yellow-500">کارمند</span>
+                        ) : user?.user_type === 'legal' ? (
+                          <span className="text-purple-500">کاربر حقوقی</span>
+                        ) : user?.user_type === 'business' ? (
+                          <span className="text-indigo-500">کاربر تجاری</span>
+                        ) : null}
+                      </p>
+                    )}
                   </div>
                   
                   {/* Menu Items */}

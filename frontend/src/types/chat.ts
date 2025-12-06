@@ -7,7 +7,7 @@ export interface User {
   phone_number?: string
   is_superuser?: boolean
   is_staff?: boolean
-  user_type?: 'individual' | 'business'
+  user_type?: 'individual' | 'business' | 'legal'
   company_name?: string
   organization?: Organization
   language: string
