@@ -149,7 +149,6 @@ class User(AbstractUser):
     email = models.EmailField(unique=True, blank=True, null=True, verbose_name=_('ایمیل'))
     phone_number = models.CharField(
         max_length=15, 
-        unique=True,
         validators=[phone_validator],
         verbose_name=_('شماره موبایل')
     )
@@ -254,6 +253,14 @@ class User(AbstractUser):
         verbose_name = _('کاربر')
         verbose_name_plural = _('کاربران')
         ordering = ['-created_at']
+        constraints = [
+            # Individual users must have unique phone numbers
+            models.UniqueConstraint(
+                fields=['phone_number'],
+                condition=models.Q(user_type='individual'),
+                name='unique_phone_for_individual_users'
+            ),
+        ]
     
     def __str__(self):
         """Display user's full name, or last name, or phone number"""

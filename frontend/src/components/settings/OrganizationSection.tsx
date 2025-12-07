@@ -50,6 +50,7 @@ export default function OrganizationSection() {
   const [showAddForm, setShowAddForm] = useState(false)
   const [newMember, setNewMember] = useState({
     email: '',
+    phone_number: '',
     first_name: '',
     last_name: '',
     role: 'member' as 'admin' | 'member'
@@ -91,14 +92,14 @@ export default function OrganizationSection() {
 
   const handleAddMember = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!newMember.email) return
+    if (!newMember.email || !newMember.phone_number) return
     
     try {
       setAddingMember(true)
       await axiosInstance.post('/api/v1/auth/organization/members/', newMember)
       
       // Reset form and reload
-      setNewMember({ email: '', first_name: '', last_name: '', role: 'member' })
+      setNewMember({ email: '', phone_number: '', first_name: '', last_name: '', role: 'member' })
       setShowAddForm(false)
       loadOrganizationData()
     } catch (err: any) {
@@ -249,7 +250,27 @@ export default function OrganizationSection() {
                   className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                   placeholder="email@example.com"
                   required
+                  dir="ltr"
                 />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  شماره موبایل *
+                </label>
+                <input
+                  type="tel"
+                  value={newMember.phone_number}
+                  onChange={(e) => setNewMember({ ...newMember, phone_number: e.target.value })}
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                  placeholder="09123456789"
+                  pattern="09[0-9]{9}"
+                  required
+                  dir="ltr"
+                />
+                <p className="text-xs text-gray-500 mt-1">
+                  این شماره نمی‌تواند برای ورود حقیقی استفاده شود
+                </p>
               </div>
               
               <div className="grid grid-cols-2 gap-3">

@@ -133,11 +133,23 @@ class VerifyOTPView(APIView):
         # OTP is valid, delete it
         cache.delete(cache_key)
         
-        # Get or create user
+        # Check if this phone belongs to a business user (organization member)
+        # Business users must login with email, not phone
+        existing_business_user = User.objects.filter(
+            phone_number=phone_number,
+            user_type='business'
+        ).first()
+        
+        if existing_business_user:
+            return Response({
+                'message': 'این شماره تلفن متعلق به یک کاربر سازمانی است. لطفاً با ایمیل وارد شوید.'
+            }, status=status.HTTP_400_BAD_REQUEST)
+        
+        # Get or create individual user
         user, created = User.objects.get_or_create(
             phone_number=phone_number,
+            user_type='individual',  # Only get/create individual users
             defaults={
-                'user_type': 'individual',  # حقیقی - phone login
                 'is_active': True,
                 'phone_verified': True,
             }

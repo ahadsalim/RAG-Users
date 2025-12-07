@@ -174,12 +174,21 @@ class OrganizationMembersView(APIView):
         
         # Validate input
         email = request.data.get('email', '').strip().lower()
+        phone_number = request.data.get('phone_number', '').strip()
         role = request.data.get('role', 'member')
         first_name = request.data.get('first_name', '')
         last_name = request.data.get('last_name', '')
         
         if not email:
             return Response({'error': 'ایمیل الزامی است'}, status=400)
+        
+        if not phone_number:
+            return Response({'error': 'شماره تلفن الزامی است'}, status=400)
+        
+        # Validate phone format
+        import re
+        if not re.match(r'^09\d{9}$', phone_number):
+            return Response({'error': 'شماره موبایل باید با 09 شروع شود و 11 رقم باشد'}, status=400)
         
         if role not in ['admin', 'member']:
             role = 'member'
@@ -195,10 +204,17 @@ class OrganizationMembersView(APIView):
                 'error': 'این ایمیل متعلق به یک کاربر حقیقی مستقل است'
             }, status=400)
         
+        # Check if phone exists as individual user (they cannot login as individual with this phone)
+        existing_individual = User.objects.filter(phone_number=phone_number, user_type='individual').first()
+        if existing_individual:
+            return Response({
+                'error': 'این شماره تلفن متعلق به یک کاربر حقیقی مستقل است. کاربر باید ابتدا حساب حقیقی خود را حذف کند.'
+            }, status=400)
+        
         # Create new member user
         new_member = User.objects.create(
             email=email,
-            phone_number=organization.phone or user.phone_number,  # Same phone as organization
+            phone_number=phone_number,
             user_type='business',
             organization=organization,
             organization_role=role,
