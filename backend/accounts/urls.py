@@ -24,6 +24,12 @@ from .views import (
 )
 from .otp_views import SendOTPView, VerifyOTPView
 from .settings_views import user_settings
+from .organization_views import (
+    OrganizationInfoView,
+    OrganizationMembersView,
+    OrganizationMemberDetailView,
+    OrganizationUsageView
+)
 
 router = DefaultRouter()
 router.register(r'sessions', UserSessionViewSet, basename='session')
@@ -64,4 +70,10 @@ urlpatterns = [
     
     # Sessions Management
     path('', include(router.urls)),
+    
+    # Organization Management (for business users)
+    path('organization/', OrganizationInfoView.as_view(), name='organization-info'),
+    path('organization/members/', OrganizationMembersView.as_view(), name='organization-members'),
+    path('organization/members/<uuid:member_id>/', OrganizationMemberDetailView.as_view(), name='organization-member-detail'),
+    path('organization/usage/', OrganizationUsageView.as_view(), name='organization-usage'),
 ]

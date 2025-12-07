@@ -147,7 +147,7 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
             
             # Validate phone format for legal users (mobile or landline)
             # Mobile: 09123456789 (11 digits starting with 09)
-            # Landline: 02112345678 (11 digits starting with 0 + area code)
+            # Landline: 02187654321 (11 digits starting with 0 + area code)
             if not re.match(r'^0\d{10}$', phone_number):
                 raise serializers.ValidationError({
                     'phone_number': _('لطفا یک شماره تلفن معتبر وارد کنید (موبایل: 09123456789 یا ثابت: 02112345678)')

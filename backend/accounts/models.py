@@ -73,12 +73,22 @@ class CustomUserManager(BaseUserManager):
 class Organization(models.Model):
     """Organization model for team management"""
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    name = models.CharField(max_length=255, verbose_name=_('Organization Name'))
+    name = models.CharField(max_length=255, verbose_name=_('نام سازمان'))
     slug = models.SlugField(max_length=255, unique=True)
     logo = models.ImageField(upload_to='organizations/logos/', blank=True, null=True)
     
+    # Owner - the business user who created this organization
+    owner = models.ForeignKey(
+        'User',
+        on_delete=models.CASCADE,
+        related_name='owned_organizations',
+        null=True,
+        blank=True,
+        verbose_name=_('مالک')
+    )
+    
     # Legal Information
-    company_name = models.CharField(max_length=255, blank=True, verbose_name=_('Company Legal Name'))
+    company_name = models.CharField(max_length=255, blank=True, verbose_name=_('نام حقوقی شرکت'))
     economic_code = models.CharField(
         max_length=14, 
         blank=True, 
@@ -179,7 +189,6 @@ class User(AbstractUser):
     organization_role = models.CharField(
         max_length=20,
         choices=[
-            ('owner', _('مالک')),
             ('admin', _('مدیر')),
             ('member', _('عضو')),
         ],

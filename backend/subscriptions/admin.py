@@ -7,18 +7,22 @@ from .usage import UsageLog
 
 @admin.register(Plan)
 class PlanAdmin(admin.ModelAdmin):
-    list_display = ['name', 'price', 'duration_days', 'max_queries_per_day', 'max_queries_per_month', 'is_active', 'colored_status']
-    list_filter = ['is_active', 'created_at']
+    list_display = ['name', 'plan_type', 'price', 'duration_days', 'max_queries_per_day', 'max_queries_per_month', 'max_organization_members', 'is_active', 'colored_status']
+    list_filter = ['plan_type', 'is_active', 'created_at']
     search_fields = ['name', 'description']
-    list_editable = ['price', 'duration_days', 'max_queries_per_day', 'max_queries_per_month', 'is_active']
-    ordering = ['price']
+    list_editable = ['price', 'duration_days', 'max_queries_per_day', 'max_queries_per_month', 'max_organization_members', 'is_active']
+    ordering = ['plan_type', 'price']
     
     fieldsets = (
         ('اطلاعات پایه', {
-            'fields': ('name', 'description', 'price', 'duration_days', 'is_active')
+            'fields': ('name', 'description', 'plan_type', 'price', 'duration_days', 'is_active')
         }),
         ('محدودیت‌های استفاده', {
             'fields': ('max_queries_per_day', 'max_queries_per_month'),
+        }),
+        ('تنظیمات سازمانی (فقط برای پلن‌های حقوقی)', {
+            'fields': ('max_organization_members',),
+            'description': 'حداکثر تعداد اعضای سازمان برای پلن‌های حقوقی'
         }),
         ('ویژگی‌های اضافی', {
             'fields': ('features',),

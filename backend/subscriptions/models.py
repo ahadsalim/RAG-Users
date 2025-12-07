@@ -7,13 +7,21 @@ import uuid
 
 class Plan(models.Model):
     """مدل پلن اشتراک"""
+    
+    PLAN_TYPE_CHOICES = [
+        ('individual', _('حقیقی')),
+        ('business', _('حقوقی')),
+    ]
+    
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     name = models.CharField(_("نام پلن"), max_length=100)
     description = models.TextField(_("توضیحات"), blank=True)
+    plan_type = models.CharField(_("نوع پلن"), max_length=20, choices=PLAN_TYPE_CHOICES, default='individual')
     price = models.DecimalField(_("قیمت"), max_digits=10, decimal_places=2)
     duration_days = models.IntegerField(_("مدت به روز"), default=30)
     max_queries_per_day = models.IntegerField(_("سوال/روز"), default=10)
     max_queries_per_month = models.IntegerField(_("سوال/ماه"), default=300)
+    max_organization_members = models.IntegerField(_("حداکثر اعضای سازمان"), default=1, help_text=_("فقط برای پلن‌های حقوقی"))
     features = models.JSONField(_("ویژگی‌ها"), default=dict, blank=True)
     is_active = models.BooleanField(_("فعال"), default=True)
     created_at = models.DateTimeField(_("تاریخ ایجاد"), auto_now_add=True)

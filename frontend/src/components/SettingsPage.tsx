@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { X, User, Bell, Shield, CreditCard, Palette, Globe, HelpCircle, Brain } from 'lucide-react';
+import { X, User, Bell, Shield, CreditCard, Palette, Globe, HelpCircle, Brain, Building2 } from 'lucide-react';
 import axios from 'axios';
 import { useAuthStore } from '@/store/auth';
 import MemorySection from '@/components/settings/MemorySection';
+import OrganizationSection from '@/components/settings/OrganizationSection';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || '';
 
@@ -11,7 +12,7 @@ interface SettingsPageProps {
   onClose: () => void;
 }
 
-type SettingsTab = 'profile' | 'subscription' | 'memory' | 'preferences' | 'notifications' | 'security' | 'help';
+type SettingsTab = 'profile' | 'subscription' | 'memory' | 'organization' | 'preferences' | 'notifications' | 'security' | 'help';
 
 interface UserSettings {
   // Profile
@@ -143,10 +144,14 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ isOpen, onClose }) => {
 
   if (!isOpen) return null;
 
+  // Show organization tab only for business users
+  const isBusinessUser = user?.user_type === 'business';
+  
   const tabs = [
     { id: 'profile' as SettingsTab, label: 'پروفایل', icon: User },
     { id: 'subscription' as SettingsTab, label: 'اشتراک', icon: CreditCard },
     { id: 'memory' as SettingsTab, label: 'حافظه من', icon: Brain },
+    ...(isBusinessUser ? [{ id: 'organization' as SettingsTab, label: 'مدیریت سازمان', icon: Building2 }] : []),
     { id: 'preferences' as SettingsTab, label: 'تنظیمات', icon: Palette },
     { id: 'notifications' as SettingsTab, label: 'اعلان‌ها', icon: Bell },
     { id: 'security' as SettingsTab, label: 'امنیت', icon: Shield },
@@ -251,6 +256,7 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ isOpen, onClose }) => {
             {activeTab === 'profile' && <ProfileTab settings={settings} setSettings={setSettings} userPhone={user?.phone_number} userType={user?.user_type} />}
             {activeTab === 'subscription' && <SubscriptionTab subscription={subscription} loading={loading} />}
             {activeTab === 'memory' && <MemorySection />}
+            {activeTab === 'organization' && <OrganizationSection />}
             {activeTab === 'preferences' && <PreferencesTab settings={settings} setSettings={setSettings} />}
             {activeTab === 'notifications' && <NotificationsTab />}
             {activeTab === 'security' && <SecurityTab />}
