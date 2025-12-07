@@ -13,9 +13,54 @@ interface ChatMessagesProps {
   isTyping: boolean
 }
 
+// Parse source string from RAG Core format
+interface ParsedSource {
+  index: number
+  text: string
+  documentName: string
+  path: string
+}
+
+function parseSource(source: string, idx: number): ParsedSource {
+  // Format: "📌 منبع X:\n📄 متن: ...\n\n📎 نام سند: ...\n📍 مسیر: ..."
+  const result: ParsedSource = {
+    index: idx + 1,
+    text: '',
+    documentName: '',
+    path: ''
+  }
+  
+  // Extract source number if present
+  const indexMatch = source.match(/منبع\s*(\d+)/);
+  if (indexMatch) {
+    result.index = parseInt(indexMatch[1]);
+  }
+  
+  // Extract text content
+  const textMatch = source.match(/متن:\s*([^\n]+(?:\n(?!📎|نام سند)[^\n]*)*)/);
+  if (textMatch) {
+    result.text = textMatch[1].trim();
+  }
+  
+  // Extract document name
+  const docMatch = source.match(/نام سند:\s*([^\n]+)/);
+  if (docMatch) {
+    result.documentName = docMatch[1].trim();
+  }
+  
+  // Extract path
+  const pathMatch = source.match(/مسیر:\s*([^\n]+)/);
+  if (pathMatch) {
+    result.path = pathMatch[1].trim();
+  }
+  
+  return result;
+}
+
 export function ChatMessages({ messages, isLoading, isTyping }: ChatMessagesProps) {
   const [copiedId, setCopiedId] = useState<string | null>(null)
   const [feedbackSent, setFeedbackSent] = useState<Set<string>>(new Set())
+  const [expandedSource, setExpandedSource] = useState<string | null>(null)
   
   const handleCopy = async (text: string, messageId: string) => {
     await navigator.clipboard.writeText(text)
@@ -183,19 +228,43 @@ export function ChatMessages({ messages, isLoading, isTyping }: ChatMessagesProp
               
               {/* Sources */}
               {message.sources && message.sources.length > 0 && (
-                <div className="mt-4 p-3 bg-blue-50 dark:bg-blue-900/30 rounded-lg">
-                  <div className="flex items-center gap-2 mb-2">
-                    <span className="text-sm font-medium text-blue-900 dark:text-blue-200">
-                      📚 منابع:
+                <div className="mt-4 p-3 bg-gray-50 dark:bg-gray-800/50 rounded-lg border border-gray-200 dark:border-gray-700">
+                  <div className="flex items-center gap-2 mb-3">
+                    <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                      منابع:
                     </span>
                   </div>
-                  <ul className="space-y-1">
-                    {message.sources.map((source, idx) => (
-                      <li key={idx} className="text-sm text-blue-800 dark:text-blue-300">
-                        • {source}
-                      </li>
-                    ))}
-                  </ul>
+                  <div className="space-y-2">
+                    {message.sources.map((source, idx) => {
+                      const parsed = parseSource(source, idx);
+                      const sourceKey = `${message.id}-${idx}`;
+                      const isExpanded = expandedSource === sourceKey;
+                      
+                      return (
+                        <div key={idx} className="text-sm">
+                          <button
+                            onClick={() => setExpandedSource(isExpanded ? null : sourceKey)}
+                            className="flex items-center gap-2 text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 transition-colors text-right w-full"
+                          >
+                            <span className="flex-shrink-0">📍</span>
+                            <span className="hover:underline">
+                              منبع {parsed.index}: {parsed.documentName}{parsed.path ? ` - ${parsed.path}` : ''}
+                            </span>
+                            <span className="mr-auto text-gray-400 text-xs">
+                              {isExpanded ? '▲' : '▼'}
+                            </span>
+                          </button>
+                          
+                          {/* Expanded content */}
+                          {isExpanded && parsed.text && (
+                            <div className="mt-2 mr-6 p-3 bg-white dark:bg-gray-900 rounded border border-gray-200 dark:border-gray-600 text-gray-700 dark:text-gray-300 text-sm leading-relaxed">
+                              {parsed.text}
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
                 </div>
               )}
               

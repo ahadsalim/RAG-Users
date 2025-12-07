@@ -183,6 +183,10 @@ class QueryView(APIView):
                 conversation.rag_conversation_id = response.get('conversation_id')
                 conversation.save(update_fields=['rag_conversation_id'])
             
+            # DEBUG: Log raw response from RAG Core
+            import json
+            logger.info(f"RAG Core raw response: {json.dumps(response, ensure_ascii=False, default=str)}")
+            
             # به‌روزرسانی پیام assistant - مطابق با API سیستم مرکزی
             assistant_message.content = response.get('answer', '')
             assistant_message.sources = response.get('sources', [])
