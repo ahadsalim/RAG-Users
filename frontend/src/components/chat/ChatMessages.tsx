@@ -30,26 +30,30 @@ function parseSource(source: string, idx: number): ParsedSource {
     path: ''
   }
   
+  // Clean broken emoji characters (�) and other unwanted symbols
+  const cleanSource = source.replace(/�/g, '').replace(/📌|📄|📎|📍/g, '');
+  
   // Extract source number if present
-  const indexMatch = source.match(/منبع\s*(\d+)/);
+  const indexMatch = cleanSource.match(/منبع\s*(\d+)/);
   if (indexMatch) {
     result.index = parseInt(indexMatch[1]);
   }
   
-  // Extract text content
-  const textMatch = source.match(/متن:\s*([^\n]+(?:\n(?!📎|نام سند)[^\n]*)*)/);
+  // Extract text content - only the actual text, not metadata
+  const textMatch = cleanSource.match(/متن:\s*([^]*?)(?=\s*نام سند:|$)/);
   if (textMatch) {
-    result.text = textMatch[1].trim();
+    // Clean the text: remove extra whitespace and newlines
+    result.text = textMatch[1].trim().replace(/\n{2,}/g, '\n');
   }
   
   // Extract document name
-  const docMatch = source.match(/نام سند:\s*([^\n]+)/);
+  const docMatch = cleanSource.match(/نام سند:\s*([^\n]+)/);
   if (docMatch) {
     result.documentName = docMatch[1].trim();
   }
   
   // Extract path
-  const pathMatch = source.match(/مسیر:\s*([^\n]+)/);
+  const pathMatch = cleanSource.match(/مسیر:\s*([^\n]+)/);
   if (pathMatch) {
     result.path = pathMatch[1].trim();
   }
