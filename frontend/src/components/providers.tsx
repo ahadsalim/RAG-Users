@@ -4,6 +4,7 @@ import { ReactNode, useEffect, useState } from 'react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { ThemeProvider } from 'next-themes'
 import { Toaster } from 'react-hot-toast'
+import { SettingsProvider } from '@/contexts/SettingsContext'
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -28,38 +29,40 @@ export function Providers({ children }: { children: ReactNode }) {
   return (
     <QueryClientProvider client={queryClient}>
       <ThemeProvider attribute="class" defaultTheme="light" enableSystem>
-        {children}
-        <Toaster
-          position="top-center"
-          reverseOrder={false}
-          gutter={8}
-          toastOptions={{
-            duration: 4000,
-            style: {
-              background: '#363636',
-              color: '#fff',
-              borderRadius: '8px',
-            },
-            success: {
+        <SettingsProvider>
+          {children}
+          <Toaster
+            position="top-center"
+            reverseOrder={false}
+            gutter={8}
+            toastOptions={{
+              duration: 4000,
               style: {
-                background: '#10b981',
+                background: '#363636',
+                color: '#fff',
+                borderRadius: '8px',
               },
-              iconTheme: {
-                primary: '#fff',
-                secondary: '#10b981',
+              success: {
+                style: {
+                  background: '#10b981',
+                },
+                iconTheme: {
+                  primary: '#fff',
+                  secondary: '#10b981',
+                },
               },
-            },
-            error: {
-              style: {
-                background: '#ef4444',
+              error: {
+                style: {
+                  background: '#ef4444',
+                },
+                iconTheme: {
+                  primary: '#fff',
+                  secondary: '#ef4444',
+                },
               },
-              iconTheme: {
-                primary: '#fff',
-                secondary: '#ef4444',
-              },
-            },
-          }}
-        />
+            }}
+          />
+        </SettingsProvider>
       </ThemeProvider>
     </QueryClientProvider>
   )

@@ -4,6 +4,7 @@ import axios from 'axios';
 import { useAuthStore } from '@/store/auth';
 import MemorySection from '@/components/settings/MemorySection';
 import OrganizationSection from '@/components/settings/OrganizationSection';
+import { useCurrency } from '@/hooks/useCurrency';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || '';
 
@@ -357,6 +358,7 @@ const SubscriptionTab: React.FC<{ subscription: SubscriptionInfo | null; loading
   const [plans, setPlans] = React.useState<Plan[]>([]);
   const [usageStats, setUsageStats] = React.useState<any>(null);
   const [loading, setLoading] = React.useState(initialLoading);
+  const { formatPrice } = useCurrency();
 
   // بارگذاری پلن‌ها و آمار مصرف
   React.useEffect(() => {
@@ -546,7 +548,7 @@ const SubscriptionTab: React.FC<{ subscription: SubscriptionInfo | null; loading
                 )}
                 <h5 className="font-semibold text-gray-900 dark:text-white mb-2">{plan.name}</h5>
                 <p className="text-2xl font-bold text-blue-500 mb-2">
-                  {plan.price === 0 ? 'رایگان' : `${plan.price.toLocaleString()} تومان`}
+                  {plan.price === 0 ? 'رایگان' : formatPrice(plan.price)}
                 </p>
                 <div className="text-sm text-gray-600 dark:text-gray-400 mb-4 space-y-1">
                   <p>📅 {plan.duration_days} روز</p>
