@@ -34,6 +34,26 @@ class Plan(models.Model):
     
     def __str__(self):
         return self.name
+    
+    def get_formatted_price(self, currency=None):
+        """Get formatted price based on currency settings"""
+        if currency is None:
+            # Get base currency from site settings
+            from core.models import SiteSettings
+            settings = SiteSettings.get_settings()
+            currency = settings.base_currency
+        
+        if currency:
+            # Convert price if needed
+            converted_price = currency.convert_from_base(self.price)
+            return currency.format_price(converted_price)
+        else:
+            # Fallback to plain price
+            return f"{self.price:,.0f}"
+    
+    def get_price_display(self):
+        """Get price display for admin"""
+        return self.get_formatted_price()
 
 
 class Subscription(models.Model):

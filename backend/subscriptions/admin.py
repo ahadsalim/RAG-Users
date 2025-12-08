@@ -7,10 +7,10 @@ from .usage import UsageLog
 
 @admin.register(Plan)
 class PlanAdmin(admin.ModelAdmin):
-    list_display = ['name', 'plan_type', 'price', 'duration_days', 'max_queries_per_day', 'max_queries_per_month', 'max_organization_members', 'is_active', 'colored_status']
+    list_display = ['name', 'plan_type', 'formatted_price', 'duration_days', 'max_queries_per_day', 'max_queries_per_month', 'max_organization_members', 'is_active', 'colored_status']
     list_filter = ['plan_type', 'is_active', 'created_at']
     search_fields = ['name', 'description']
-    list_editable = ['price', 'duration_days', 'max_queries_per_day', 'max_queries_per_month', 'max_organization_members', 'is_active']
+    list_editable = ['duration_days', 'max_queries_per_day', 'max_queries_per_month', 'max_organization_members', 'is_active']
     ordering = ['plan_type', 'price']
     
     fieldsets = (
@@ -30,6 +30,11 @@ class PlanAdmin(admin.ModelAdmin):
             'description': 'تنظیمات JSON اضافی. مثال: {"gpt_3_5_access": true, "gpt_4_access": false}'
         }),
     )
+    
+    def formatted_price(self, obj):
+        """Display price with currency formatting"""
+        return obj.get_formatted_price()
+    formatted_price.short_description = 'قیمت'
     
     def colored_status(self, obj):
         if obj.is_active:
