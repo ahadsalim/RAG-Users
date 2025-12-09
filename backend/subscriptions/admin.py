@@ -1,12 +1,98 @@
 from django.contrib import admin
 from django.utils.html import format_html
 from django.utils import timezone
+from django import forms
 from .models import Plan, Subscription
 from .usage import UsageLog
+from core.models import Currency, SiteSettings
+
+
+class PlanAdminForm(forms.ModelForm):
+    """فرم سفارشی برای ورود قیمت با انتخاب ارز"""
+    
+    # فیلد برای ورود قیمت به ارز دلخواه
+    price_in_currency = forms.DecimalField(
+        label='قیمت',
+        max_digits=15,
+        decimal_places=2,
+        required=False,
+        help_text='قیمت را به ارز انتخابی وارد کنید'
+    )
+    
+    # فیلد انتخاب ارز
+    input_currency = forms.ModelChoiceField(
+        queryset=Currency.objects.filter(is_active=True),
+        label='ارز قیمت',
+        required=False,
+        help_text='ارز برای محاسبه و نمایش قیمت'
+    )
+    
+    class Meta:
+        model = Plan
+        fields = '__all__'
+    
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        
+        # اگر در حال ویرایش هستیم
+        if self.instance.pk:
+            # نمایش قیمت به ارز انتخابی پلن یا ارز پایه
+            target_currency = self.instance.currency
+            if not target_currency:
+                settings = SiteSettings.get_settings()
+                target_currency = settings.base_currency
+            
+            if target_currency:
+                # تبدیل قیمت از base به ارز هدف
+                converted_price = target_currency.convert_from_base(self.instance.price)
+                self.fields['price_in_currency'].initial = converted_price
+                self.fields['input_currency'].initial = target_currency
+        else:
+            # برای پلن جدید، ارز پیش‌فرض را تنظیم کن
+            settings = SiteSettings.get_settings()
+            if settings.base_currency:
+                self.fields['input_currency'].initial = settings.base_currency
+        
+        # پنهان کردن فیلد price (چون به صورت خودکار محاسبه می‌شود)
+        self.fields['price'].widget = forms.HiddenInput()
+        self.fields['price'].required = False
+    
+    def clean(self):
+        cleaned_data = super().clean()
+        price_in_currency = cleaned_data.get('price_in_currency')
+        input_currency = cleaned_data.get('input_currency')
+        
+        # اگر قیمت وارد شده
+        if price_in_currency is not None:
+            if not input_currency:
+                # اگر ارز انتخاب نشده، از ارز پایه استفاده کن
+                settings = SiteSettings.get_settings()
+                input_currency = settings.base_currency
+                cleaned_data['input_currency'] = input_currency
+            
+            if input_currency:
+                # تبدیل به واحد پایه
+                base_price = price_in_currency / float(input_currency.exchange_rate)
+                cleaned_data['price'] = base_price
+                cleaned_data['currency'] = input_currency
+        
+        return cleaned_data
+    
+    def save(self, commit=True):
+        instance = super().save(commit=False)
+        
+        # اگر ارز انتخاب شده، آن را در پلن ذخیره کن
+        if self.cleaned_data.get('input_currency'):
+            instance.currency = self.cleaned_data['input_currency']
+        
+        if commit:
+            instance.save()
+        return instance
 
 
 @admin.register(Plan)
 class PlanAdmin(admin.ModelAdmin):
+    form = PlanAdminForm
     list_display = ['name', 'plan_type', 'formatted_price', 'duration_days', 'max_queries_per_day', 'max_queries_per_month', 'max_organization_members', 'is_active', 'colored_status']
     list_filter = ['plan_type', 'is_active', 'created_at']
     search_fields = ['name', 'description']
@@ -15,7 +101,8 @@ class PlanAdmin(admin.ModelAdmin):
     
     fieldsets = (
         ('اطلاعات پایه', {
-            'fields': ('name', 'description', 'plan_type', 'price', 'duration_days', 'is_active')
+            'fields': ('name', 'description', 'plan_type', 'input_currency', 'price_in_currency', 'price', 'duration_days', 'is_active'),
+            'description': 'قیمت را به ارز انتخابی وارد کنید. خودکار به واحد پایه تبدیل می‌شود.'
         }),
         ('محدودیت‌های استفاده', {
             'fields': ('max_queries_per_day', 'max_queries_per_month'),

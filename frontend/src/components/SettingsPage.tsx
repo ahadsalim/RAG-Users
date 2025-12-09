@@ -4,6 +4,7 @@ import axios from 'axios';
 import { useAuthStore } from '@/store/auth';
 import MemorySection from '@/components/settings/MemorySection';
 import OrganizationSection from '@/components/settings/OrganizationSection';
+import CurrencySelector from '@/components/settings/CurrencySelector';
 import { useCurrency } from '@/hooks/useCurrency';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || '';
@@ -613,6 +614,12 @@ const PreferencesTab: React.FC<{ settings: UserSettings; setSettings: React.Disp
             </div>
           </div>
         </div>
+      </div>
+
+      {/* انتخاب واحد پولی */}
+      <div className="bg-gray-50 dark:bg-gray-800 rounded-xl p-6">
+        <h4 className="text-lg font-semibold mb-4 text-gray-900 dark:text-white">تنظیمات مالی</h4>
+        <CurrencySelector />
       </div>
 
       <div className="bg-gray-50 dark:bg-gray-800 rounded-xl p-6">
