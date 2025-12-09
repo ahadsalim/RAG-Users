@@ -40,15 +40,23 @@ class Currency(models.Model):
     
     def format_price(self, amount):
         """Format price according to currency settings"""
+        from decimal import Decimal
+        # تبدیل به float برای فرمت‌بندی
+        amount_float = float(amount) if isinstance(amount, Decimal) else amount
+        
         if self.has_decimals and self.decimal_places > 0:
-            return f"{amount:,.{self.decimal_places}f} {self.symbol}"
+            return f"{amount_float:,.{self.decimal_places}f} {self.symbol}"
         else:
             # Remove decimals for currencies like IRR, Toman
-            return f"{int(amount):,} {self.symbol}"
+            return f"{int(amount_float):,} {self.symbol}"
     
     def convert_from_base(self, base_amount):
         """Convert amount from base currency to this currency"""
-        return base_amount * self.exchange_rate
+        from decimal import Decimal
+        # تبدیل به Decimal برای دقت بالا
+        if isinstance(base_amount, Decimal):
+            return base_amount * Decimal(str(self.exchange_rate))
+        return float(base_amount) * float(self.exchange_rate)
 
 
 class PaymentGateway(models.Model):

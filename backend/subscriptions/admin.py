@@ -2,6 +2,7 @@ from django.contrib import admin
 from django.utils.html import format_html
 from django.utils import timezone
 from django import forms
+from decimal import Decimal
 from .models import Plan, Subscription
 from .usage import UsageLog
 from core.models import Currency, SiteSettings
@@ -71,8 +72,9 @@ class PlanAdminForm(forms.ModelForm):
                 cleaned_data['input_currency'] = input_currency
             
             if input_currency:
-                # تبدیل به واحد پایه
-                base_price = price_in_currency / float(input_currency.exchange_rate)
+                # تبدیل به واحد پایه (استفاده از Decimal برای دقت بالا)
+                exchange_rate = Decimal(str(input_currency.exchange_rate))
+                base_price = price_in_currency / exchange_rate
                 cleaned_data['price'] = base_price
                 cleaned_data['currency'] = input_currency
         
