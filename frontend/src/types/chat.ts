@@ -133,7 +133,6 @@ export interface QueryRequest {
   max_results?: number
   use_cache?: boolean
   use_reranking?: boolean
-  stream?: boolean
   filters?: QueryFilters
   llm_config?: LLMConfig
   context?: Record<string, any>
