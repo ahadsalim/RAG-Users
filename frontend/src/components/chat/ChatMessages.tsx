@@ -130,10 +130,41 @@ export function ChatMessages({ messages, isLoading, isTyping }: ChatMessagesProp
               
               {/* File Attachments */}
               {message.attachments && message.attachments.length > 0 && (
-                <div className="mb-2 flex flex-wrap gap-1.5">
+                <div className="mb-2 flex flex-wrap gap-2">
                   {message.attachments.map((attachment, idx) => {
                     // فقط در حالت processing نمایش دهیم اگر assistant message هنوز processing است
                     const isProcessing = message.status === 'processing' && attachment.extraction_status === 'processing'
+                    const isImage = attachment.file_type === 'image' || 
+                      attachment.mime_type?.startsWith('image/') ||
+                      /\.(png|jpg|jpeg|gif|webp)$/i.test(attachment.file_name)
+                    
+                    // برای تصاویر، پیش‌نمایش نمایش بده
+                    if (isImage && attachment.file) {
+                      return (
+                        <div 
+                          key={idx}
+                          className={`relative rounded-lg overflow-hidden ${
+                            isProcessing ? 'opacity-50' : ''
+                          }`}
+                        >
+                          <img
+                            src={attachment.file}
+                            alt={attachment.file_name}
+                            className="max-w-[200px] max-h-[150px] object-cover rounded-lg border border-gray-200 dark:border-gray-700"
+                          />
+                          {isProcessing && (
+                            <div className="absolute inset-0 flex items-center justify-center bg-black/30">
+                              <span className="text-white animate-pulse">⏳</span>
+                            </div>
+                          )}
+                          <div className="absolute bottom-0 left-0 right-0 bg-black/50 text-white text-xs px-2 py-1 truncate">
+                            {attachment.file_name}
+                          </div>
+                        </div>
+                      )
+                    }
+                    
+                    // برای فایل‌های غیر تصویری، آیکون نمایش بده
                     return (
                       <div 
                         key={idx}
@@ -143,24 +174,25 @@ export function ChatMessages({ messages, isLoading, isTyping }: ChatMessagesProp
                             : 'bg-gray-100 dark:bg-gray-800'
                         }`}
                       >
-                        {/* File Icon - کوچک‌تر */}
+                        {/* File Icon */}
                         <span className={`text-base ${isProcessing ? 'opacity-40 animate-pulse' : ''}`}>
-                          {attachment.file_type === 'image' ? '🖼️' : 
-                           attachment.file_type === 'pdf' ? '📄' : 
-                           attachment.file_type === 'document' ? '📝' : '📎'}
+                          {attachment.mime_type === 'application/pdf' ? '📄' : 
+                           attachment.mime_type === 'text/plain' ? '📝' :
+                           attachment.mime_type?.includes('word') ? '📃' :
+                           attachment.mime_type === 'text/html' ? '🌐' : '📎'}
                         </span>
                         
-                        {/* File Name - کوچک‌تر */}
+                        {/* File Name */}
                         <span className="text-gray-700 dark:text-gray-300 truncate max-w-[120px] font-medium">
                           {attachment.file_name}
                         </span>
                         
-                        {/* File Size - کوچک‌تر */}
+                        {/* File Size */}
                         <span className="text-gray-500">
                           ({Math.round(attachment.file_size / 1024)}KB)
                         </span>
                         
-                        {/* Processing Indicator - فقط موقع processing */}
+                        {/* Processing Indicator */}
                         {isProcessing && (
                           <span className="text-xs text-gray-600 dark:text-gray-400 animate-pulse mr-1">
                             ⏳

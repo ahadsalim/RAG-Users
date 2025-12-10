@@ -4,12 +4,29 @@ import { useState, useRef, useEffect, KeyboardEvent } from 'react'
 import clsx from 'clsx'
 import { useAuthStore } from '@/store/auth'
 
+// فرمت‌های مجاز فایل
+const ALLOWED_IMAGE_EXTENSIONS = ['.png', '.jpg', '.jpeg', '.gif', '.webp']
+const ALLOWED_DOCUMENT_EXTENSIONS = ['.pdf', '.txt', '.doc', '.docx', '.html', '.htm']
+const ALLOWED_EXTENSIONS = [...ALLOWED_IMAGE_EXTENSIONS, ...ALLOWED_DOCUMENT_EXTENSIONS]
+
+// MIME types مجاز
+const ALLOWED_IMAGE_TYPES = ['image/png', 'image/jpeg', 'image/gif', 'image/webp']
+const ALLOWED_DOCUMENT_TYPES = [
+  'application/pdf',
+  'text/plain',
+  'application/msword',
+  'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+  'text/html'
+]
+const ALLOWED_MIME_TYPES = [...ALLOWED_IMAGE_TYPES, ...ALLOWED_DOCUMENT_TYPES]
+
 interface FileUploadProgress {
   file: File
   progress: number
   uploaded: boolean
   error?: string
   objectKey?: string
+  previewUrl?: string  // URL پیش‌نمایش برای تصاویر
 }
 
 interface ChatInputProps {
@@ -126,16 +143,45 @@ export function ChatInput({ onSendMessage, isLoading, disabled }: ChatInputProps
     })
   }
   
+  // بررسی معتبر بودن فایل
+  const isValidFile = (file: File): boolean => {
+    // بررسی MIME type
+    if (ALLOWED_MIME_TYPES.includes(file.type)) return true
+    
+    // بررسی پسوند فایل (برای فایل‌هایی که MIME type نادرست دارند)
+    const extension = '.' + file.name.split('.').pop()?.toLowerCase()
+    return ALLOWED_EXTENSIONS.includes(extension)
+  }
+  
+  // بررسی تصویر بودن فایل
+  const isImageFile = (file: File): boolean => {
+    if (ALLOWED_IMAGE_TYPES.includes(file.type)) return true
+    const extension = '.' + file.name.split('.').pop()?.toLowerCase()
+    return ALLOWED_IMAGE_EXTENSIONS.includes(extension)
+  }
+  
+  // ایجاد URL پیش‌نمایش برای تصاویر
+  const createPreviewUrl = (file: File): string | undefined => {
+    if (isImageFile(file)) {
+      return URL.createObjectURL(file)
+    }
+    return undefined
+  }
+  
   const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || [])
     
-    // فیلتر فایل‌ها: فقط عکس، PDF و متن
-    const validFiles = files.filter((file: File) => {
-      const isImage = file.type.startsWith('image/')
-      const isPDF = file.type === 'application/pdf'
-      const isText = file.type === 'text/plain'
-      return isImage || isPDF || isText
-    })
+    // فیلتر فایل‌ها بر اساس فرمت‌های مجاز
+    const validFiles = files.filter((file: File) => isValidFile(file))
+    
+    // نمایش خطا برای فایل‌های نامعتبر
+    const invalidFiles = files.filter((file: File) => !isValidFile(file))
+    if (invalidFiles.length > 0) {
+      const invalidNames = invalidFiles.map(f => f.name).join(', ')
+      alert(`فرمت فایل‌های زیر مجاز نیست: ${invalidNames}\n\nفرمت‌های مجاز: ${ALLOWED_EXTENSIONS.join(', ')}`)
+    }
+    
+    if (validFiles.length === 0) return
     
     // حداکثر 5 فایل
     const totalFiles = attachedFiles.length + validFiles.length
@@ -156,14 +202,16 @@ export function ChatInput({ onSendMessage, isLoading, disabled }: ChatInputProps
     // شروع آپلود فوری
     setIsUploading(true)
     
-    // Initialize progress for each file
+    // Initialize progress for each file with preview URL for images
     validFiles.forEach((file: File) => {
+      const previewUrl = createPreviewUrl(file)
       setUploadProgress(prev => {
         const newMap = new Map(prev)
         newMap.set(file.name, {
           file,
           progress: 0,
-          uploaded: false
+          uploaded: false,
+          previewUrl
         })
         return newMap
       })
@@ -185,7 +233,20 @@ export function ChatInput({ onSendMessage, isLoading, disabled }: ChatInputProps
   }
   
   const handleRemoveFile = (index: number) => {
+    const fileToRemove = attachedFiles[index]
+    const progress = uploadProgress.get(fileToRemove.name)
+    
+    // آزاد کردن URL پیش‌نمایش
+    if (progress?.previewUrl) {
+      URL.revokeObjectURL(progress.previewUrl)
+    }
+    
     setAttachedFiles(attachedFiles.filter((_, i) => i !== index))
+    setUploadProgress(prev => {
+      const newMap = new Map(prev)
+      newMap.delete(fileToRemove.name)
+      return newMap
+    })
   }
   
   const handleSubmit = () => {
@@ -236,19 +297,34 @@ export function ChatInput({ onSendMessage, isLoading, disabled }: ChatInputProps
         <div className="mb-2 flex flex-col gap-2">
           {attachedFiles.map((file, index) => {
             const progress = uploadProgress.get(file.name)
+            const isImage = isImageFile(file)
             return (
               <div
                 key={index}
                 className="flex flex-col gap-1 px-3 py-2 bg-gray-100 dark:bg-gray-700 rounded-lg text-sm"
               >
                 <div className="flex items-center gap-2">
-                  <span>{getFileIcon(file)}</span>
-                  <span className="text-gray-700 dark:text-gray-300 max-w-[150px] truncate flex-1">
-                    {file.name}
-                  </span>
-                  <span className="text-gray-500 dark:text-gray-400 text-xs">
-                    ({(file.size / 1024).toFixed(1)} KB)
-                  </span>
+                  {/* پیش‌نمایش تصویر یا آیکون فایل */}
+                  {isImage && progress?.previewUrl ? (
+                    <div className="relative w-12 h-12 rounded overflow-hidden flex-shrink-0">
+                      <img
+                        src={progress.previewUrl}
+                        alt={file.name}
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                  ) : (
+                    <span className="text-2xl">{getFileIcon(file)}</span>
+                  )}
+                  
+                  <div className="flex flex-col flex-1 min-w-0">
+                    <span className="text-gray-700 dark:text-gray-300 max-w-[150px] truncate">
+                      {file.name}
+                    </span>
+                    <span className="text-gray-500 dark:text-gray-400 text-xs">
+                      {(file.size / 1024).toFixed(1)} KB
+                    </span>
+                  </div>
                   
                   {/* Status Icons */}
                   {progress?.uploaded && (
@@ -301,7 +377,7 @@ export function ChatInput({ onSendMessage, isLoading, disabled }: ChatInputProps
           ref={fileInputRef}
           type="file"
           multiple
-          accept="image/*,.pdf,.txt"
+          accept=".png,.jpg,.jpeg,.gif,.webp,.pdf,.txt,.doc,.docx,.html,.htm"
           onChange={handleFileSelect}
           className="hidden"
         />
@@ -316,7 +392,7 @@ export function ChatInput({ onSendMessage, isLoading, disabled }: ChatInputProps
               'disabled:opacity-50 disabled:cursor-not-allowed transition-colors',
               attachedFiles.length > 0 && 'text-blue-500 dark:text-blue-400'
             )}
-            title={attachedFiles.length >= 5 ? 'حداکثر 5 فایل' : 'پیوست فایل (عکس، PDF، متن)'}
+            title={attachedFiles.length >= 5 ? 'حداکثر 5 فایل' : 'پیوست فایل (تصویر، PDF، Word، HTML، متن)'}
           >
             <svg className="w-5 h-5 md:w-6 md:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
