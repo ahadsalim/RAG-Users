@@ -186,7 +186,7 @@ export function ChatSidebar({
       <aside className={clsx(
         'fixed top-0 right-0 md:relative z-50 md:z-auto',
         'w-80 h-screen md:h-full',
-        'bg-gray-900 text-white',
+        'bg-gray-950 text-white border-l border-gray-800',
         'transition-transform duration-300',
         'flex flex-col',
         'overflow-hidden',
