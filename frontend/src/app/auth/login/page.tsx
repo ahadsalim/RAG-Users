@@ -265,7 +265,7 @@ export default function LoginPage() {
       position: 'absolute' as const,
       top: '-10px',
       left: '0',
-      padding: '8px',
+      padding: '0',
       borderRadius: '50%',
       border: theme === 'light' 
         ? '1px solid rgba(255, 255, 255, 0.4)'
@@ -275,14 +275,15 @@ export default function LoginPage() {
         : '#2d3748',
       color: theme === 'light' ? '#fff' : '#e2e8f0',
       cursor: 'pointer',
-      fontSize: '20px',
+      fontSize: '18px',
       fontWeight: '500',
       transition: 'all 0.3s ease',
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
       width: '40px',
-      height: '40px'
+      height: '40px',
+      lineHeight: '1'
     },
     userTypeContainer: {
       display: 'flex',
@@ -709,7 +710,7 @@ export default function LoginPage() {
                     style={styles.methodBtn(otpMethod === 'sms')}
                     onClick={() => setOtpMethod('sms')}
                   >
-                    💬 پیامک
+                    <span style={{fontSize: '20px', lineHeight: '1', display: 'flex', alignItems: 'center'}}>💬</span> پیامک
                   </button>
                 </div>
               </div>
