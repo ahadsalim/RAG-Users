@@ -5,11 +5,14 @@ import type { Currency } from '@/types/settings'
  */
 export function formatPrice(amount: number, currency?: Currency | null): string {
   if (!currency) {
-    // Fallback to plain formatting
-    return new Intl.NumberFormat('fa-IR').format(amount)
+    // Fallback to plain formatting without decimals (default for Toman)
+    return `${Math.floor(amount).toLocaleString('fa-IR')} تومان`
   }
 
-  const formattedNumber = currency.has_decimals && currency.decimal_places > 0
+  // Check if currency should show decimals
+  const showDecimals = currency.has_decimals && currency.decimal_places > 0
+  
+  const formattedNumber = showDecimals
     ? amount.toLocaleString('fa-IR', {
         minimumFractionDigits: currency.decimal_places,
         maximumFractionDigits: currency.decimal_places,
