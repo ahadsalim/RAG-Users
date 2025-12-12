@@ -735,15 +735,15 @@ export default function LoginPage() {
                     e.currentTarget.style.boxShadow = 'none'
                   }}
                 />
-                <p style={{...styles.label, fontSize: '12px', marginTop: '8px', display: 'flex', alignItems: 'center', gap: '6px', justifyContent: 'center'}}>
-                  کد 6 رقمی ارسال شده از طریق 
+                <p style={{...styles.label, fontSize: '12px', marginTop: '8px', textAlign: 'center', lineHeight: '1.8'}}>
+                  لطفاً کد 6 رقمی ارسال شده از طریق{' '}
                   {otpMethod === 'bale' ? (
-                    <span style={{display: 'flex', alignItems: 'center', gap: '4px'}}>
-                      <img src={`/bale_64.png?v=${cacheVersion}`} alt="Bale" width={18} height={18} style={{ objectFit: 'contain' }} />
+                    <span style={{display: 'inline-flex', alignItems: 'center', gap: '4px', verticalAlign: 'middle'}}>
+                      <img src={`/bale_64.png?v=${cacheVersion}`} alt="Bale" width={16} height={16} style={{ objectFit: 'contain', verticalAlign: 'middle' }} />
                       پیام‌رسان بله
                     </span>
-                  ) : '💬 پیامک'} 
-                  به {phoneNumber} را وارد کنید
+                  ) : '💬 پیامک'}{' '}
+                  به شماره {phoneNumber} را وارد کنید
                 </p>
                 {otpTimer > 0 && (
                   <p style={{...styles.label, fontSize: '14px', marginTop: '8px', textAlign: 'center', fontWeight: 'bold'}}>
