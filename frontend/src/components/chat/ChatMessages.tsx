@@ -85,18 +85,20 @@ export function ChatMessages({ messages, isLoading, isTyping }: ChatMessagesProp
       <div
         key={message.id}
         className={clsx(
-          'group py-6',
-          isUser ? 'bg-white dark:bg-gray-950' : 'bg-gray-50 dark:bg-gray-900'
+          'group py-6 px-4 rounded-xl my-2 mx-2',
+          isUser 
+            ? 'bg-gradient-to-l from-blue-50 to-white dark:from-blue-950/40 dark:to-gray-800/60 border border-blue-100 dark:border-blue-900/50' 
+            : 'bg-gradient-to-l from-gray-50 to-white dark:from-gray-800/80 dark:to-gray-850/60 border border-gray-100 dark:border-gray-700/50'
         )}
       >
         <div className="w-full">
           <div className="flex gap-4">
             {/* Avatar */}
             <div className={clsx(
-              'flex-shrink-0 w-8 h-8 rounded-md flex items-center justify-center text-sm font-bold',
+              'flex-shrink-0 w-8 h-8 rounded-lg flex items-center justify-center text-sm font-bold shadow-sm',
               isUser 
-                ? 'bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-200' 
-                : 'bg-green-100 dark:bg-green-900 p-1'
+                ? 'bg-blue-500 text-white dark:bg-blue-600' 
+                : 'bg-emerald-500 dark:bg-emerald-600 p-1'
             )}>
               {isUser ? (
                 'ش'
