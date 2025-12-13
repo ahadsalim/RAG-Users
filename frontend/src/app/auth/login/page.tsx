@@ -275,7 +275,7 @@ export default function LoginPage() {
         : '#2d3748',
       color: theme === 'light' ? '#fff' : '#e2e8f0',
       cursor: 'pointer',
-      fontSize: '18px',
+      fontSize: '20px',
       fontWeight: '500',
       transition: 'all 0.3s ease',
       display: 'flex',
@@ -283,7 +283,8 @@ export default function LoginPage() {
       justifyContent: 'center',
       width: '40px',
       height: '40px',
-      lineHeight: '1'
+      lineHeight: '40px',
+      textAlign: 'center' as const
     },
     userTypeContainer: {
       display: 'flex',
@@ -546,7 +547,7 @@ export default function LoginPage() {
               }}
               title={theme === 'light' ? 'حالت تاریک' : 'حالت روشن'}
             >
-              {theme === 'light' ? '🌙' : '☀️'}
+              <span style={{display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%', height: '100%'}}>{theme === 'light' ? '🌙' : '☀️'}</span>
             </button>
           </div>
         </div>
@@ -735,15 +736,15 @@ export default function LoginPage() {
                     e.currentTarget.style.boxShadow = 'none'
                   }}
                 />
-                <p style={{...styles.label, fontSize: '12px', marginTop: '8px', textAlign: 'center', lineHeight: '1.8'}}>
-                  لطفاً کد 6 رقمی ارسال شده از طریق{' '}
+                <p style={{...styles.label, fontSize: '12px', marginTop: '8px', textAlign: 'center', lineHeight: '2', whiteSpace: 'nowrap'}}>
+                  کد 6 رقمی ارسال شده از طریق{' '}
                   {otpMethod === 'bale' ? (
                     <span style={{display: 'inline-flex', alignItems: 'center', gap: '4px', verticalAlign: 'middle'}}>
                       <img src={`/bale_64.png?v=${cacheVersion}`} alt="Bale" width={16} height={16} style={{ objectFit: 'contain', verticalAlign: 'middle' }} />
-                      پیام‌رسان بله
+                      بله
                     </span>
                   ) : '💬 پیامک'}{' '}
-                  به شماره {phoneNumber} را وارد کنید
+                  به {phoneNumber} را وارد کنید
                 </p>
                 {otpTimer > 0 && (
                   <p style={{...styles.label, fontSize: '14px', marginTop: '8px', textAlign: 'center', fontWeight: 'bold'}}>
