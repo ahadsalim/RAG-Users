@@ -634,10 +634,9 @@ const PreferencesTab: React.FC<{ settings: UserSettings; setSettings: React.Disp
           <h4 className="text-lg font-semibold mb-4 text-gray-900 dark:text-white">تنظیمات پاسخ</h4>
           <div className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">جستجوی وب</label>
-              <p className="text-xs text-gray-500 dark:text-gray-400 mb-3">
-                جستجوی اینترنت برای پاسخ بهتر
-              </p>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                جستجوی وب (جستجوی اینترنت برای پاسخ بهتر)
+              </label>
               <select
                 value={settings.enable_web_search === null ? 'default' : settings.enable_web_search ? 'enabled' : 'disabled'}
                 onChange={(e) => {
@@ -647,14 +646,17 @@ const PreferencesTab: React.FC<{ settings: UserSettings; setSettings: React.Disp
                     enable_web_search: value === 'default' ? null : value === 'enabled' 
                   });
                 }}
-                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-right"
+                className="w-full px-4 py-2 pr-10 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-right appearance-none"
                 dir="rtl"
-                style={{ backgroundPosition: 'left 0.75rem center' }}
+                style={{ backgroundImage: "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%236b7280'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E\")", backgroundRepeat: "no-repeat", backgroundPosition: "left 0.75rem center", backgroundSize: "1.25rem" }}
               >
                 <option value="default">پیش‌فرض سرور</option>
                 <option value="enabled">فعال (کندتر)</option>
                 <option value="disabled">غیرفعال (سریع‌تر)</option>
               </select>
+              <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                تمام پاسخ‌ها با تنظیم انتخابی شما پردازش می‌شوند
+              </p>
             </div>
           </div>
         </div>
