@@ -33,12 +33,28 @@ urlpatterns = [
     path('api/v1/notifications/', include('notifications.urls')),
     path('api/v1/analytics/', include('analytics.urls')),
     
-    # Health checks - TODO: Install django-health-check package
-    # path('health/', include('health_check.urls')),
-    
     # WebSocket URLs (برای چت real-time)
     # این‌ها در asgi.py تنظیم می‌شوند
 ]
+
+# Simple health check endpoint
+from django.http import JsonResponse
+from django.db import connection
+
+def health_check(request):
+    """بررسی سلامت سیستم"""
+    try:
+        connection.ensure_connection()
+        db_status = 'ok'
+    except Exception:
+        db_status = 'error'
+    
+    return JsonResponse({
+        'status': 'ok' if db_status == 'ok' else 'degraded',
+        'database': db_status,
+    })
+
+urlpatterns.append(path('health/', health_check, name='health-check'))
 
 # Serve media files in development
 if settings.DEBUG:

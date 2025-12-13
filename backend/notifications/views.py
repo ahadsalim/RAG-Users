@@ -319,14 +319,6 @@ class NotificationTemplateViewSet(viewsets.ReadOnlyModelViewSet):
         return queryset.order_by('category', 'name')
 
 
-class NotificationWebSocketConsumer:
-    """
-    Consumer برای ارسال اعلان‌های Real-time
-    باید در routing.py اضافه شود
-    """
-    pass
-
-
 class TestNotificationView(APIView):
     """ارسال اعلان تستی (فقط در حالت DEBUG)"""
     

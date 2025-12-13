@@ -200,5 +200,5 @@ class SiteSettings(models.Model):
         return settings
     
     def delete(self, *args, **kwargs):
-        # Prevent deletion of settings
-        pass
+        """جلوگیری از حذف تنظیمات سایت"""
+        raise ValueError("تنظیمات سایت قابل حذف نیست")

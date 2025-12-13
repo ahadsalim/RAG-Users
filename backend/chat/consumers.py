@@ -158,54 +158,31 @@ class ChatConsumer(AsyncWebsocketConsumer):
         }))
         
         try:
-            # ارسال به Core RAG با streaming
-            full_content = ""
-            sources = []
-            metadata = {}
-            
-            async for chunk in core_service.send_query_stream(
+            # ارسال به Core RAG (non-streaming)
+            response = await core_service.send_query(
                 query=query,
                 token=self.jwt_token,
                 conversation_id=conversation.rag_conversation_id,
                 language='fa'
-            ):
-                # پردازش chunk دریافتی
-                try:
-                    chunk_data = json.loads(chunk)
-                    chunk_type = chunk_data.get('type', 'text')
-                    
-                    if chunk_type == 'text' or 'content' in chunk_data:
-                        content = chunk_data.get('content', chunk_data.get('text', ''))
-                        full_content += content
-                        
-                        # ارسال chunk به کاربر
-                        await self.send(text_data=json.dumps({
-                            'type': 'chunk',
-                            'content': content,
-                            'message_id': str(assistant_message.id)
-                        }))
-                    
-                    elif chunk_type == 'sources':
-                        sources = chunk_data.get('sources', [])
-                        
-                        # ارسال منابع
-                        await self.send(text_data=json.dumps({
-                            'type': 'sources',
-                            'sources': sources,
-                            'message_id': str(assistant_message.id)
-                        }))
-                    
-                    elif chunk_type == 'metadata' or chunk_type == 'end':
-                        metadata = chunk_data
-                        
-                except json.JSONDecodeError:
-                    # اگر chunk فقط متن باشد
-                    full_content += chunk
-                    await self.send(text_data=json.dumps({
-                        'type': 'chunk',
-                        'content': chunk,
-                        'message_id': str(assistant_message.id)
-                    }))
+            )
+            
+            full_content = response.get('answer', response.get('response', ''))
+            sources = response.get('sources', [])
+            metadata = response.get('metadata', {})
+            
+            # ارسال پاسخ کامل به کاربر
+            await self.send(text_data=json.dumps({
+                'type': 'message',
+                'content': full_content,
+                'message_id': str(assistant_message.id)
+            }))
+            
+            if sources:
+                await self.send(text_data=json.dumps({
+                    'type': 'sources',
+                    'sources': sources,
+                    'message_id': str(assistant_message.id)
+                }))
             
             # به‌روزرسانی پیام assistant
             await self.update_assistant_message(

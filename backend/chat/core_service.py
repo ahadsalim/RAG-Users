@@ -81,66 +81,6 @@ class CoreAPIService:
             logger.error(f"Core API error: {str(e)}")
             raise
     
-    async def send_query_stream(
-        self,
-        query: str,
-        token: str,
-        conversation_id: Optional[str] = None,
-        language: str = 'fa',
-        filters: Optional[Dict[str, Any]] = None,
-        user_preferences: Optional[Dict[str, Any]] = None,
-    ) -> AsyncGenerator[str, None]:
-        """
-        Send a query and stream the response.
-        
-        Args:
-            query: User's question
-            token: JWT token
-            conversation_id: Optional conversation ID
-            language: Query language
-            filters: Optional filters
-            user_preferences: User's custom preferences for response style
-            
-        Yields:
-            Streamed response chunks
-        """
-        url = f"{self.base_url}/api/v1/query/stream"
-        
-        payload = {
-            "query": query,
-            "conversation_id": conversation_id,
-            "language": language,
-            "stream": True,
-        }
-        
-        # Add filters if provided
-        if filters:
-            payload["filters"] = filters
-        
-        # Add user preferences if provided
-        if user_preferences:
-            payload["user_preferences"] = user_preferences
-        
-        try:
-            async with httpx.AsyncClient(timeout=self.timeout) as client:
-                async with client.stream(
-                    'POST',
-                    url,
-                    json=payload,
-                    headers=self._get_headers(token),
-                ) as response:
-                    response.raise_for_status()
-                    async for chunk in response.aiter_text():
-                        if chunk.strip():
-                            yield chunk
-                            
-        except httpx.HTTPStatusError as e:
-            logger.error(f"Core API stream error: {e.response.status_code}")
-            yield json.dumps({"error": f"خطا در دریافت پاسخ: {e.response.status_code}"})
-        except Exception as e:
-            logger.error(f"Core API stream error: {str(e)}")
-            yield json.dumps({"error": f"خطا در ارتباط با سیستم: {str(e)}"})
-    
     async def get_conversations(
         self,
         token: str,

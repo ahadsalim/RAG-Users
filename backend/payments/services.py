@@ -405,19 +405,34 @@ class CryptoService:
             }
     
     @staticmethod
-    def calculate_crypto_amount(amount: Decimal, currency: str, cryptocurrency: str) -> Decimal:
+    def get_crypto_rates() -> dict:
+        """دریافت نرخ رمزارزها از API خارجی"""
+        import requests
+        
+        crypto_rates_api = getattr(settings, 'CRYPTO_RATES_API_URL', None)
+        
+        if crypto_rates_api:
+            try:
+                response = requests.get(crypto_rates_api, timeout=10)
+                if response.status_code == 200:
+                    return response.json()
+            except Exception as e:
+                logger.warning(f"Failed to fetch crypto rates from API: {e}")
+        
+        # نرخ‌های پیش‌فرض در صورت عدم دسترسی به API
+        return {
+            'BTC': 45000,
+            'ETH': 3000,
+            'USDT': 1,
+            'USDC': 1,
+            'BNB': 300,
+        }
+    
+    @classmethod
+    def calculate_crypto_amount(cls, amount: Decimal, currency: str, cryptocurrency: str) -> Decimal:
         """محاسبه مبلغ رمزارز بر اساس نرخ روز"""
         
-        # در محیط واقعی باید از API های قیمت مثل CoinGecko استفاده کنید
-        # این فقط یک نمونه است
-        
-        rates = {
-            'BTC': 45000,  # USD per BTC
-            'ETH': 3000,   # USD per ETH
-            'USDT': 1,     # USD per USDT
-            'USDC': 1,     # USD per USDC
-            'BNB': 300,    # USD per BNB
-        }
+        rates = cls.get_crypto_rates()
         
         # تبدیل به USD (فرض می‌کنیم currency=IRR)
         if currency == 'IRR':

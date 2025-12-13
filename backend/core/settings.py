@@ -11,7 +11,7 @@ import os
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 # Security
-SECRET_KEY = config('SECRET_KEY', default='django-insecure-w)rw6j5bfnwl$woa=)i3dgw6bv#*x(y0gew3n7ado3-jj=(yk6')
+SECRET_KEY = config('SECRET_KEY')
 DEBUG = config('DEBUG', default=True, cast=bool)
 ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='localhost,127.0.0.1,core.app.ir', cast=Csv())
 
@@ -322,6 +322,9 @@ ZARINPAL_SANDBOX = config('ZARINPAL_SANDBOX', default=True, cast=bool)
 
 STRIPE_PUBLIC_KEY = config('STRIPE_PUBLIC_KEY', default='')
 STRIPE_SECRET_KEY = config('STRIPE_SECRET_KEY', default='')
+
+# Crypto Rates API (برای دریافت نرخ لحظه‌ای رمزارزها)
+CRYPTO_RATES_API_URL = config('CRYPTO_RATES_API_URL', default='')
 
 # RAG Core API Configuration (moved to end of file)
 

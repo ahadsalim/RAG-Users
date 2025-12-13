@@ -7,7 +7,6 @@ from rest_framework_nested import routers
 
 from .views import (
     QueryView,
-    StreamingQueryView,
     ConversationViewSet,
     MessageViewSet,
     ConversationFolderViewSet,
@@ -38,8 +37,6 @@ app_name = 'chat'
 urlpatterns = [
     # Query endpoints
     path('query/', QueryView.as_view(), name='query'),
-    path('query/stream/', StreamingQueryView.as_view(), name='query-stream'),
-    
     # Health check
     path('health/', HealthCheckView.as_view(), name='health-check'),
     

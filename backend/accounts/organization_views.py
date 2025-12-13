@@ -228,7 +228,38 @@ class OrganizationMembersView(APIView):
         
         logger.info(f"New organization member created: {email} in {organization.name}")
         
-        # TODO: Send invitation email with password setup link
+        # ارسال ایمیل دعوت با لینک تنظیم رمز عبور
+        try:
+            from django.core.mail import send_mail
+            from django.conf import settings
+            from django.contrib.auth.tokens import default_token_generator
+            from django.utils.http import urlsafe_base64_encode
+            from django.utils.encoding import force_bytes
+            
+            token = default_token_generator.make_token(new_member)
+            uid = urlsafe_base64_encode(force_bytes(new_member.pk))
+            reset_url = f"{settings.FRONTEND_URL}/auth/reset-password?token={token}&user={uid}"
+            
+            send_mail(
+                subject=f'دعوت به سازمان {organization.name}',
+                message=f'''سلام {first_name}،
+
+شما به عنوان عضو جدید به سازمان {organization.name} دعوت شده‌اید.
+
+برای تنظیم رمز عبور و ورود به سیستم، روی لینک زیر کلیک کنید:
+{reset_url}
+
+این لینک تا 24 ساعت معتبر است.
+
+با تشکر،
+تیم پشتیبانی''',
+                from_email=settings.DEFAULT_FROM_EMAIL,
+                recipient_list=[email],
+                fail_silently=True,
+            )
+            logger.info(f"Invitation email sent to {email}")
+        except Exception as e:
+            logger.warning(f"Failed to send invitation email to {email}: {e}")
         
         return Response({
             'message': 'عضو جدید با موفقیت اضافه شد',

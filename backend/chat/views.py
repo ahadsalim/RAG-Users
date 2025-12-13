@@ -320,269 +320,6 @@ class QueryView(APIView):
             )
 
 
-class StreamingQueryView(APIView):
-    """ارسال سوال با پاسخ streaming"""
-    permission_classes = [permissions.IsAuthenticated]
-    
-    def post(self, request):
-        """ارسال سوال با streaming response"""
-        serializer = QueryRequestSerializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        
-        data = serializer.validated_data
-        user = request.user
-        
-        # بررسی اشتراک کاربر
-        active_subscription = None
-        from subscriptions.models import Subscription
-        active_subscription = user.subscriptions.filter(
-            status__in=['active', 'trial'],
-            end_date__gt=timezone.now()
-        ).first()
-        
-        if not active_subscription:
-            return Response(
-                {
-                    'error': 'شما اشتراک فعالی ندارید',
-                    'code': 'NO_ACTIVE_SUBSCRIPTION',
-                    'plans_url': '/api/v1/plans/'
-                },
-                status=status.HTTP_403_FORBIDDEN
-            )
-        
-        # بررسی محدودیت روزانه و ماهانه
-        can_query, message = active_subscription.can_query()
-        if not can_query:
-            return Response(
-                {
-                    'error': message,
-                    'code': 'QUOTA_EXCEEDED',
-                    'usage': {
-                        'daily_used': active_subscription.queries_used_today,
-                        'daily_limit': active_subscription.plan.max_queries_per_day,
-                        'monthly_used': active_subscription.queries_used_month,
-                        'monthly_limit': active_subscription.plan.max_queries_per_month,
-                    }
-                },
-                status=status.HTTP_429_TOO_MANY_REQUESTS
-            )
-        
-        # دریافت یا ایجاد conversation
-        conversation_id = data.get('conversation_id')
-        conversation = None
-        
-        if conversation_id:
-            conversation = get_object_or_404(
-                Conversation,
-                id=conversation_id,
-                user=user
-            )
-        else:
-            conversation = Conversation.objects.create(
-                user=user,
-                organization=user.organization,
-                title=data['query'][:50] + '...' if len(data['query']) > 50 else data['query'],
-                default_response_mode=data.get('response_mode', 'simple_explanation')
-            )
-        
-        # ایجاد پیام کاربر
-        user_message = Message.objects.create(
-            conversation=conversation,
-            role='user',
-            content=data['query'],
-            response_mode=data.get('response_mode', 'simple_explanation'),
-            status='completed'
-        )
-        
-        # ایجاد پیام assistant
-        assistant_message = Message.objects.create(
-            conversation=conversation,
-            role='assistant',
-            content='',
-            status='processing'
-        )
-        
-        # دریافت مقادیر sync قبل از async generator
-        conversation_id = str(conversation.id)
-        assistant_message_id = str(assistant_message.id)
-        rag_conversation_id = conversation.rag_conversation_id
-        query_text = data['query']
-        filters = data.get('filters')
-        
-        async def generate_stream():
-            """Generator برای streaming response"""
-            try:
-                # Generate JWT token for Core API (sync operation)
-                refresh = await sync_to_async(RefreshToken.for_user)(user)
-                access_token = str(refresh.access_token)
-                
-                # Get user preferences as object
-                user_preferences = None
-                if user.preferences:
-                    user_preferences = {
-                        'response_style': user.preferences.get('response_style', 'formal'),
-                        'detail_level': user.preferences.get('detail_level', 'moderate'),
-                        'include_examples': user.preferences.get('include_examples', True),
-                        'language_style': user.preferences.get('language_style', 'simple'),
-                        'format': user.preferences.get('format', 'paragraph')
-                    }
-                
-                full_content = ""
-                sources = []
-                chunks = []
-                metadata = {}
-                
-                # ارسال اطلاعات اولیه
-                yield f"data: {json.dumps({'type': 'start', 'conversation_id': conversation_id, 'message_id': assistant_message_id})}\n\n"
-                
-                # دریافت stream از RAG Core
-                async for chunk_text in core_service.send_query_stream(
-                    query=query_text,
-                    token=access_token,
-                    conversation_id=rag_conversation_id,
-                    language='fa',
-                    filters=filters,
-                    user_preferences=user_preferences
-                ):
-                    # Parse SSE chunks from RAG Core
-                    # RAG Core sends: data: {"type": "token", "content": "..."}\n\n
-                    for line in chunk_text.split('\n'):
-                        if line.startswith('data: '):
-                            try:
-                                chunk_data = json.loads(line[6:])  # Remove "data: " prefix
-                                chunk_type = chunk_data.get('type')
-                                
-                                if chunk_type == 'token':
-                                    # Token from RAG Core - accumulate and send as chunk
-                                    content = chunk_data.get('content', '')
-                                    full_content += content
-                                    yield f"data: {json.dumps({'type': 'chunk', 'content': content})}\n\n"
-                                
-                                elif chunk_type == 'sources':
-                                    sources = chunk_data.get('sources', [])
-                                    yield f"data: {json.dumps({'type': 'sources', 'sources': sources})}\n\n"
-                                
-                                elif chunk_type == 'metadata':
-                                    metadata = chunk_data
-                                    chunks = chunk_data.get('chunks', [])
-                                
-                                elif chunk_type == 'error':
-                                    error_msg = chunk_data.get('message', 'Unknown error')
-                                    yield f"data: {json.dumps({'type': 'error', 'error': error_msg})}\n\n"
-                                    break
-                                    
-                            except json.JSONDecodeError:
-                                logger.error(f"Failed to parse SSE chunk: {line}")
-                                continue
-                
-                # ارسال end event
-                yield f"data: {json.dumps({'type': 'end', 'metadata': metadata})}\n\n"
-                
-                # به‌روزرسانی پیام در دیتابیس
-                assistant_message.content = full_content
-                assistant_message.sources = sources
-                assistant_message.chunks = chunks
-                assistant_message.status = 'completed'
-                assistant_message.tokens = metadata.get('tokens', 0)
-                assistant_message.processing_time_ms = metadata.get('processing_time_ms', 0)
-                assistant_message.model_used = metadata.get('model_used', '')
-                assistant_message.cached = metadata.get('cached', False)
-                await sync_to_async(assistant_message.save)()
-                
-                # به‌روزرسانی آمار conversation - فقط پیام‌های کاربر
-                def update_conversation_stats():
-                    conversation.message_count = conversation.messages.filter(role='user').count()
-                    conversation.token_usage = conversation.messages.aggregate(
-                        total=Count('tokens')
-                    )['total'] or 0
-                    conversation.last_message_at = timezone.now()
-                    conversation.save()
-                
-                await sync_to_async(update_conversation_stats)()
-                
-                # ثبت مصرف
-                if active_subscription:
-                    from subscriptions.usage import UsageService
-                    def log_usage():
-                        UsageService.log_usage(
-                            user=user,
-                            action_type='query',
-                            tokens_used=metadata.get('tokens', 0),
-                            subscription=active_subscription,
-                            metadata={
-                                'conversation_id': conversation_id,
-                                'message_id': assistant_message_id,
-                                'streaming': True
-                            },
-                            ip_address=request.META.get('REMOTE_ADDR'),
-                            user_agent=request.META.get('HTTP_USER_AGENT', '')
-                        )
-                    await sync_to_async(log_usage)()
-                
-            except Exception as e:
-                logger.error(f"Error in streaming: {str(e)}")
-                yield f"data: {json.dumps({'type': 'error', 'error': str(e)})}\n\n"
-                
-                # به‌روزرسانی وضعیت خطا
-                assistant_message.status = 'failed'
-                assistant_message.error_message = str(e)
-                await sync_to_async(assistant_message.save)()
-        
-        # تبدیل async generator به sync generator
-        import threading
-        import queue as queue_module
-        
-        def sync_stream():
-            """Wrapper برای تبدیل async generator به sync"""
-            # استفاده از queue برای انتقال داده بین thread ها
-            queue = queue_module.Queue()
-            
-            # ساخت event loop جدید در thread جدید
-            loop = asyncio.new_event_loop()
-            
-            def run_async_gen():
-                asyncio.set_event_loop(loop)
-                async_gen = generate_stream()
-                
-                try:
-                    while True:
-                        try:
-                            chunk = loop.run_until_complete(async_gen.__anext__())
-                            queue.put(chunk)
-                        except StopAsyncIteration:
-                            queue.put(None)
-                            break
-                        except Exception as e:
-                            logger.error(f"Error in async generator: {str(e)}")
-                            queue.put(f"data: {json.dumps({'type': 'error', 'error': str(e)})}\n\n")
-                            queue.put(None)
-                            break
-                finally:
-                    loop.close()
-            
-            # اجرای async generator در thread جدید
-            thread = threading.Thread(target=run_async_gen)
-            thread.start()
-            
-            # خواندن از queue و yield کردن
-            while True:
-                chunk = queue.get()
-                if chunk is None:
-                    break
-                yield chunk
-            
-            thread.join()
-        
-        # برگرداندن streaming response
-        response = StreamingHttpResponse(
-            sync_stream(),
-            content_type='text/event-stream'
-        )
-        response['Cache-Control'] = 'no-cache'
-        response['X-Accel-Buffering'] = 'no'
-        return response
-
-
 class ConversationViewSet(viewsets.ModelViewSet):
     """مدیریت گفتگوها"""
     serializer_class = ConversationSerializer
@@ -705,16 +442,57 @@ class ConversationViewSet(viewsets.ModelViewSet):
     
     @action(detail=True, methods=['post'])
     def export(self, request, pk=None):
-        """Export گفتگو"""
+        """Export گفتگو به فرمت‌های مختلف"""
+        from django.http import HttpResponse
+        import csv
+        import io
+        
         conversation = self.get_object()
         serializer = ConversationExportSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         
-        format = serializer.validated_data['format']
+        export_format = serializer.validated_data['format']
+        messages = conversation.messages.all().order_by('created_at')
         
-        # TODO: پیاده‌سازی export به فرمت‌های مختلف
+        if export_format == 'json':
+            data = {
+                'title': conversation.title,
+                'created_at': conversation.created_at.isoformat(),
+                'messages': [
+                    {
+                        'role': msg.role,
+                        'content': msg.content,
+                        'created_at': msg.created_at.isoformat()
+                    } for msg in messages
+                ]
+            }
+            return Response(data)
         
-        return Response({'status': 'export started'})
+        elif export_format == 'txt':
+            content = f"گفتگو: {conversation.title}\n"
+            content += f"تاریخ: {conversation.created_at.strftime('%Y-%m-%d %H:%M')}\n"
+            content += "=" * 50 + "\n\n"
+            for msg in messages:
+                role = "کاربر" if msg.role == "user" else "دستیار"
+                content += f"[{role}] {msg.created_at.strftime('%H:%M')}\n{msg.content}\n\n"
+            
+            response = HttpResponse(content, content_type='text/plain; charset=utf-8')
+            response['Content-Disposition'] = f'attachment; filename="conversation_{pk}.txt"'
+            return response
+        
+        elif export_format == 'csv':
+            output = io.StringIO()
+            writer = csv.writer(output)
+            writer.writerow(['نقش', 'پیام', 'زمان'])
+            for msg in messages:
+                role = "کاربر" if msg.role == "user" else "دستیار"
+                writer.writerow([role, msg.content, msg.created_at.strftime('%Y-%m-%d %H:%M')])
+            
+            response = HttpResponse(output.getvalue(), content_type='text/csv; charset=utf-8')
+            response['Content-Disposition'] = f'attachment; filename="conversation_{pk}.csv"'
+            return response
+        
+        return Response({'error': 'فرمت نامعتبر'}, status=400)
     
     @action(detail=False, methods=['post'])
     def bulk_action(self, request):
