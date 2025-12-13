@@ -54,10 +54,6 @@ export const useAuthStore = create<AuthState>()(
           const { access, refresh, user, requires_2fa } = response.data
           
           // Debug: Log user data
-          console.log('🔐 Login Response - User Data:', user);
-          console.log('  - is_superuser:', user?.is_superuser);
-          console.log('  - is_staff:', user?.is_staff);
-          console.log('  - user_type:', user?.user_type);
           
           if (requires_2fa) {
             // Store tokens temporarily and wait for 2FA
@@ -78,7 +74,6 @@ export const useAuthStore = create<AuthState>()(
           })
           
           // Debug: Log what was saved
-          console.log('💾 Saved to store:', { user, isAuthenticated: true });
           
           // Set axios default header
           axios.defaults.headers.common['Authorization'] = `Bearer ${access}`
@@ -239,7 +234,6 @@ export const useAuthStore = create<AuthState>()(
       }),
       onRehydrateStorage: () => (state) => {
         // After rehydration, set loading to false and restore axios header
-        console.log('🔄 Rehydrating auth state:', { 
           hasToken: !!state?.accessToken, 
           isAuthenticated: state?.isAuthenticated 
         })

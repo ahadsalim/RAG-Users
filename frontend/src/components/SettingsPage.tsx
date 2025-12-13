@@ -378,7 +378,6 @@ const SubscriptionTab: React.FC<{ subscription: SubscriptionInfo | null; loading
       try {
         // بارگذاری پلن‌ها - URL صحیح
         const plansResponse = await axios.get(`${API_URL}/api/v1/subscriptions/plans/`);
-        console.log('Plans response:', plansResponse.data);
         if (plansResponse.data?.results) {
           setPlans(plansResponse.data.results);
         } else if (Array.isArray(plansResponse.data)) {

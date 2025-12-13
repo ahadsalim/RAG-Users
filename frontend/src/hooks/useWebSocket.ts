@@ -24,16 +24,13 @@ export function useWebSocket(options: UseWebSocketOptions = {}) {
   
   const connect = useCallback(() => {
     if (!isAuthenticated || !accessToken) {
-      console.log('Not authenticated, skipping WebSocket connection')
       return
     }
     
     if (wsRef.current?.readyState === WebSocket.OPEN) {
-      console.log('WebSocket already connected')
       return
     }
     
-    console.log('Connecting to WebSocket...')
     
     // Close existing connection if any
     if (wsRef.current) {
@@ -50,7 +47,6 @@ export function useWebSocket(options: UseWebSocketOptions = {}) {
     wsRef.current = ws
     
     ws.onopen = () => {
-      console.log('WebSocket connected')
       setIsConnected(true)
       setReconnectCount(0)
       options.onConnect?.()
@@ -59,12 +55,10 @@ export function useWebSocket(options: UseWebSocketOptions = {}) {
     ws.onmessage = (event) => {
       try {
         const data: WebSocketMessage = JSON.parse(event.data)
-        console.log('WebSocket message:', data)
         
         // Handle different message types
         switch (data.type) {
           case 'connection':
-            console.log('Connection established:', data.message)
             break
             
           case 'chunk':
@@ -86,7 +80,6 @@ export function useWebSocket(options: UseWebSocketOptions = {}) {
             break
             
           case 'processing_started':
-            console.log('Processing started for message:', data.message_id)
             break
             
           case 'processing_completed':
@@ -114,7 +107,6 @@ export function useWebSocket(options: UseWebSocketOptions = {}) {
             break
             
           case 'pong':
-            console.log('Pong received')
             break
             
           default:
@@ -131,7 +123,6 @@ export function useWebSocket(options: UseWebSocketOptions = {}) {
     }
     
     ws.onclose = (event) => {
-      console.log('WebSocket disconnected:', event.code, event.reason)
       setIsConnected(false)
       wsRef.current = null
       options.onDisconnect?.()
@@ -139,7 +130,6 @@ export function useWebSocket(options: UseWebSocketOptions = {}) {
       // Attempt to reconnect if not intentionally closed
       if (event.code !== 1000 && isAuthenticated) {
         const delay = Math.min(1000 * Math.pow(2, reconnectCount), 30000)
-        console.log(`Reconnecting in ${delay}ms... (attempt ${reconnectCount + 1})`)
         
         reconnectTimeoutRef.current = setTimeout(() => {
           setReconnectCount(prev => prev + 1)
@@ -150,7 +140,6 @@ export function useWebSocket(options: UseWebSocketOptions = {}) {
   }, [isAuthenticated, accessToken, WS_URL, options, updateMessage])
   
   const disconnect = useCallback(() => {
-    console.log('Disconnecting WebSocket...')
     
     // Clear reconnect timeout
     if (reconnectTimeoutRef.current) {

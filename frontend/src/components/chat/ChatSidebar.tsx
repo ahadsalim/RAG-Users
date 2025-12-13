@@ -99,7 +99,6 @@ export function ChatSidebar({
           text: shareText,
         })
       } catch (err) {
-        console.log('اشتراک‌گذاری لغو شد')
       }
     } else {
       // Fallback: کپی به کلیپبورد

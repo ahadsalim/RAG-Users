@@ -536,25 +536,99 @@ class MetricsExportView(APIView):
         
         # تبدیل فرمت
         if format == 'csv':
-            # TODO: تبدیل به CSV
-            pass
-        elif format == 'pdf':
-            # TODO: تولید PDF
-            pass
+            import csv
+            import io
+            from django.http import HttpResponse
+            
+            output = io.StringIO()
+            writer = csv.writer(output)
+            
+            # نوشتن header و data بر اساس نوع گزارش
+            if 'users' in data:
+                writer.writerow(['نام', 'ایمیل', 'تعداد سوال', 'آخرین فعالیت'])
+                for user in data.get('users', []):
+                    writer.writerow([user.get('name', ''), user.get('email', ''), 
+                                   user.get('query_count', 0), user.get('last_active', '')])
+            else:
+                writer.writerow(['کلید', 'مقدار'])
+                for key, value in data.items():
+                    writer.writerow([key, value])
+            
+            response = HttpResponse(output.getvalue(), content_type='text/csv; charset=utf-8')
+            response['Content-Disposition'] = f'attachment; filename="report_{report_type}.csv"'
+            return response
         
         return Response(data)
     
     def _generate_summary_report(self, start_date, end_date):
         """تولید گزارش خلاصه"""
-        # TODO: پیاده‌سازی
-        return {'report': 'summary', 'data': []}
+        from accounts.models import User
+        from payments.models import Transaction, PaymentStatus
+        from chat.models import Message
+        
+        users_count = User.objects.filter(date_joined__range=[start_date, end_date]).count()
+        active_users = User.objects.filter(last_login__range=[start_date, end_date]).count()
+        
+        transactions = Transaction.objects.filter(
+            created_at__range=[start_date, end_date],
+            status=PaymentStatus.SUCCESS
+        )
+        total_revenue = transactions.aggregate(total=Sum('amount'))['total'] or 0
+        
+        messages_count = Message.objects.filter(created_at__range=[start_date, end_date]).count()
+        
+        return {
+            'report': 'summary',
+            'period': {'start': start_date.isoformat(), 'end': end_date.isoformat()},
+            'new_users': users_count,
+            'active_users': active_users,
+            'total_revenue': float(total_revenue),
+            'messages_count': messages_count,
+            'transactions_count': transactions.count()
+        }
     
     def _generate_users_report(self, start_date, end_date):
         """تولید گزارش کاربران"""
-        # TODO: پیاده‌سازی
-        return {'report': 'users', 'data': []}
+        from accounts.models import User
+        from chat.models import Message
+        from django.db.models import Count
+        
+        users = User.objects.filter(
+            date_joined__range=[start_date, end_date]
+        ).annotate(
+            query_count=Count('conversations__messages', filter=Q(conversations__messages__role='user'))
+        ).values('id', 'email', 'first_name', 'last_name', 'date_joined', 'last_login', 'query_count')[:100]
+        
+        return {
+            'report': 'users',
+            'period': {'start': start_date.isoformat(), 'end': end_date.isoformat()},
+            'total': len(users),
+            'users': list(users)
+        }
     
     def _generate_revenue_report(self, start_date, end_date):
         """تولید گزارش درآمد"""
-        # TODO: پیاده‌سازی
-        return {'report': 'revenue', 'data': []}
+        from payments.models import Transaction, PaymentStatus
+        from django.db.models.functions import TruncDate
+        
+        transactions = Transaction.objects.filter(
+            created_at__range=[start_date, end_date],
+            status=PaymentStatus.SUCCESS
+        )
+        
+        daily_revenue = transactions.annotate(
+            date=TruncDate('created_at')
+        ).values('date').annotate(
+            total=Sum('amount'),
+            count=Count('id')
+        ).order_by('date')
+        
+        total = transactions.aggregate(total=Sum('amount'))['total'] or 0
+        
+        return {
+            'report': 'revenue',
+            'period': {'start': start_date.isoformat(), 'end': end_date.isoformat()},
+            'total_revenue': float(total),
+            'transactions_count': transactions.count(),
+            'daily_breakdown': list(daily_revenue)
+        }

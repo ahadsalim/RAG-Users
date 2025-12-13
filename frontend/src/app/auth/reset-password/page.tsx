@@ -39,8 +39,6 @@ export default function ResetPasswordPage() {
     const tokenParam = params.get('token')
     const userParam = params.get('user')
     
-    console.log('URL params:', { token: tokenParam, user: userParam })
-    console.log('Full URL:', window.location.href)
     
     if (tokenParam) setToken(tokenParam)
     if (userParam) setUserId(userParam)
@@ -71,7 +69,6 @@ export default function ResetPasswordPage() {
     
     setIsLoading(true)
     
-    console.log('Submitting password reset with:', { token, userId })
     
     try {
       const payload = { 
@@ -80,7 +77,6 @@ export default function ResetPasswordPage() {
         new_password: password,
         new_password_confirm: confirmPassword
       }
-      console.log('Request payload:', payload)
       
       const response = await fetch(`${API_URL}/api/v1/auth/reset-password/`, {
         method: 'POST',

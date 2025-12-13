@@ -162,16 +162,41 @@ class Subscription(models.Model):
         max_queries_per_day = features.get('max_queries_per_day', 10)
         max_queries_per_month = features.get('max_queries_per_month', 300)
         
-        # برای الان همیشه True برمی‌گردانیم
-        # TODO: باید usage tracking اضافه شود
+        # بررسی محدودیت روزانه
+        daily_used = self.queries_used_today
+        if daily_used >= max_queries_per_day:
+            return False, f"محدودیت روزانه ({max_queries_per_day} سوال) تمام شده است"
+        
+        # بررسی محدودیت ماهانه
+        monthly_used = self.queries_used_month
+        if monthly_used >= max_queries_per_month:
+            return False, f"محدودیت ماهانه ({max_queries_per_month} سوال) تمام شده است"
+        
         return True, "OK"
     
     @property
     def queries_used_today(self):
-        """تعداد query های امروز - TODO: باید implement شود"""
-        return 0
+        """تعداد query های امروز"""
+        from django.utils import timezone
+        from chat.models import Message
+        
+        today = timezone.now().date()
+        return Message.objects.filter(
+            conversation__user=self.user,
+            role='user',
+            created_at__date=today
+        ).count()
     
     @property
     def queries_used_month(self):
-        """تعداد query های این ماه - TODO: باید implement شود"""
-        return 0
+        """تعداد query های این ماه"""
+        from django.utils import timezone
+        from chat.models import Message
+        
+        now = timezone.now()
+        first_day_of_month = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+        return Message.objects.filter(
+            conversation__user=self.user,
+            role='user',
+            created_at__gte=first_day_of_month
+        ).count()

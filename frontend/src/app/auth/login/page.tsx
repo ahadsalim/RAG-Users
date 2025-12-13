@@ -71,7 +71,6 @@ export default function LoginPage() {
     }
     
     setIsLoadingOtp(true)
-    console.log('Sending OTP to:', phoneNumber)
     
     try {
       // Try to send OTP via Next.js API route (no CORS issue)
@@ -86,11 +85,9 @@ export default function LoginPage() {
         })
       })
       
-      console.log('Response status:', response.status)
       
       if (response.ok) {
         const data = await response.json()
-        console.log('Response data:', data)
         
         // Get the actual method used (backend may fallback to SMS)
         const methodUsed = data.method || otpMethod
@@ -149,11 +146,9 @@ export default function LoginPage() {
         })
       })
       
-      console.log('Verify response status:', response.status)
       
       if (response.ok) {
         const data = await response.json()
-        console.log('Verify response data:', data)
         
         // Use Zustand login with tokens
         const { access, refresh, user } = data

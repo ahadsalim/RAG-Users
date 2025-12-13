@@ -270,12 +270,59 @@ class TransactionViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_400_BAD_REQUEST
             )
         
-        # TODO: تولید PDF فاکتور
+        # تولید فاکتور HTML (قابل تبدیل به PDF با wkhtmltopdf یا weasyprint)
+        from django.template.loader import render_to_string
+        from django.http import HttpResponse
         
-        return Response({
+        invoice_data = {
             'invoice_number': transaction.invoice_number,
-            'download_url': transaction.invoice_file.url if transaction.invoice_file else None
-        })
+            'date': transaction.paid_at or transaction.created_at,
+            'user': transaction.user,
+            'amount': transaction.amount,
+            'currency': transaction.currency,
+            'description': transaction.description,
+            'gateway': transaction.get_gateway_display(),
+            'status': 'پرداخت شده',
+        }
+        
+        # تولید HTML فاکتور
+        html_content = f"""
+        <!DOCTYPE html>
+        <html dir="rtl" lang="fa">
+        <head>
+            <meta charset="UTF-8">
+            <title>فاکتور {transaction.invoice_number}</title>
+            <style>
+                body {{ font-family: Tahoma, sans-serif; padding: 40px; }}
+                .header {{ text-align: center; border-bottom: 2px solid #333; padding-bottom: 20px; }}
+                .invoice-info {{ margin: 20px 0; }}
+                .invoice-info p {{ margin: 5px 0; }}
+                .amount {{ font-size: 24px; font-weight: bold; color: #2563eb; }}
+                .footer {{ margin-top: 40px; text-align: center; color: #666; }}
+            </style>
+        </head>
+        <body>
+            <div class="header">
+                <h1>فاکتور رسمی</h1>
+                <p>شماره فاکتور: {transaction.invoice_number}</p>
+            </div>
+            <div class="invoice-info">
+                <p><strong>تاریخ:</strong> {invoice_data['date'].strftime('%Y/%m/%d') if invoice_data['date'] else '-'}</p>
+                <p><strong>نام مشتری:</strong> {transaction.user.get_full_name() or transaction.user.email}</p>
+                <p><strong>شرح:</strong> {transaction.description or 'خرید اشتراک'}</p>
+                <p><strong>درگاه پرداخت:</strong> {invoice_data['gateway']}</p>
+                <p class="amount"><strong>مبلغ:</strong> {transaction.amount:,.0f} {transaction.currency}</p>
+            </div>
+            <div class="footer">
+                <p>با تشکر از خرید شما</p>
+            </div>
+        </body>
+        </html>
+        """
+        
+        response = HttpResponse(html_content, content_type='text/html; charset=utf-8')
+        response['Content-Disposition'] = f'attachment; filename="invoice_{transaction.invoice_number}.html"'
+        return response
     
     @action(detail=True, methods=['post'])
     def refund(self, request, pk=None):

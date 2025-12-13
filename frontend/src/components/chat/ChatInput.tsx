@@ -76,7 +76,6 @@ export function ChatInput({ onSendMessage, isLoading, disabled }: ChatInputProps
       return Promise.reject(new Error(error))
     }
     
-    console.log('Uploading file with token:', token.substring(0, 20) + '...')
     
     return new Promise((resolve, reject) => {
       const xhr = new XMLHttpRequest()
@@ -267,7 +266,6 @@ export function ChatInput({ onSendMessage, isLoading, disabled }: ChatInputProps
         })
         .filter(f => f !== null)
       
-      console.log('Sending message with files:', fileAttachments)
       
       onSendMessage(message, fileAttachments.length > 0 ? fileAttachments : undefined)
       setMessage('')

@@ -78,7 +78,6 @@ export default function ChatPage() {
   // Check authentication after hydration
   useEffect(() => {
     if (isHydrated && !authLoading && !isAuthenticated) {
-      console.log('Not authenticated, redirecting to login...')
       router.push('/auth/login')
     }
   }, [isHydrated, authLoading, isAuthenticated, router])

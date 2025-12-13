@@ -74,7 +74,6 @@ export function ChatMessages({ messages, isLoading, isTyping }: ChatMessagesProp
   
   const handleFeedback = async (messageId: string, rating: number) => {
     // Send feedback to API
-    console.log('Feedback:', messageId, rating)
     setFeedbackSent(prev => new Set(prev).add(messageId))
   }
   
