@@ -736,15 +736,8 @@ export default function LoginPage() {
                     e.currentTarget.style.boxShadow = 'none'
                   }}
                 />
-                <p style={{...styles.label, fontSize: '12px', marginTop: '8px', textAlign: 'center', lineHeight: '2', whiteSpace: 'nowrap'}}>
-                  کد 6 رقمی ارسال شده از طریق{' '}
-                  {otpMethod === 'bale' ? (
-                    <span style={{display: 'inline-flex', alignItems: 'center', gap: '4px', verticalAlign: 'middle'}}>
-                      <img src={`/bale_64.png?v=${cacheVersion}`} alt="Bale" width={16} height={16} style={{ objectFit: 'contain', verticalAlign: 'middle' }} />
-                      بله
-                    </span>
-                  ) : '💬 پیامک'}{' '}
-                  به {phoneNumber} را وارد کنید
+                <p style={{...styles.label, fontSize: '12px', marginTop: '8px', textAlign: 'center', lineHeight: '2'}}>
+                  کد ۶ رقمی ارسال شده از طریق {otpMethod === 'bale' ? 'پیام‌رسان بله' : 'پیامک'} به {phoneNumber} را وارد کنید
                 </p>
                 {otpTimer > 0 && (
                   <p style={{...styles.label, fontSize: '14px', marginTop: '8px', textAlign: 'center', fontWeight: 'bold'}}>
