@@ -13,12 +13,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # Security
 SECRET_KEY = config('SECRET_KEY')
 DEBUG = config('DEBUG', default=True, cast=bool)
-ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='localhost,127.0.0.1,core.app.ir', cast=Csv())
-
-# Allow RFC 1034/1035 non-compliant hostnames (like app_backend with underscore)
-# This is needed for Docker internal networking
-# Always allow all hosts in containerized environment
-ALLOWED_HOSTS = ['*']  # Allow all hosts for Docker internal networking
+ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='localhost,127.0.0.1', cast=Csv())
 
 # Application definition
 INSTALLED_APPS = [
@@ -49,7 +44,6 @@ INSTALLED_APPS = [
     'subscriptions',
     'payments',
     'chat',
-    'consultants',
     'notifications',
     'analytics',
 ]
