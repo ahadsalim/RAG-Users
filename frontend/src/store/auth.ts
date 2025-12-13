@@ -234,9 +234,6 @@ export const useAuthStore = create<AuthState>()(
       }),
       onRehydrateStorage: () => (state) => {
         // After rehydration, set loading to false and restore axios header
-          hasToken: !!state?.accessToken, 
-          isAuthenticated: state?.isAuthenticated 
-        })
         if (state?.accessToken) {
           axios.defaults.headers.common['Authorization'] = `Bearer ${state.accessToken}`
         }
