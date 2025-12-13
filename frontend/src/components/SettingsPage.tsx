@@ -359,7 +359,17 @@ const SubscriptionTab: React.FC<{ subscription: SubscriptionInfo | null; loading
   const [plans, setPlans] = React.useState<Plan[]>([]);
   const [usageStats, setUsageStats] = React.useState<any>(null);
   const [loading, setLoading] = React.useState(initialLoading);
-  const { formatPrice } = useCurrency();
+  const { formatPrice, activeCurrency } = useCurrency();
+  
+  // Helper function to format price without decimals for Toman
+  const formatPlanPrice = (price: number) => {
+    // If currency is loaded and has no decimals, or if it's Toman, don't show decimals
+    if (activeCurrency && !activeCurrency.has_decimals) {
+      return `${Math.floor(price).toLocaleString('fa-IR')} ${activeCurrency.symbol}`;
+    }
+    // Fallback: assume Toman with no decimals
+    return `${Math.floor(price).toLocaleString('fa-IR')} تومان`;
+  };
 
   // بارگذاری پلن‌ها و آمار مصرف
   React.useEffect(() => {
@@ -549,16 +559,16 @@ const SubscriptionTab: React.FC<{ subscription: SubscriptionInfo | null; loading
                 )}
                 <h5 className="font-semibold text-gray-900 dark:text-white mb-2">{plan.name}</h5>
                 <p className="text-2xl font-bold text-blue-500 mb-2">
-                  {plan.price === 0 ? 'رایگان' : formatPrice(plan.price)}
+                  {plan.price === 0 ? 'رایگان' : formatPlanPrice(plan.price)}
                 </p>
                 <div className="text-sm text-gray-600 dark:text-gray-400 mb-4 space-y-1">
                   <p>📅 {plan.duration_days} روز</p>
                   <p>📊 {plan.max_queries_per_day || 10} سوال/روز</p>
                   <p>📈 {plan.max_queries_per_month || 300} سوال/ماه</p>
                 </div>
-                {!isCurrentPlan && (
+                {plan.price === 0 ? null : (
                   <button className="w-full py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors">
-                    {plan.price === 0 ? 'انتخاب' : 'ارتقا'}
+                    {isCurrentPlan ? 'خرید/تمدید' : 'ارتقا'}
                   </button>
                 )}
               </div>
