@@ -158,12 +158,18 @@ class ChatConsumer(AsyncWebsocketConsumer):
         }))
         
         try:
+            # دریافت تنظیم enable_web_search از preferences کاربر
+            enable_web_search = None
+            if self.user.preferences:
+                enable_web_search = self.user.preferences.get('enable_web_search')
+            
             # ارسال به Core RAG (non-streaming)
             response = await core_service.send_query(
                 query=query,
                 token=self.jwt_token,
                 conversation_id=conversation.rag_conversation_id,
-                language='fa'
+                language='fa',
+                enable_web_search=enable_web_search
             )
             
             full_content = response.get('answer', response.get('response', ''))

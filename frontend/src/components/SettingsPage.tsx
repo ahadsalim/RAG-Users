@@ -25,11 +25,7 @@ interface UserSettings {
   
   // Preferences
   theme: 'light' | 'dark';
-  response_style: 'formal' | 'casual' | 'academic' | 'simple';
-  detail_level: 'brief' | 'moderate' | 'comprehensive' | 'detailed';
-  language_style: 'simple' | 'technical' | 'mixed';
-  format: 'bullet_points' | 'numbered_list' | 'paragraph';
-  include_examples: boolean;
+  enable_web_search: boolean | null;
 }
 
 interface SubscriptionInfo {
@@ -63,11 +59,7 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ isOpen, onClose }) => {
               email: user?.email || '',
               phone: user?.phone_number || '',
               theme: 'light',
-              response_style: 'formal',
-              detail_level: 'moderate',
-              language_style: 'simple',
-              format: 'paragraph',
-              include_examples: true,
+              enable_web_search: null,
             };
           }
           return parsed;
@@ -83,11 +75,7 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ isOpen, onClose }) => {
       email: user?.email || '',
       phone: user?.phone_number || '',
       theme: 'light',
-      response_style: 'formal',
-      detail_level: 'moderate',
-      language_style: 'simple',
-      format: 'paragraph',
-      include_examples: true,
+      enable_web_search: null,
     };
   };
   
@@ -635,33 +623,26 @@ const PreferencesTab: React.FC<{ settings: UserSettings; setSettings: React.Disp
         <h4 className="text-lg font-semibold mb-4 text-gray-900 dark:text-white">تنظیمات پاسخ</h4>
         <div className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">سبک پاسخ</label>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">جستجوی وب</label>
+            <p className="text-xs text-gray-500 dark:text-gray-400 mb-3">
+              در صورت فعال بودن، سیستم می‌تواند برای پاسخ‌های بهتر از اینترنت جستجو کند (زمان پاسخ‌دهی بیشتر می‌شود)
+            </p>
             <select
-              value={settings.response_style}
-              onChange={(e) => setSettings({ ...settings, response_style: e.target.value as any })}
+              value={settings.enable_web_search === null ? 'default' : settings.enable_web_search ? 'enabled' : 'disabled'}
+              onChange={(e) => {
+                const value = e.target.value;
+                setSettings({ 
+                  ...settings, 
+                  enable_web_search: value === 'default' ? null : value === 'enabled' 
+                });
+              }}
               className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-right"
               dir="rtl"
               style={{ backgroundPosition: 'left 0.75rem center' }}
             >
-              <option value="formal">رسمی</option>
-              <option value="casual">غیررسمی</option>
-              <option value="academic">آکادمیک</option>
-              <option value="simple">ساده</option>
-            </select>
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">سطح جزئیات</label>
-            <select
-              value={settings.detail_level}
-              onChange={(e) => setSettings({ ...settings, detail_level: e.target.value as any })}
-              className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-right"
-              dir="rtl"
-              style={{ backgroundPosition: 'left 0.75rem center' }}
-            >
-              <option value="brief">خلاصه</option>
-              <option value="moderate">متوسط</option>
-              <option value="comprehensive">جامع</option>
-              <option value="detailed">تفصیلی</option>
+              <option value="default">پیش‌فرض سرور</option>
+              <option value="enabled">فعال (کندتر - 40-60 ثانیه)</option>
+              <option value="disabled">غیرفعال (سریع‌تر - 20 ثانیه)</option>
             </select>
           </div>
         </div>

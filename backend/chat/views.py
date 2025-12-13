@@ -168,13 +168,19 @@ class QueryView(APIView):
             loop = asyncio.new_event_loop()
             asyncio.set_event_loop(loop)
             
+            # دریافت تنظیم enable_web_search از request یا preferences کاربر
+            enable_web_search = data.get('enable_web_search')
+            if enable_web_search is None and user.preferences:
+                enable_web_search = user.preferences.get('enable_web_search')
+            
             response = loop.run_until_complete(
                 core_service.send_query(
                     query=data['query'],
                     token=access_token,
                     conversation_id=conversation.rag_conversation_id or None,
                     language=data.get('language', 'fa'),
-                    file_attachments=file_attachments
+                    file_attachments=file_attachments,
+                    enable_web_search=enable_web_search
                 )
             )
             

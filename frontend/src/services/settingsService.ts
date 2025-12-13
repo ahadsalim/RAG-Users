@@ -5,7 +5,7 @@ import type { SiteSettings, Currency, PaymentGateway, CurrencyConversionRequest,
  * Get site settings
  */
 export async function getSiteSettings(): Promise<SiteSettings> {
-  const response = await api.get('/settings/')
+  const response = await api.get('/api/v1/settings/')
   return response.data
 }
 
@@ -13,7 +13,7 @@ export async function getSiteSettings(): Promise<SiteSettings> {
  * Get all active currencies
  */
 export async function getCurrencies(): Promise<Currency[]> {
-  const response = await api.get('/currencies/')
+  const response = await api.get('/api/v1/currencies/')
   return response.data.results || response.data
 }
 
@@ -21,7 +21,7 @@ export async function getCurrencies(): Promise<Currency[]> {
  * Get all active payment gateways
  */
 export async function getPaymentGateways(): Promise<PaymentGateway[]> {
-  const response = await api.get('/payment-gateways/')
+  const response = await api.get('/api/v1/payment-gateways/')
   return response.data.results || response.data
 }
 
@@ -29,6 +29,6 @@ export async function getPaymentGateways(): Promise<PaymentGateway[]> {
  * Convert currency
  */
 export async function convertCurrency(request: CurrencyConversionRequest): Promise<CurrencyConversionResponse> {
-  const response = await api.post('/currencies/convert/', request)
+  const response = await api.post('/api/v1/currencies/convert/', request)
   return response.data
 }

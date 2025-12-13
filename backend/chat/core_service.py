@@ -34,6 +34,7 @@ class CoreAPIService:
         conversation_id: Optional[str] = None,
         language: str = 'fa',
         file_attachments: Optional[list] = None,
+        enable_web_search: Optional[bool] = None,
     ) -> Dict[str, Any]:
         """
         ارسال سوال به سیستم مرکزی RAG Core.
@@ -44,6 +45,7 @@ class CoreAPIService:
             conversation_id: شناسه مکالمه برای استفاده از حافظه
             language: زبان (پیش‌فرض: fa)
             file_attachments: لیست فایل‌های ضمیمه (حداکثر 5)
+            enable_web_search: فعال/غیرفعال کردن جستجوی وب (None = پیش‌فرض سرور)
             
         Returns:
             پاسخ شامل answer, file_analysis, conversation_id و غیره
@@ -63,6 +65,10 @@ class CoreAPIService:
         # اضافه کردن فایل‌های ضمیمه (حداکثر 5)
         if file_attachments and len(file_attachments) > 0:
             payload["file_attachments"] = file_attachments[:5]
+        
+        # اضافه کردن تنظیم جستجوی وب
+        if enable_web_search is not None:
+            payload["enable_web_search"] = enable_web_search
         
         try:
             async with httpx.AsyncClient(timeout=self.timeout) as client:
