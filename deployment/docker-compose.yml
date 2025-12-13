@@ -113,6 +113,7 @@ services:
       # RAG Core
       RAG_CORE_BASE_URL: ${RAG_CORE_BASE_URL}
       RAG_CORE_API_KEY: ${RAG_CORE_API_KEY}
+      RAG_CORE_TIMEOUT: ${RAG_CORE_TIMEOUT:-60}
       # Email
       EMAIL_HOST: ${EMAIL_HOST:-smtp.gmail.com}
       EMAIL_PORT: ${EMAIL_PORT:-587}

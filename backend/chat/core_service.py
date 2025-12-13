@@ -18,7 +18,7 @@ class CoreAPIService:
         # استفاده از RAG_CORE_BASE_URL که در settings تعریف شده
         self.base_url = settings.RAG_CORE_BASE_URL
         self.api_key = settings.RAG_CORE_API_KEY
-        self.timeout = 300.0  # 5 minutes for file processing queries
+        self.timeout = float(getattr(settings, 'RAG_CORE_TIMEOUT', 60))
         
     def _get_headers(self, token: str) -> Dict[str, str]:
         """Get headers for API requests."""
