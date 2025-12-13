@@ -1,6 +1,13 @@
 import api from '@/lib/axios'
 import type { SiteSettings, Currency, PaymentGateway, CurrencyConversionRequest, CurrencyConversionResponse } from '@/types/settings'
 
+// Fallback currencies for when API is not available
+const FALLBACK_CURRENCIES: Currency[] = [
+  { id: 1, code: 'IRT', name: 'تومان', symbol: 'تومان', has_decimals: false, decimal_places: 0, exchange_rate: '10', is_active: true, display_order: 1 },
+  { id: 2, code: 'USD', name: 'دلار آمریکا', symbol: '$', has_decimals: true, decimal_places: 2, exchange_rate: '1260950', is_active: true, display_order: 2 },
+  { id: 3, code: 'EUR', name: 'یورو', symbol: '€', has_decimals: true, decimal_places: 2, exchange_rate: '14680900', is_active: true, display_order: 3 },
+]
+
 /**
  * Get site settings
  */
@@ -13,8 +20,14 @@ export async function getSiteSettings(): Promise<SiteSettings> {
  * Get all active currencies
  */
 export async function getCurrencies(): Promise<Currency[]> {
-  const response = await api.get('/api/v1/currencies/')
-  return response.data.results || response.data
+  try {
+    const response = await api.get('/api/v1/currencies/')
+    const data = response.data.results || response.data
+    return data.length > 0 ? data : FALLBACK_CURRENCIES
+  } catch (error) {
+    console.error('Failed to fetch currencies, using fallback:', error)
+    return FALLBACK_CURRENCIES
+  }
 }
 
 /**

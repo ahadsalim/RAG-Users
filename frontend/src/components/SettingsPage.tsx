@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { X, User, Bell, Shield, CreditCard, Palette, Globe, HelpCircle, Brain, Building2 } from 'lucide-react';
 import axios from 'axios';
+import { useTheme } from 'next-themes';
 import { useAuthStore } from '@/store/auth';
 import MemorySection from '@/components/settings/MemorySection';
 import OrganizationSection from '@/components/settings/OrganizationSection';
@@ -573,6 +574,13 @@ const SubscriptionTab: React.FC<{ subscription: SubscriptionInfo | null; loading
 
 // Preferences Tab
 const PreferencesTab: React.FC<{ settings: UserSettings; setSettings: React.Dispatch<React.SetStateAction<UserSettings>> }> = ({ settings, setSettings }) => {
+  const { theme, setTheme } = useTheme();
+  
+  const handleThemeChange = (newTheme: 'light' | 'dark') => {
+    setTheme(newTheme);
+    setSettings({ ...settings, theme: newTheme });
+  };
+  
   return (
     <div className="space-y-6">
       {/* تم تاریک/روشن */}
@@ -583,9 +591,9 @@ const PreferencesTab: React.FC<{ settings: UserSettings; setSettings: React.Disp
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">تم</label>
             <div className="grid grid-cols-2 gap-3">
               <button
-                onClick={() => setSettings({ ...settings, theme: 'light' })}
+                onClick={() => handleThemeChange('light')}
                 className={`p-3 rounded-lg border-2 transition-all flex items-center justify-center gap-2 ${
-                  settings.theme === 'light'
+                  theme === 'light'
                     ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300'
                     : 'border-gray-300 dark:border-gray-600 hover:border-gray-400 dark:hover:border-gray-500 text-gray-700 dark:text-gray-300'
                 }`}
@@ -596,9 +604,9 @@ const PreferencesTab: React.FC<{ settings: UserSettings; setSettings: React.Disp
                 <span className="font-medium">روشن</span>
               </button>
               <button
-                onClick={() => setSettings({ ...settings, theme: 'dark' })}
+                onClick={() => handleThemeChange('dark')}
                 className={`p-3 rounded-lg border-2 transition-all flex items-center justify-center gap-2 ${
-                  settings.theme === 'dark'
+                  theme === 'dark'
                     ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300'
                     : 'border-gray-300 dark:border-gray-600 hover:border-gray-400 dark:hover:border-gray-500 text-gray-700 dark:text-gray-300'
                 }`}
@@ -613,37 +621,41 @@ const PreferencesTab: React.FC<{ settings: UserSettings; setSettings: React.Disp
         </div>
       </div>
 
-      {/* انتخاب واحد پولی */}
-      <div className="bg-gray-50 dark:bg-gray-800 rounded-xl p-6">
-        <h4 className="text-lg font-semibold mb-4 text-gray-900 dark:text-white">تنظیمات مالی</h4>
-        <CurrencySelector />
-      </div>
+      {/* تنظیمات مالی و پاسخ در دو ستون */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {/* انتخاب واحد پولی */}
+        <div className="bg-gray-50 dark:bg-gray-800 rounded-xl p-6">
+          <h4 className="text-lg font-semibold mb-4 text-gray-900 dark:text-white">تنظیمات مالی</h4>
+          <CurrencySelector />
+        </div>
 
-      <div className="bg-gray-50 dark:bg-gray-800 rounded-xl p-6">
-        <h4 className="text-lg font-semibold mb-4 text-gray-900 dark:text-white">تنظیمات پاسخ</h4>
-        <div className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">جستجوی وب</label>
-            <p className="text-xs text-gray-500 dark:text-gray-400 mb-3">
-              در صورت فعال بودن، سیستم می‌تواند برای پاسخ‌های بهتر از اینترنت جستجو کند (زمان پاسخ‌دهی بیشتر می‌شود)
-            </p>
-            <select
-              value={settings.enable_web_search === null ? 'default' : settings.enable_web_search ? 'enabled' : 'disabled'}
-              onChange={(e) => {
-                const value = e.target.value;
-                setSettings({ 
-                  ...settings, 
-                  enable_web_search: value === 'default' ? null : value === 'enabled' 
-                });
-              }}
-              className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-right"
-              dir="rtl"
-              style={{ backgroundPosition: 'left 0.75rem center' }}
-            >
-              <option value="default">پیش‌فرض سرور</option>
-              <option value="enabled">فعال (کندتر - 40-60 ثانیه)</option>
-              <option value="disabled">غیرفعال (سریع‌تر - 20 ثانیه)</option>
-            </select>
+        {/* تنظیمات پاسخ */}
+        <div className="bg-gray-50 dark:bg-gray-800 rounded-xl p-6">
+          <h4 className="text-lg font-semibold mb-4 text-gray-900 dark:text-white">تنظیمات پاسخ</h4>
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">جستجوی وب</label>
+              <p className="text-xs text-gray-500 dark:text-gray-400 mb-3">
+                جستجوی اینترنت برای پاسخ بهتر
+              </p>
+              <select
+                value={settings.enable_web_search === null ? 'default' : settings.enable_web_search ? 'enabled' : 'disabled'}
+                onChange={(e) => {
+                  const value = e.target.value;
+                  setSettings({ 
+                    ...settings, 
+                    enable_web_search: value === 'default' ? null : value === 'enabled' 
+                  });
+                }}
+                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-right"
+                dir="rtl"
+                style={{ backgroundPosition: 'left 0.75rem center' }}
+              >
+                <option value="default">پیش‌فرض سرور</option>
+                <option value="enabled">فعال (کندتر)</option>
+                <option value="disabled">غیرفعال (سریع‌تر)</option>
+              </select>
+            </div>
           </div>
         </div>
       </div>
