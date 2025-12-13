@@ -186,7 +186,7 @@ export function ChatSidebar({
       <aside className={clsx(
         'fixed top-0 right-0 md:relative z-50 md:z-auto',
         'w-80 h-screen md:h-full',
-        'bg-gray-950 text-white border-l border-gray-800',
+        'bg-gray-900 text-white border-l border-gray-700',
         'transition-transform duration-300',
         'flex flex-col',
         'overflow-hidden',
@@ -218,7 +218,7 @@ export function ChatSidebar({
           {/* New Chat Button */}
           <button
             onClick={onNewChat}
-            className="w-full flex items-center gap-2 px-3 py-2 bg-gray-800 hover:bg-gray-700 rounded-lg transition-colors text-sm"
+            className="w-full flex items-center gap-2 px-3 py-2 bg-gray-700/50 hover:bg-gray-600/50 rounded-xl transition-colors text-sm border border-gray-600/30"
           >
             <span>➕</span>
             <span>گفتگوی جدید</span>

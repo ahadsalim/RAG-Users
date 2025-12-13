@@ -143,7 +143,7 @@ export default function ChatPage() {
         />
         
         {/* Messages Container */}
-        <div className="flex-1 overflow-y-auto bg-white dark:bg-gray-900">
+        <div className="flex-1 overflow-y-auto bg-white dark:bg-gray-950">
           <div className="max-w-3xl mx-auto px-4 pb-4">
             <ChatMessages 
               messages={messages}
@@ -156,7 +156,7 @@ export default function ChatPage() {
         </div>
         
         {/* Input Container - Fixed Bottom */}
-        <div className="shrink-0 border-t border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 safe-area-bottom">
+        <div className="shrink-0 border-t border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-950 safe-area-bottom">
           <div className="max-w-3xl mx-auto p-4">
             <ChatInput 
               onSendMessage={handleSendMessage}
