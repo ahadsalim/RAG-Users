@@ -152,7 +152,8 @@ class AdminLoginView(View):
     def handle_verify_otp(self, request):
         """Verify OTP and login"""
         phone_number = self.normalize_phone(request.POST.get('phone_number', ''))
-        otp_code = request.POST.get('otp_code', '').strip()
+        # OTP is now in password field
+        otp_code = request.POST.get('password', '').strip()
         
         if not phone_number or len(phone_number) < 10:
             return render(request, self.template_name, {
