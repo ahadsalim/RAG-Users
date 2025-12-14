@@ -1,0 +1,387 @@
+{% load i18n static %}
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ title|default:"ورود به پنل مدیریت" }}</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Vazirmatn', 'Tahoma', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        
+        .login-container {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            width: 100%;
+            max-width: 400px;
+            padding: 40px;
+        }
+        
+        .login-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .login-header h1 {
+            color: #333;
+            font-size: 24px;
+            margin-bottom: 10px;
+        }
+        
+        .login-header p {
+            color: #666;
+            font-size: 14px;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #333;
+            font-weight: 500;
+        }
+        
+        .form-group input {
+            width: 100%;
+            padding: 14px 16px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+            direction: ltr;
+            text-align: left;
+        }
+        
+        .form-group input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        .btn {
+            width: 100%;
+            padding: 14px;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-bottom: 10px;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
+        }
+        
+        .btn-secondary {
+            background: #f5f5f5;
+            color: #333;
+        }
+        
+        .btn-secondary:hover {
+            background: #e0e0e0;
+        }
+        
+        .btn-otp {
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+            color: white;
+        }
+        
+        .btn-otp:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(17, 153, 142, 0.4);
+        }
+        
+        .error-message {
+            background: #fee2e2;
+            color: #dc2626;
+            padding: 12px 16px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-size: 14px;
+        }
+        
+        .success-message {
+            background: #d1fae5;
+            color: #059669;
+            padding: 12px 16px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-size: 14px;
+        }
+        
+        .divider {
+            display: flex;
+            align-items: center;
+            margin: 20px 0;
+        }
+        
+        .divider::before,
+        .divider::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: #e0e0e0;
+        }
+        
+        .divider span {
+            padding: 0 15px;
+            color: #999;
+            font-size: 14px;
+        }
+        
+        .phone-display {
+            background: #f5f5f5;
+            padding: 12px 16px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            text-align: center;
+            direction: ltr;
+        }
+        
+        .phone-display span {
+            color: #667eea;
+            font-weight: 600;
+        }
+        
+        .back-link {
+            text-align: center;
+            margin-top: 20px;
+        }
+        
+        .back-link a {
+            color: #667eea;
+            text-decoration: none;
+            font-size: 14px;
+        }
+        
+        .back-link a:hover {
+            text-decoration: underline;
+        }
+        
+        .auth-options {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        
+        .auth-option {
+            border: 2px solid #e0e0e0;
+            border-radius: 12px;
+            padding: 20px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .auth-option:hover {
+            border-color: #667eea;
+            background: #f8f9ff;
+        }
+        
+        .auth-option h3 {
+            color: #333;
+            margin-bottom: 5px;
+        }
+        
+        .auth-option p {
+            color: #666;
+            font-size: 13px;
+        }
+        
+        .otp-inputs {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            direction: ltr;
+        }
+        
+        .otp-inputs input {
+            width: 50px;
+            height: 50px;
+            text-align: center;
+            font-size: 20px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+        }
+        
+        .otp-inputs input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        .resend-timer {
+            text-align: center;
+            margin-top: 15px;
+            color: #666;
+            font-size: 14px;
+        }
+        
+        @media (max-width: 480px) {
+            .login-container {
+                padding: 30px 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <div class="login-header">
+            <h1>🔐 {{ title|default:"ورود به پنل مدیریت" }}</h1>
+            <p>پنل مدیریت پلتفرم مشاور</p>
+        </div>
+        
+        {% if error %}
+        <div class="error-message">{{ error }}</div>
+        {% endif %}
+        
+        {% if message %}
+        <div class="success-message">{{ message }}</div>
+        {% endif %}
+        
+        {% if step == 'phone' %}
+        <!-- Step 1: Enter Phone Number -->
+        <form method="post">
+            {% csrf_token %}
+            <input type="hidden" name="step" value="phone">
+            
+            <div class="form-group">
+                <label for="phone_number">شماره موبایل</label>
+                <input type="tel" id="phone_number" name="phone_number" 
+                       placeholder="09121234567" required
+                       pattern="[0-9]{10,11}" maxlength="11">
+            </div>
+            
+            <button type="submit" class="btn btn-primary">ادامه</button>
+        </form>
+        
+        {% elif step == 'auth_choice' %}
+        <!-- Step 2: Choose Authentication Method -->
+        <div class="phone-display">
+            شماره موبایل: <span>{{ phone_number }}</span>
+        </div>
+        
+        <div class="auth-options">
+            <form method="post" style="margin: 0;">
+                {% csrf_token %}
+                <input type="hidden" name="step" value="password">
+                <button type="submit" class="auth-option" style="width: 100%; text-align: right; border: 2px solid #e0e0e0; background: white;">
+                    <h3>🔑 ورود با رمز عبور</h3>
+                    <p>رمز عبور حساب کاربری خود را وارد کنید</p>
+                </button>
+            </form>
+            
+            <form method="post" style="margin: 0;">
+                {% csrf_token %}
+                <input type="hidden" name="step" value="send_otp">
+                <button type="submit" class="auth-option" style="width: 100%; text-align: right; border: 2px solid #11998e; background: #f0fdf4;">
+                    <h3>📱 ورود با کد یکبار مصرف</h3>
+                    <p>کد تأیید به شماره موبایل شما ارسال می‌شود</p>
+                </button>
+            </form>
+        </div>
+        
+        <div class="back-link">
+            <a href="?">← تغییر شماره موبایل</a>
+        </div>
+        
+        {% elif step == 'password' %}
+        <!-- Step 3a: Enter Password -->
+        <div class="phone-display">
+            شماره موبایل: <span>{{ phone_number }}</span>
+        </div>
+        
+        <form method="post">
+            {% csrf_token %}
+            <input type="hidden" name="step" value="password">
+            
+            <div class="form-group">
+                <label for="password">رمز عبور</label>
+                <input type="password" id="password" name="password" 
+                       placeholder="رمز عبور خود را وارد کنید" required>
+            </div>
+            
+            <button type="submit" class="btn btn-primary">ورود</button>
+        </form>
+        
+        <div class="divider"><span>یا</span></div>
+        
+        <form method="post">
+            {% csrf_token %}
+            <input type="hidden" name="step" value="send_otp">
+            <button type="submit" class="btn btn-otp">📱 ارسال کد یکبار مصرف</button>
+        </form>
+        
+        <div class="back-link">
+            <a href="?">← تغییر شماره موبایل</a>
+        </div>
+        
+        {% elif step == 'otp' %}
+        <!-- Step 3b: Enter OTP -->
+        <div class="phone-display">
+            شماره موبایل: <span>{{ phone_number }}</span>
+        </div>
+        
+        <form method="post">
+            {% csrf_token %}
+            <input type="hidden" name="step" value="verify_otp">
+            
+            <div class="form-group">
+                <label for="otp_code">کد تأیید 5 رقمی</label>
+                <input type="text" id="otp_code" name="otp_code" 
+                       placeholder="12345" required
+                       pattern="[0-9]{5}" maxlength="5"
+                       style="text-align: center; font-size: 24px; letter-spacing: 10px;">
+            </div>
+            
+            <button type="submit" class="btn btn-primary">تأیید و ورود</button>
+        </form>
+        
+        <div class="divider"><span>کد را دریافت نکردید؟</span></div>
+        
+        <form method="post">
+            {% csrf_token %}
+            <input type="hidden" name="step" value="send_otp">
+            <button type="submit" class="btn btn-secondary">ارسال مجدد کد</button>
+        </form>
+        
+        <div class="back-link">
+            <a href="?">← تغییر شماره موبایل</a>
+        </div>
+        
+        {% endif %}
+    </div>
+    
+    <script>
+        // Auto-focus on input fields
+        document.addEventListener('DOMContentLoaded', function() {
+            const inputs = document.querySelectorAll('input[type="tel"], input[type="text"], input[type="password"]');
+            if (inputs.length > 0) {
+                inputs[0].focus();
+            }
+        });
+    </script>
+</body>
+</html>

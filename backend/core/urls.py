@@ -7,6 +7,7 @@ from django.conf import settings
 from django.conf.urls.static import static
 from rest_framework_simplejwt.views import TokenRefreshView
 from drf_spectacular.views import SpectacularAPIView, SpectacularRedocView, SpectacularSwaggerView
+from admin_panel.views import AdminLoginView
 
 # برای تنظیم عنوان پنل ادمین
 admin.site.site_header = "پنل مدیریت پلتفرم مشاور"
@@ -14,6 +15,8 @@ admin.site.site_title = "مدیریت مشاور"
 admin.site.index_title = "خوش آمدید به پنل مدیریت"
 
 urlpatterns = [
+    # Custom admin login with OTP support
+    path('admin/login/', AdminLoginView.as_view(), name='admin_otp_login'),
     # Admin panel
     path('admin/', admin.site.urls),
     
