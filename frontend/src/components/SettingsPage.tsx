@@ -529,8 +529,16 @@ const SubscriptionTab: React.FC<{ subscription: SubscriptionInfo | null; loading
       <div>
         <h4 className="text-lg font-semibold mb-4 text-gray-900 dark:text-white">پلن‌های موجود</h4>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {plans.length > 0 ? plans.map((plan) => {
+          {plans.length > 0 ? plans.filter((plan) => {
+            // اگر پلن رایگان است و کاربر همین پلن را دارد، نمایش نده
             const isCurrentPlan = usageStats?.subscription?.plan === plan.name;
+            if (plan.price === 0 && isCurrentPlan) return false;
+            return true;
+          }).map((plan) => {
+            const isCurrentPlan = usageStats?.subscription?.plan === plan.name;
+            const currentPlanPrice = plans.find(p => p.name === usageStats?.subscription?.plan)?.price || 0;
+            const isUpgrade = plan.price > currentPlanPrice;
+            
             return (
               <div 
                 key={plan.id} 
@@ -556,7 +564,7 @@ const SubscriptionTab: React.FC<{ subscription: SubscriptionInfo | null; loading
                 </div>
                 {plan.price === 0 ? null : (
                   <button className="w-full py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors">
-                    {isCurrentPlan ? 'خرید/تمدید' : 'ارتقا'}
+                    {isCurrentPlan ? 'تمدید' : (isUpgrade ? 'ارتقا' : 'خرید')}
                   </button>
                 )}
               </div>

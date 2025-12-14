@@ -254,6 +254,12 @@ class UsageStatsView(APIView):
         user = request.user
         days = int(request.query_params.get('days', 30))
         
+        # دریافت اشتراک فعال
+        subscription = user.subscriptions.filter(
+            status__in=['active', 'trial'],
+            end_date__gt=timezone.now()
+        ).first()
+        
         # آمار کلی
         stats = UsageService.get_usage_stats(user, days=days)
         
@@ -268,6 +274,15 @@ class UsageStatsView(APIView):
         # درصد مصرف
         quota_percentage = UsageService.get_quota_percentage(user)
         
+        # محدودیت‌ها از پلن
+        if subscription and subscription.plan:
+            features = subscription.plan.features or {}
+            daily_limit = features.get('max_queries_per_day', subscription.plan.max_queries_per_day or 10)
+            monthly_limit = features.get('max_queries_per_month', subscription.plan.max_queries_per_month or 300)
+        else:
+            daily_limit = 10
+            monthly_limit = 300
+        
         return Response({
             'today': {
                 'queries': today_queries,
@@ -278,7 +293,29 @@ class UsageStatsView(APIView):
                 'tokens': month_tokens
             },
             'quota_percentage': quota_percentage,
-            'period_stats': stats
+            'period_stats': stats,
+            'subscription': {
+                'plan': subscription.plan.name if subscription else 'رایگان',
+                'status': subscription.status if subscription else 'active',
+                'start_date': subscription.start_date if subscription else None,
+                'end_date': subscription.end_date if subscription else None,
+                'days_remaining': (subscription.end_date - timezone.now()).days if subscription else 0
+            },
+            'usage': {
+                'daily_used': today_queries,
+                'daily_limit': daily_limit,
+                'daily_remaining': max(0, daily_limit - today_queries),
+                'monthly_used': month_queries,
+                'monthly_limit': monthly_limit,
+                'monthly_remaining': max(0, monthly_limit - month_queries)
+            },
+            'stats': {
+                'total_queries': stats.get('total_queries', 0),
+                'total_tokens': stats.get('total_tokens', 0)
+            },
+            'user': {
+                'date_joined': user.date_joined
+            }
         })
 
 
