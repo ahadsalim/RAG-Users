@@ -7,32 +7,61 @@ from .usage import UsageLog
 from core.models import Currency
 
 
+class PlanAdminForm(forms.ModelForm):
+    """فرم سفارشی برای نمایش قیمت با جداکننده هزارگان"""
+    
+    class Meta:
+        model = Plan
+        fields = '__all__'
+    
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Get base currency name for label
+        base_currency = Currency.get_base_currency()
+        currency_name = base_currency.name if base_currency else 'ارز پایه'
+        
+        # Update price field label and help text
+        self.fields['price'].label = f'قیمت ({currency_name})'
+        self.fields['price'].help_text = f'قیمت را به {currency_name} وارد کنید'
+        
+        # Add thousand separator widget
+        self.fields['price'].widget.attrs.update({
+            'style': 'direction: ltr; text-align: left;',
+            'class': 'vIntegerField',
+        })
+
+
 @admin.register(Plan)
 class PlanAdmin(admin.ModelAdmin):
+    form = PlanAdminForm
     list_display = ['name', 'plan_type', 'formatted_price', 'duration_days', 'max_queries_per_day', 'max_queries_per_month', 'max_organization_members', 'is_active', 'colored_status']
     list_filter = ['plan_type', 'is_active', 'created_at']
     search_fields = ['name', 'description']
     list_editable = ['duration_days', 'max_queries_per_day', 'max_queries_per_month', 'max_organization_members', 'is_active']
     ordering = ['plan_type', 'price']
     
-    fieldsets = (
-        ('اطلاعات پایه', {
-            'fields': ('name', 'description', 'plan_type', 'price', 'duration_days', 'is_active'),
-            'description': 'قیمت را به ارز پایه سایت وارد کنید.'
-        }),
-        ('محدودیت‌های استفاده', {
-            'fields': ('max_queries_per_day', 'max_queries_per_month'),
-        }),
-        ('تنظیمات سازمانی (فقط برای پلن‌های حقوقی)', {
-            'fields': ('max_organization_members',),
-            'description': 'حداکثر تعداد اعضای سازمان برای پلن‌های حقوقی'
-        }),
-        ('ویژگی‌های اضافی', {
-            'fields': ('features',),
-            'classes': ('collapse',),
-            'description': 'تنظیمات JSON اضافی. مثال: {"gpt_3_5_access": true, "gpt_4_access": false}'
-        }),
-    )
+    def get_fieldsets(self, request, obj=None):
+        base_currency = Currency.get_base_currency()
+        currency_name = base_currency.name if base_currency else 'ارز پایه'
+        
+        return (
+            ('اطلاعات پایه', {
+                'fields': ('name', 'description', 'plan_type', 'price', 'duration_days', 'is_active'),
+                'description': f'قیمت را به {currency_name} وارد کنید.'
+            }),
+            ('محدودیت‌های استفاده', {
+                'fields': ('max_queries_per_day', 'max_queries_per_month'),
+            }),
+            ('تنظیمات سازمانی (فقط برای پلن‌های حقوقی)', {
+                'fields': ('max_organization_members',),
+                'description': 'حداکثر تعداد اعضای سازمان برای پلن‌های حقوقی'
+            }),
+            ('ویژگی‌های اضافی', {
+                'fields': ('features',),
+                'classes': ('collapse',),
+                'description': 'تنظیمات JSON اضافی. مثال: {"gpt_3_5_access": true, "gpt_4_access": false}'
+            }),
+        )
     
     def formatted_price(self, obj):
         """Display price with currency formatting"""

@@ -5,6 +5,7 @@ This will be called from accounts/apps.py ready() method
 from django.contrib import admin
 from django.apps import apps
 from django.utils.translation import gettext_lazy as _
+from django.utils.html import format_html
 from .models import Currency, PaymentGateway, SiteSettings
 
 
@@ -32,13 +33,20 @@ def setup_token_blacklist_persian():
 class CurrencyAdmin(admin.ModelAdmin):
     """Admin for Currency model"""
     list_display = [
-        'code', 'name', 'symbol', 'is_base', 'has_decimals', 'decimal_places', 
+        'code', 'name', 'symbol', 'is_base_display', 'has_decimals', 'decimal_places', 
         'exchange_rate_display', 'is_active', 'display_order'
     ]
-    list_editable = ['is_active', 'is_base', 'display_order']
+    list_editable = ['is_active', 'display_order']
     list_filter = ['is_active', 'has_decimals', 'is_base']
     search_fields = ['code', 'name']
     ordering = ['display_order', 'code']
+    
+    def is_base_display(self, obj):
+        """Display base currency with icon"""
+        if obj.is_base:
+            return format_html('<span style="color: green; font-weight: bold;">✓ پایه</span>')
+        return '-'
+    is_base_display.short_description = _('ارز پایه')
     
     def exchange_rate_display(self, obj):
         """Display exchange rate with max 2 decimal places"""
