@@ -33,12 +33,19 @@ class CurrencyAdmin(admin.ModelAdmin):
     """Admin for Currency model"""
     list_display = [
         'code', 'name', 'symbol', 'has_decimals', 'decimal_places', 
-        'exchange_rate', 'is_active', 'display_order'
+        'exchange_rate_display', 'is_active', 'display_order'
     ]
-    list_editable = ['exchange_rate', 'is_active', 'display_order']
+    list_editable = ['is_active', 'display_order']
     list_filter = ['is_active', 'has_decimals']
     search_fields = ['code', 'name']
     ordering = ['display_order', 'code']
+    
+    def exchange_rate_display(self, obj):
+        """Display exchange rate with max 2 decimal places"""
+        if obj.exchange_rate == int(obj.exchange_rate):
+            return f"{int(obj.exchange_rate):,}"
+        return f"{float(obj.exchange_rate):,.2f}"
+    exchange_rate_display.short_description = _('نرخ تبدیل به واحد پایه')
     
     fieldsets = (
         (_('اطلاعات پایه'), {
