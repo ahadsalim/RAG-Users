@@ -32,11 +32,11 @@ def setup_token_blacklist_persian():
 class CurrencyAdmin(admin.ModelAdmin):
     """Admin for Currency model"""
     list_display = [
-        'code', 'name', 'symbol', 'has_decimals', 'decimal_places', 
+        'code', 'name', 'symbol', 'is_base', 'has_decimals', 'decimal_places', 
         'exchange_rate_display', 'is_active', 'display_order'
     ]
-    list_editable = ['is_active', 'display_order']
-    list_filter = ['is_active', 'has_decimals']
+    list_editable = ['is_active', 'is_base', 'display_order']
+    list_filter = ['is_active', 'has_decimals', 'is_base']
     search_fields = ['code', 'name']
     ordering = ['display_order', 'code']
     
@@ -60,7 +60,8 @@ class CurrencyAdmin(admin.ModelAdmin):
             'description': _('نرخ تبدیل این ارز به واحد پایه سایت (1 = واحد پایه)')
         }),
         (_('وضعیت'), {
-            'fields': ('is_active',)
+            'fields': ('is_active', 'is_base'),
+            'description': _('فقط یک ارز می‌تواند ارز پایه باشد')
         }),
     )
 

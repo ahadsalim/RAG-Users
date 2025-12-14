@@ -19,18 +19,7 @@ class Plan(models.Model):
     plan_type = models.CharField(_("نوع پلن"), max_length=20, choices=PLAN_TYPE_CHOICES, default='individual')
     
     # قیمت همیشه در واحد پایه (Base Currency) ذخیره می‌شود
-    price = models.DecimalField(_("قیمت (به واحد پایه)"), max_digits=15, decimal_places=2)
-    
-    # ارز مورد استفاده برای نمایش (اختیاری - پیش‌فرض از تنظیمات سایت)
-    currency = models.ForeignKey(
-        'core.Currency',
-        on_delete=models.SET_NULL,
-        null=True,
-        blank=True,
-        related_name='plans',
-        verbose_name=_('ارز نمایش'),
-        help_text=_('ارز برای نمایش قیمت (پیش‌فرض: ارز پایه سایت)')
-    )
+    price = models.DecimalField(_("قیمت"), max_digits=15, decimal_places=0, help_text=_('قیمت به ارز پایه سایت'))
     
     duration_days = models.IntegerField(_("مدت به روز"), default=30)
     max_queries_per_day = models.IntegerField(_("سوال/روز"), default=10)
@@ -58,38 +47,32 @@ class Plan(models.Model):
         Returns:
             قیمت فرمت شده با واحد ارز
         """
+        from core.models import Currency
+        
         if target_currency is None:
-            # First try plan's currency, then site's base currency
-            if self.currency:
-                target_currency = self.currency
-            else:
-                from core.models import SiteSettings
-                settings = SiteSettings.get_settings()
-                target_currency = settings.base_currency
+            # Use base currency
+            target_currency = Currency.get_base_currency()
         
         if target_currency:
-            # Convert price from base to target currency
-            converted_price = target_currency.convert_from_base(self.price)
-            return target_currency.format_price(converted_price)
+            # Price is already in base currency, convert to target if different
+            if target_currency.is_base:
+                # No conversion needed
+                return target_currency.format_price(self.price)
+            else:
+                # Convert from base to target currency
+                converted_price = target_currency.convert_from_base(self.price)
+                return target_currency.format_price(converted_price)
         else:
             # Fallback to plain price
-            return f"{self.price:,.0f}"
+            return f"{int(self.price):,}"
     
     def get_price_display(self):
-        """Get price display for admin"""
-        return self.get_formatted_price()
-    
-    def set_price_in_currency(self, amount, currency):
-        """Set price by converting from given currency to base currency
-        
-        Args:
-            amount: مبلغ به ارز مورد نظر
-            currency: ارز ورودی
-        """
-        # Convert to base currency for storage
-        base_amount = amount / float(currency.exchange_rate)
-        self.price = base_amount
-        self.currency = currency
+        """Get price display for admin (in base currency)"""
+        from core.models import Currency
+        base = Currency.get_base_currency()
+        if base:
+            return base.format_price(self.price)
+        return f"{int(self.price):,}"
 
 
 class Subscription(models.Model):

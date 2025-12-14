@@ -25,6 +25,11 @@ class Currency(models.Model):
         help_text=_('نرخ تبدیل این ارز به واحد پایه سایت (1 = واحد پایه)')
     )
     is_active = models.BooleanField(default=True, verbose_name=_('فعال'))
+    is_base = models.BooleanField(
+        default=False, 
+        verbose_name=_('ارز پایه'),
+        help_text=_('فقط یک ارز می‌تواند ارز پایه باشد. قیمت‌ها به این ارز ذخیره می‌شوند.')
+    )
     display_order = models.PositiveSmallIntegerField(default=0, verbose_name=_('ترتیب نمایش'))
     
     created_at = models.DateTimeField(auto_now_add=True)
@@ -34,6 +39,17 @@ class Currency(models.Model):
         verbose_name = _('ارز')
         verbose_name_plural = _('ارزها')
         ordering = ['display_order', 'code']
+    
+    def save(self, *args, **kwargs):
+        # اگر این ارز پایه شد، بقیه را غیر پایه کن
+        if self.is_base:
+            Currency.objects.filter(is_base=True).exclude(pk=self.pk).update(is_base=False)
+        super().save(*args, **kwargs)
+    
+    @classmethod
+    def get_base_currency(cls):
+        """Get the base currency"""
+        return cls.objects.filter(is_base=True, is_active=True).first()
     
     def __str__(self):
         return f"{self.name} ({self.code})"

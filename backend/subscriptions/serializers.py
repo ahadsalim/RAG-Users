@@ -3,9 +3,20 @@ from .models import Plan, Subscription
 
 
 class PlanSerializer(serializers.ModelSerializer):
+    formatted_price = serializers.SerializerMethodField()
+    currency_symbol = serializers.SerializerMethodField()
+    
     class Meta:
         model = Plan
-        fields = ['id', 'name', 'description', 'price', 'duration_days', 'max_queries_per_day', 'max_queries_per_month', 'features', 'is_active']
+        fields = ['id', 'name', 'description', 'price', 'formatted_price', 'currency_symbol', 'duration_days', 'max_queries_per_day', 'max_queries_per_month', 'features', 'is_active']
+    
+    def get_formatted_price(self, obj):
+        return obj.get_price_display()
+    
+    def get_currency_symbol(self, obj):
+        from core.models import Currency
+        base = Currency.get_base_currency()
+        return base.symbol if base else 'تومان'
 
 
 class SubscriptionSerializer(serializers.ModelSerializer):
