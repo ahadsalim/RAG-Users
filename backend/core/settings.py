@@ -463,7 +463,7 @@ JAZZMIN_SETTINGS = {
     },
     
     # UI Tweaks
-    "custom_css": "admin/css/rtl.css",
+    "custom_css": "admin/css/custom_rtl.css",
     "custom_js": None,
     "use_google_fonts_cdn": True,
     "show_ui_builder": False,

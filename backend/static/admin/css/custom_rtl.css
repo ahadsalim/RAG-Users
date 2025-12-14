@@ -200,3 +200,55 @@ body:not(.sidebar-mini-md):not(.sidebar-mini-xs):not(.layout-top-nav) .main-head
 .sidebar-collapse .main-header {
     margin-right: 0;
 }
+
+/* Compact filter bar */
+#changelist-filter-form,
+.changelist-form-container form,
+#changelist #toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+}
+
+#changelist-filter-form select,
+#changelist-filter-form input,
+.changelist-form-container select,
+.changelist-form-container input[type="text"],
+#changelist #toolbar select,
+#changelist #toolbar input[type="text"] {
+    font-size: 12px !important;
+    padding: 4px 8px !important;
+    height: auto !important;
+    min-height: 30px !important;
+}
+
+#changelist-filter-form .btn,
+.changelist-form-container .btn,
+#changelist #toolbar .btn {
+    font-size: 12px !important;
+    padding: 4px 12px !important;
+}
+
+#changelist-filter-form label,
+.changelist-form-container label {
+    font-size: 12px !important;
+    margin-bottom: 0 !important;
+}
+
+/* Jazzmin specific compact filters */
+.card-header select,
+.card-body select.form-control {
+    font-size: 12px !important;
+    padding: 4px 8px !important;
+    height: 30px !important;
+}
+
+.form-inline .form-control {
+    font-size: 12px !important;
+}
+
+.actions select {
+    font-size: 12px !important;
+    padding: 4px 8px !important;
+}
