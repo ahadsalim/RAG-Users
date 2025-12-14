@@ -162,7 +162,7 @@ class Subscription(models.Model):
         max_queries_per_day = features.get('max_queries_per_day', 10)
         max_queries_per_month = features.get('max_queries_per_month', 300)
         
-        # بررسی محدودیت روزانه
+        # بررسی محدودیت روزانه - استفاده از UsageService برای یکسان‌سازی با UI
         daily_used = self.queries_used_today
         if daily_used >= max_queries_per_day:
             return False, f"محدودیت روزانه ({max_queries_per_day} سوال) تمام شده است"
@@ -176,27 +176,12 @@ class Subscription(models.Model):
     
     @property
     def queries_used_today(self):
-        """تعداد query های امروز"""
-        from django.utils import timezone
-        from chat.models import Message
-        
-        today = timezone.now().date()
-        return Message.objects.filter(
-            conversation__user=self.user,
-            role='user',
-            created_at__date=today
-        ).count()
+        """تعداد query های امروز - از UsageLog"""
+        from .usage import UsageService
+        return UsageService.get_daily_usage(self.user, self)
     
     @property
     def queries_used_month(self):
-        """تعداد query های این ماه"""
-        from django.utils import timezone
-        from chat.models import Message
-        
-        now = timezone.now()
-        first_day_of_month = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
-        return Message.objects.filter(
-            conversation__user=self.user,
-            role='user',
-            created_at__gte=first_day_of_month
-        ).count()
+        """تعداد query های این ماه - از UsageLog"""
+        from .usage import UsageService
+        return UsageService.get_monthly_usage(self.user, self)
