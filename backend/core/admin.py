@@ -44,9 +44,9 @@ class CurrencyAdmin(admin.ModelAdmin):
     def is_base_display(self, obj):
         """Display base currency with icon"""
         if obj.is_base:
-            return format_html('<span style="color: green; font-weight: bold;">✓ پایه</span>')
-        return '-'
-    is_base_display.short_description = _('ارز پایه')
+            return format_html('<span style="color: green; font-weight: bold;">✓</span>')
+        return ''
+    is_base_display.short_description = _('پایه')
     
     def exchange_rate_display(self, obj):
         """Display exchange rate with max 2 decimal places"""
