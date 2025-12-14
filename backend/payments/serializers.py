@@ -107,7 +107,9 @@ class TransactionDetailSerializer(TransactionSerializer):
 class CreatePaymentSerializer(serializers.Serializer):
     """Serializer برای ایجاد پرداخت"""
     
-    gateway = serializers.ChoiceField(choices=PaymentGateway.choices)
+    # می‌تواند gateway (string) یا gateway_id (int) باشد
+    gateway = serializers.ChoiceField(choices=PaymentGateway.choices, required=False)
+    gateway_id = serializers.IntegerField(required=False)
     plan_id = serializers.UUIDField(required=False, allow_null=True)
     subscription_id = serializers.UUIDField(required=False, allow_null=True)
     amount = serializers.DecimalField(
@@ -134,6 +136,18 @@ class CreatePaymentSerializer(serializers.Serializer):
     
     def validate(self, attrs):
         """اعتبارسنجی داده‌ها"""
+        from core.models import PaymentGateway as PaymentGatewayModel
+        
+        # اگر gateway_id داده شده، gateway_type را از آن بگیر
+        if attrs.get('gateway_id'):
+            try:
+                gateway_obj = PaymentGatewayModel.objects.get(id=attrs['gateway_id'], is_active=True)
+                attrs['gateway'] = gateway_obj.gateway_type
+                attrs['gateway_model'] = gateway_obj
+            except PaymentGatewayModel.DoesNotExist:
+                raise serializers.ValidationError({'gateway_id': 'درگاه پرداخت یافت نشد یا غیرفعال است'})
+        elif not attrs.get('gateway'):
+            raise serializers.ValidationError('درگاه پرداخت مشخص نشده است')
         
         # باید حداقل یکی از plan_id، subscription_id یا amount وجود داشته باشد
         if not any([attrs.get('plan_id'), attrs.get('subscription_id'), attrs.get('amount')]):
@@ -142,7 +156,7 @@ class CreatePaymentSerializer(serializers.Serializer):
             )
         
         # برای پرداخت رمزارز، cryptocurrency و network الزامی است
-        if attrs['gateway'] == PaymentGateway.CRYPTO:
+        if attrs.get('gateway') == PaymentGateway.CRYPTO:
             if not attrs.get('cryptocurrency'):
                 raise serializers.ValidationError(
                     {'cryptocurrency': 'برای پرداخت رمزارز، نوع رمزارز الزامی است'}

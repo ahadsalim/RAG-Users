@@ -11,6 +11,12 @@ router.register(r'wallet', views.WalletViewSet, basename='wallet')
 urlpatterns = [
     path('', include(router.urls)),
     
+    # Payment gateways list
+    path('gateways/', views.PaymentGatewayListView.as_view(), name='gateway-list'),
+    
+    # Create payment (simplified endpoint)
+    path('create/', views.TransactionViewSet.as_view({'post': 'create_payment'}), name='create-payment'),
+    
     # Callbacks
     path('zarinpal/callback/', views.ZarinpalCallbackView.as_view(), name='zarinpal-callback'),
     path('zarinpal/wallet-callback/', views.ZarinpalCallbackView.as_view(), name='zarinpal-wallet-callback'),

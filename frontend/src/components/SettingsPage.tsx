@@ -530,14 +530,18 @@ const SubscriptionTab: React.FC<{ subscription: SubscriptionInfo | null; loading
         <h4 className="text-lg font-semibold mb-4 text-gray-900 dark:text-white">پلن‌های موجود</h4>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           {plans.length > 0 ? plans.filter((plan) => {
-            // اگر پلن رایگان است و کاربر همین پلن را دارد، نمایش نده
-            const isCurrentPlan = usageStats?.subscription?.plan === plan.name;
-            if (plan.price === 0 && isCurrentPlan) return false;
+            // پلن رایگان را نمایش نده (چون خودکار به همه تعلق می‌گیرد)
+            if (plan.price === 0) return false;
             return true;
           }).map((plan) => {
             const isCurrentPlan = usageStats?.subscription?.plan === plan.name;
             const currentPlanPrice = plans.find(p => p.name === usageStats?.subscription?.plan)?.price || 0;
             const isUpgrade = plan.price > currentPlanPrice;
+            
+            const handlePurchase = () => {
+              // Navigate to checkout page with plan info
+              window.location.href = `/checkout?plan=${plan.id}`;
+            };
             
             return (
               <div 
@@ -555,18 +559,19 @@ const SubscriptionTab: React.FC<{ subscription: SubscriptionInfo | null; loading
                 )}
                 <h5 className="font-semibold text-gray-900 dark:text-white mb-2">{plan.name}</h5>
                 <p className="text-2xl font-bold text-blue-500 mb-2">
-                  {plan.price === 0 ? 'رایگان' : formatPlanPrice(plan.price)}
+                  {formatPlanPrice(plan.price)}
                 </p>
                 <div className="text-sm text-gray-600 dark:text-gray-400 mb-4 space-y-1">
                   <p>📅 {plan.duration_days} روز</p>
                   <p>📊 {plan.max_queries_per_day || 10} سوال/روز</p>
                   <p>📈 {plan.max_queries_per_month || 300} سوال/ماه</p>
                 </div>
-                {plan.price === 0 ? null : (
-                  <button className="w-full py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors">
-                    {isCurrentPlan ? 'تمدید' : (isUpgrade ? 'ارتقا' : 'خرید')}
-                  </button>
-                )}
+                <button 
+                  onClick={handlePurchase}
+                  className="w-full py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
+                >
+                  {isCurrentPlan ? 'تمدید' : (isUpgrade ? 'ارتقا' : 'خرید')}
+                </button>
               </div>
             );
           }) : (

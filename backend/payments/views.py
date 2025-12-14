@@ -10,9 +10,10 @@ from decimal import Decimal
 import logging
 
 from .models import (
-    Transaction, PaymentGateway, PaymentStatus,
+    Transaction, PaymentGateway as PaymentGatewayChoices, PaymentStatus,
     ZarinpalPayment, StripePayment, CryptoPayment, Wallet
 )
+from core.models import PaymentGateway as PaymentGatewayModel
 from .serializers import (
     TransactionSerializer, TransactionDetailSerializer,
     CreatePaymentSerializer, VerifyPaymentSerializer,
@@ -524,6 +525,25 @@ class WalletViewSet(viewsets.ModelViewSet):
             'description': t.description,
             'created_at': t.created_at
         } for t in transactions])
+
+
+class PaymentGatewayListView(APIView):
+    """لیست درگاه‌های پرداخت فعال"""
+    
+    permission_classes = [permissions.IsAuthenticated]
+    
+    def get(self, request):
+        """دریافت لیست درگاه‌های پرداخت فعال"""
+        gateways = PaymentGatewayModel.objects.filter(is_active=True).order_by('display_order')
+        
+        data = [{
+            'id': g.id,
+            'name': g.name,
+            'gateway_type': g.gateway_type,
+            'is_active': g.is_active,
+        } for g in gateways]
+        
+        return Response(data)
 
 
 class StripeWebhookView(APIView):
