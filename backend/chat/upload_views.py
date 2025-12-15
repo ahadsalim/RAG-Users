@@ -22,6 +22,8 @@ ALLOWED_CONTENT_TYPES = [
     'image/webp',
     'application/pdf',
     'text/plain',
+    'text/markdown',
+    'text/x-markdown',
 ]
 
 # Maximum file size (10MB)
