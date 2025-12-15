@@ -49,6 +49,7 @@ const config: Config = {
         'slide-up': 'slideUp 0.3s ease-out',
         'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
         'typing': 'typing 1.5s steps(3) infinite',
+        'loading-bar': 'loadingBar 2s ease-in-out infinite',
       },
       keyframes: {
         fadeIn: {
@@ -63,6 +64,11 @@ const config: Config = {
           '0%': { content: '.' },
           '33%': { content: '..' },
           '66%': { content: '...' },
+        },
+        loadingBar: {
+          '0%': { width: '0%', marginLeft: '0%' },
+          '50%': { width: '70%', marginLeft: '15%' },
+          '100%': { width: '0%', marginLeft: '100%' },
         },
       },
       screens: {
