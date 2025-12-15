@@ -211,85 +211,82 @@ export function ChatMessages({ messages, isLoading, isTyping }: ChatMessagesProp
                   <div className="text-red-600 dark:text-red-400">
                     خطا: {message.error_message || 'خطای نامشخص'}
                   </div>
-                ) : (
-                  <>
-                    <ReactMarkdown 
-                      remarkPlugins={[remarkGfm]}
-                      components={{
-                      // Custom rendering for code blocks
-                      code: ({ node, inline, className, children, ...props }: any) => {
-                        const match = /language-(\w+)/.exec(className || '')
-                        return !inline && match ? (
-                          <div className="relative group/code">
-                            <pre className="bg-gray-900 text-gray-100 rounded-lg p-4 overflow-x-auto">
-                              <code className={className} {...props}>
-                                {children}
-                              </code>
-                            </pre>
-                            <button
-                              onClick={() => handleCopy(String(children), message.id)}
-                              className="absolute top-2 left-2 p-1.5 bg-gray-700 hover:bg-gray-600 rounded opacity-0 group-hover/code:opacity-100 transition-opacity"
-                            >
-                              <span className="text-xs text-gray-300">
-                                {copiedId === message.id ? '✓' : '📋'}
-                              </span>
-                            </button>
-                          </div>
-                        ) : (
-                          <code className="bg-gray-200 dark:bg-gray-700 px-1.5 py-0.5 rounded text-sm" {...props}>
-                            {children}
-                          </code>
-                        )
-                      },
-                      // Custom rendering for links
-                      a: ({ node, ...props }: any) => (
-                        <a 
-                          className="text-blue-600 dark:text-blue-400 hover:underline"
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          {...props}
-                        />
-                      ),
-                    }}
-                  >
-                    {message.content}
-                  </ReactMarkdown>
-                  {message.status === 'processing' && (
-                    <div className="mt-4 flex items-center gap-3 p-4 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-950/30 dark:to-indigo-950/30 rounded-xl border border-blue-100 dark:border-blue-900/50">
-                      {/* Animated AI Brain Icon */}
-                      <div className="relative">
-                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center animate-pulse">
-                          <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
-                          </svg>
-                        </div>
-                        {/* Rotating ring */}
-                        <div className="absolute inset-0 rounded-full border-2 border-transparent border-t-blue-400 animate-spin" style={{ animationDuration: '1s' }}></div>
+                ) : message.status === 'processing' ? (
+                  <div className="flex items-center gap-3 p-4 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-950/30 dark:to-indigo-950/30 rounded-xl border border-blue-100 dark:border-blue-900/50">
+                    {/* Animated AI Brain Icon */}
+                    <div className="relative">
+                      <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center animate-pulse">
+                        <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                        </svg>
                       </div>
-                      
-                      {/* Text and progress */}
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2">
-                          <span className="text-sm font-medium text-blue-700 dark:text-blue-300">
-                            در حال پردازش پاسخ شما
-                          </span>
-                          <span className="flex gap-1">
-                            <span className="w-1.5 h-1.5 bg-blue-500 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></span>
-                            <span className="w-1.5 h-1.5 bg-blue-500 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></span>
-                            <span className="w-1.5 h-1.5 bg-blue-500 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></span>
-                          </span>
-                        </div>
-                        <p className="text-xs text-blue-600/70 dark:text-blue-400/70 mt-1">
-                          هوش مصنوعی در حال تحلیل و آماده‌سازی پاسخ است...
-                        </p>
-                        {/* Progress bar animation */}
-                        <div className="mt-2 h-1 bg-blue-100 dark:bg-blue-900/50 rounded-full overflow-hidden">
-                          <div className="h-full bg-gradient-to-r from-blue-400 via-indigo-500 to-blue-400 rounded-full animate-loading-bar"></div>
-                        </div>
+                      {/* Rotating ring */}
+                      <div className="absolute inset-0 rounded-full border-2 border-transparent border-t-blue-400 animate-spin" style={{ animationDuration: '1s' }}></div>
+                    </div>
+                    
+                    {/* Text and progress */}
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm font-medium text-blue-700 dark:text-blue-300">
+                          در حال پردازش پاسخ شما
+                        </span>
+                        <span className="flex gap-1">
+                          <span className="w-1.5 h-1.5 bg-blue-500 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></span>
+                          <span className="w-1.5 h-1.5 bg-blue-500 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></span>
+                          <span className="w-1.5 h-1.5 bg-blue-500 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></span>
+                        </span>
+                      </div>
+                      <p className="text-xs text-blue-600/70 dark:text-blue-400/70 mt-1">
+                        هوش مصنوعی در حال تحلیل و آماده‌سازی پاسخ است...
+                      </p>
+                      {/* Progress bar animation */}
+                      <div className="mt-2 h-1 bg-blue-100 dark:bg-blue-900/50 rounded-full overflow-hidden">
+                        <div className="h-full bg-gradient-to-r from-blue-400 via-indigo-500 to-blue-400 rounded-full animate-loading-bar"></div>
                       </div>
                     </div>
-                  )}
-                  </>
+                  </div>
+                ) : (
+                  <ReactMarkdown 
+                    remarkPlugins={[remarkGfm]}
+                    components={{
+                    // Custom rendering for code blocks
+                    code: ({ node, inline, className, children, ...props }: any) => {
+                      const match = /language-(\w+)/.exec(className || '')
+                      return !inline && match ? (
+                        <div className="relative group/code">
+                          <pre className="bg-gray-900 text-gray-100 rounded-lg p-4 overflow-x-auto">
+                            <code className={className} {...props}>
+                              {children}
+                            </code>
+                          </pre>
+                          <button
+                            onClick={() => handleCopy(String(children), message.id)}
+                            className="absolute top-2 left-2 p-1.5 bg-gray-700 hover:bg-gray-600 rounded opacity-0 group-hover/code:opacity-100 transition-opacity"
+                          >
+                            <span className="text-xs text-gray-300">
+                              {copiedId === message.id ? '✓' : '📋'}
+                            </span>
+                          </button>
+                        </div>
+                      ) : (
+                        <code className="bg-gray-200 dark:bg-gray-700 px-1.5 py-0.5 rounded text-sm" {...props}>
+                          {children}
+                        </code>
+                      )
+                    },
+                    // Custom rendering for links
+                    a: ({ node, ...props }: any) => (
+                      <a 
+                        className="text-blue-600 dark:text-blue-400 hover:underline"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        {...props}
+                      />
+                    ),
+                  }}
+                >
+                  {message.content}
+                </ReactMarkdown>
                 )}
               </div>
               
