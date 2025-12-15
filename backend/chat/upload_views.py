@@ -24,6 +24,9 @@ ALLOWED_CONTENT_TYPES = [
     'text/plain',
     'text/markdown',
     'text/x-markdown',
+    'text/html',
+    'application/msword',
+    'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
 ]
 
 # Maximum file size (10MB)
