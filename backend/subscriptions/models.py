@@ -24,6 +24,7 @@ class Plan(models.Model):
     duration_days = models.IntegerField(_("مدت به روز"), default=30)
     max_queries_per_day = models.IntegerField(_("سوال/روز"), default=10)
     max_queries_per_month = models.IntegerField(_("سوال/ماه"), default=300)
+    max_active_sessions = models.IntegerField(_("حداکثر جلسات فعال"), default=3, help_text=_("حداکثر تعداد دستگاه‌های همزمان"))
     max_organization_members = models.IntegerField(_("حداکثر اعضای سازمان"), default=1, help_text=_("فقط برای پلن‌های حقوقی"))
     features = models.JSONField(_("ویژگی‌ها"), default=dict, blank=True)
     is_active = models.BooleanField(_("فعال"), default=True)

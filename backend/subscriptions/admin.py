@@ -35,10 +35,10 @@ class PlanAdminForm(forms.ModelForm):
 @admin.register(Plan)
 class PlanAdmin(admin.ModelAdmin):
     form = PlanAdminForm
-    list_display = ['name', 'plan_type', 'formatted_price', 'duration_days', 'max_queries_per_day', 'max_queries_per_month', 'max_organization_members', 'is_active', 'colored_status']
+    list_display = ['name', 'plan_type', 'formatted_price', 'duration_days', 'max_queries_per_day', 'max_queries_per_month', 'max_active_sessions', 'max_organization_members', 'is_active', 'colored_status']
     list_filter = ['plan_type', 'is_active', 'created_at']
     search_fields = ['name', 'description']
-    list_editable = ['duration_days', 'max_queries_per_day', 'max_queries_per_month', 'max_organization_members', 'is_active']
+    list_editable = ['duration_days', 'max_queries_per_day', 'max_queries_per_month', 'max_active_sessions', 'max_organization_members', 'is_active']
     ordering = ['plan_type', 'price']
     
     def get_fieldsets(self, request, obj=None):
@@ -51,7 +51,7 @@ class PlanAdmin(admin.ModelAdmin):
                 'description': f'قیمت را به {currency_name} وارد کنید.'
             }),
             ('محدودیت‌های استفاده', {
-                'fields': ('max_queries_per_day', 'max_queries_per_month'),
+                'fields': ('max_queries_per_day', 'max_queries_per_month', 'max_active_sessions'),
             }),
             ('تنظیمات سازمانی (فقط برای پلن‌های حقوقی)', {
                 'fields': ('max_organization_members',),

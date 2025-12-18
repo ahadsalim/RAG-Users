@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { X, User, Bell, Shield, CreditCard, Palette, Globe, HelpCircle, Brain, Building2 } from 'lucide-react';
+import { X, User, Bell, Shield, CreditCard, Palette, Globe, Monitor, Brain, Building2, Smartphone, Laptop, Trash2 } from 'lucide-react';
 import axios from 'axios';
 import { useTheme } from 'next-themes';
 import { useAuthStore } from '@/store/auth';
@@ -15,7 +15,7 @@ interface SettingsPageProps {
   onClose: () => void;
 }
 
-type SettingsTab = 'profile' | 'subscription' | 'memory' | 'organization' | 'preferences' | 'notifications' | 'security' | 'help';
+type SettingsTab = 'profile' | 'subscription' | 'memory' | 'organization' | 'preferences' | 'notifications' | 'security' | 'sessions';
 
 interface UserSettings {
   // Profile
@@ -146,7 +146,7 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ isOpen, onClose }) => {
     { id: 'preferences' as SettingsTab, label: 'تنظیمات', icon: Palette },
     { id: 'notifications' as SettingsTab, label: 'اعلان‌ها', icon: Bell },
     { id: 'security' as SettingsTab, label: 'امنیت', icon: Shield },
-    { id: 'help' as SettingsTab, label: 'راهنما', icon: HelpCircle },
+    { id: 'sessions' as SettingsTab, label: 'جلسات فعال', icon: Monitor },
   ];
 
   return (
@@ -251,7 +251,7 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ isOpen, onClose }) => {
             {activeTab === 'preferences' && <PreferencesTab settings={settings} setSettings={setSettings} />}
             {activeTab === 'notifications' && <NotificationsTab />}
             {activeTab === 'security' && <SecurityTab />}
-            {activeTab === 'help' && <HelpTab />}
+            {activeTab === 'sessions' && <SessionsTab />}
           </div>
         </div>
       </div>
@@ -964,13 +964,239 @@ const SecurityTab: React.FC = () => {
   );
 };
 
-// Help Tab
-const HelpTab: React.FC = () => {
+// Sessions Tab - Active Sessions Management
+interface Session {
+  id: string;
+  device_type: string;
+  device_name: string;
+  browser: string;
+  os: string;
+  ip_address: string;
+  location: string;
+  created_at: string;
+  last_activity: string;
+  is_active: boolean;
+  is_current: boolean;
+}
+
+interface SessionsData {
+  sessions: Session[];
+  max_sessions: number;
+  current_sessions_count: number;
+  can_create_new_session: boolean;
+}
+
+const SessionsTab: React.FC = () => {
+  const [sessionsData, setSessionsData] = React.useState<SessionsData | null>(null);
+  const [loading, setLoading] = React.useState(true);
+  const [revoking, setRevoking] = React.useState<string | null>(null);
+  const [message, setMessage] = React.useState('');
+
+  const loadSessions = async () => {
+    try {
+      setLoading(true);
+      const response = await axios.get(`${API_URL}/api/v1/accounts/sessions/with_limit/`);
+      setSessionsData(response.data);
+    } catch (error) {
+      console.error('Error loading sessions:', error);
+      setMessage('✗ خطا در بارگذاری جلسات');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  React.useEffect(() => {
+    loadSessions();
+  }, []);
+
+  const handleRevokeSession = async (sessionId: string) => {
+    try {
+      setRevoking(sessionId);
+      await axios.post(`${API_URL}/api/v1/accounts/sessions/${sessionId}/revoke/`);
+      setMessage('✓ جلسه با موفقیت حذف شد');
+      loadSessions();
+      setTimeout(() => setMessage(''), 3000);
+    } catch (error: any) {
+      console.error('Error revoking session:', error);
+      if (error.response?.data?.error) {
+        setMessage(`✗ ${error.response.data.error}`);
+      } else {
+        setMessage('✗ خطا در حذف جلسه');
+      }
+    } finally {
+      setRevoking(null);
+    }
+  };
+
+  const handleRevokeAll = async () => {
+    try {
+      setRevoking('all');
+      await axios.post(`${API_URL}/api/v1/accounts/sessions/revoke_all/`);
+      setMessage('✓ تمام جلسات دیگر حذف شدند');
+      loadSessions();
+      setTimeout(() => setMessage(''), 3000);
+    } catch (error) {
+      console.error('Error revoking all sessions:', error);
+      setMessage('✗ خطا در حذف جلسات');
+    } finally {
+      setRevoking(null);
+    }
+  };
+
+  const getDeviceIcon = (deviceType: string) => {
+    switch (deviceType?.toLowerCase()) {
+      case 'mobile':
+      case 'phone':
+        return <Smartphone className="w-5 h-5" />;
+      case 'tablet':
+        return <Smartphone className="w-5 h-5" />;
+      default:
+        return <Laptop className="w-5 h-5" />;
+    }
+  };
+
+  const formatDate = (dateStr: string) => {
+    if (!dateStr) return '-';
+    const date = new Date(dateStr);
+    return date.toLocaleDateString('fa-IR') + ' ' + date.toLocaleTimeString('fa-IR', { hour: '2-digit', minute: '2-digit' });
+  };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <div className="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+        <span className="mr-3 text-gray-600 dark:text-gray-400">در حال بارگذاری...</span>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
+      {/* Session Limit Info */}
+      <div className="bg-gradient-to-l from-blue-600 via-purple-600 to-indigo-600 rounded-xl p-4 text-white shadow-lg">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center">
+              <Monitor className="w-6 h-6" />
+            </div>
+            <div>
+              <p className="text-xs opacity-80">جلسات فعال</p>
+              <p className="text-xl font-bold">
+                {sessionsData?.current_sessions_count || 0} از {sessionsData?.max_sessions || 3}
+              </p>
+            </div>
+          </div>
+          {sessionsData && !sessionsData.can_create_new_session && (
+            <div className="px-3 py-1 rounded-full text-xs font-medium bg-red-400/20 text-red-100">
+              ⚠️ به حداکثر رسیده
+            </div>
+          )}
+        </div>
+        <p className="text-xs opacity-80 mt-2">
+          بر اساس پلن شما، می‌توانید حداکثر {sessionsData?.max_sessions || 3} دستگاه همزمان داشته باشید.
+          {sessionsData && !sessionsData.can_create_new_session && (
+            <span className="block mt-1 text-yellow-200">
+              برای ورود از دستگاه جدید، ابتدا یکی از جلسات فعال را حذف کنید.
+            </span>
+          )}
+        </p>
+      </div>
+
+      {/* Message */}
+      {message && (
+        <div className={`text-sm py-2 px-4 rounded-lg ${
+          message.includes('✓') 
+            ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300' 
+            : 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300'
+        }`}>
+          {message}
+        </div>
+      )}
+
+      {/* Sessions List */}
       <div className="bg-gray-50 dark:bg-gray-800 rounded-xl p-6">
-        <h4 className="text-lg font-semibold mb-4 text-gray-900 dark:text-white">راهنما و پشتیبانی</h4>
-        <p className="text-gray-600 dark:text-gray-400">به زودی...</p>
+        <div className="flex items-center justify-between mb-4">
+          <h4 className="text-lg font-semibold text-gray-900 dark:text-white">دستگاه‌های متصل</h4>
+          {sessionsData && sessionsData.sessions.length > 1 && (
+            <button
+              onClick={handleRevokeAll}
+              disabled={revoking === 'all'}
+              className="text-sm text-red-500 hover:text-red-600 disabled:opacity-50"
+            >
+              {revoking === 'all' ? 'در حال حذف...' : 'حذف همه جلسات دیگر'}
+            </button>
+          )}
+        </div>
+
+        <div className="space-y-3">
+          {sessionsData?.sessions.map((session) => (
+            <div 
+              key={session.id}
+              className={`flex items-center justify-between p-4 rounded-lg border transition-all ${
+                session.is_current
+                  ? 'border-green-500 bg-green-50 dark:bg-green-900/20'
+                  : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600'
+              }`}
+            >
+              <div className="flex items-center gap-4">
+                <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${
+                  session.is_current
+                    ? 'bg-green-500 text-white'
+                    : 'bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-400'
+                }`}>
+                  {getDeviceIcon(session.device_type)}
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <p className="font-medium text-gray-900 dark:text-white">
+                      {session.device_name || session.browser || 'دستگاه ناشناس'}
+                    </p>
+                    {session.is_current && (
+                      <span className="px-2 py-0.5 text-xs bg-green-500 text-white rounded-full">
+                        این دستگاه
+                      </span>
+                    )}
+                  </div>
+                  <div className="text-xs text-gray-500 dark:text-gray-400 mt-1 space-y-0.5">
+                    <p>{session.os} • {session.browser}</p>
+                    <p>IP: {session.ip_address} {session.location && `• ${session.location}`}</p>
+                    <p>آخرین فعالیت: {formatDate(session.last_activity)}</p>
+                  </div>
+                </div>
+              </div>
+              
+              {!session.is_current && (
+                <button
+                  onClick={() => handleRevokeSession(session.id)}
+                  disabled={revoking === session.id}
+                  className="p-2 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors disabled:opacity-50"
+                  title="حذف جلسه"
+                >
+                  {revoking === session.id ? (
+                    <div className="w-5 h-5 border-2 border-red-500 border-t-transparent rounded-full animate-spin"></div>
+                  ) : (
+                    <Trash2 className="w-5 h-5" />
+                  )}
+                </button>
+              )}
+            </div>
+          ))}
+
+          {(!sessionsData?.sessions || sessionsData.sessions.length === 0) && (
+            <div className="text-center py-8 text-gray-500 dark:text-gray-400">
+              هیچ جلسه فعالی یافت نشد
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Info Box */}
+      <div className="bg-blue-50 dark:bg-blue-900/20 rounded-xl p-4 border border-blue-200 dark:border-blue-800">
+        <h5 className="font-medium text-blue-800 dark:text-blue-300 mb-2">💡 نکته امنیتی</h5>
+        <p className="text-sm text-blue-700 dark:text-blue-400">
+          اگر دستگاهی را نمی‌شناسید یا به آن دسترسی ندارید، آن را حذف کنید و رمز عبور خود را تغییر دهید.
+          برای افزایش تعداد جلسات مجاز، می‌توانید پلن خود را ارتقا دهید.
+        </p>
       </div>
     </div>
   );

@@ -435,6 +435,14 @@ class UserSessionSerializer(serializers.ModelSerializer):
         return False
 
 
+class UserSessionsWithLimitSerializer(serializers.Serializer):
+    """Serializer for sessions list with plan limit info"""
+    sessions = UserSessionSerializer(many=True)
+    max_sessions = serializers.IntegerField()
+    current_sessions_count = serializers.IntegerField()
+    can_create_new_session = serializers.BooleanField()
+
+
 class PhoneVerificationSerializer(serializers.Serializer):
     """Phone number verification serializer"""
     phone_number = serializers.CharField(required=True)

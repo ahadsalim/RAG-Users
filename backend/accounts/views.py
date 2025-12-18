@@ -28,6 +28,7 @@ from .serializers import (
     OrganizationSerializer,
     OrganizationInvitationSerializer,
     UserSessionSerializer,
+    UserSessionsWithLimitSerializer,
     PhoneVerificationSerializer,
     OTPVerificationSerializer
 )
@@ -421,6 +422,38 @@ class UserSessionViewSet(ModelViewSet):
             user=self.request.user,
             is_active=True
         ).order_by('-last_activity')
+    
+    def _get_max_sessions_from_plan(self, user):
+        """Get max sessions limit from user's active subscription plan"""
+        from subscriptions.models import Subscription
+        
+        # Get active subscription
+        subscription = Subscription.objects.filter(
+            user=user,
+            status='active'
+        ).select_related('plan').first()
+        
+        if subscription and subscription.plan:
+            return subscription.plan.max_active_sessions
+        
+        # Default limit if no active subscription
+        return 3
+    
+    @action(detail=False, methods=['get'])
+    def with_limit(self, request):
+        """Get sessions list with plan limit info"""
+        sessions = self.get_queryset()
+        max_sessions = self._get_max_sessions_from_plan(request.user)
+        current_count = sessions.count()
+        
+        data = {
+            'sessions': UserSessionSerializer(sessions, many=True, context={'request': request}).data,
+            'max_sessions': max_sessions,
+            'current_sessions_count': current_count,
+            'can_create_new_session': current_count < max_sessions
+        }
+        
+        return Response(data, status=status.HTTP_200_OK)
     
     @action(detail=True, methods=['post'])
     def revoke(self, request, pk=None):
