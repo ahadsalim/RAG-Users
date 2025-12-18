@@ -241,15 +241,59 @@ NEXT_PUBLIC_API_URL=https://admin.tejarat.chat
 
 ---
 
-## 🔐 سیستم احراز هویت
+## 🔐 سیستم احراز هویت و دسترسی
 
 ### انواع کاربران
 
-| نوع | روش احراز هویت | ویژگی‌ها |
-|-----|----------------|----------|
-| حقیقی (Individual) | موبایل + OTP | شماره موبایل + رمز عبور |
-| حقوقی (Legal) | ایمیل + تایید | ایمیل + شماره تماس |
-| تجاری (Business) | ایمیل + تایید | مشابه حقوقی با امکانات بیشتر |
+| نوع | زیرنوع | ویژگی‌ها |
+|-----|--------|----------|
+| **حقیقی (Individual)** | مشتری | `user_type='individual'`, `is_staff=False` |
+| **حقیقی (Individual)** | کارمند | `user_type='individual'`, `is_staff=True`, عضو `staff_groups` |
+| **حقیقی (Individual)** | سوپر ادمین | `is_superuser=True` - دسترسی کامل |
+| **حقوقی (Business)** | مالک | `user_type='business'`, `organization_role='owner'` |
+| **حقوقی (Business)** | مدیر | `user_type='business'`, `organization_role='admin'` |
+| **حقوقی (Business)** | عضو | `user_type='business'`, `organization_role='member'` |
+
+### سیستم گروه‌های کارمندی (StaffGroup)
+
+برای مدیریت دسترسی کارمندان از مدل `StaffGroup` در اپ `accounts` استفاده می‌شود:
+
+```python
+# accounts/models.py
+class StaffGroup(models.Model):
+    name = models.CharField(max_length=100, unique=True)
+    # دسترسی‌های سفارشی
+    can_view_users = models.BooleanField(default=False)
+    can_edit_users = models.BooleanField(default=False)
+    can_delete_users = models.BooleanField(default=False)
+    can_view_financial = models.BooleanField(default=False)
+    can_manage_financial = models.BooleanField(default=False)
+    can_view_analytics = models.BooleanField(default=False)
+    can_export_data = models.BooleanField(default=False)
+    can_manage_content = models.BooleanField(default=False)
+    can_manage_subscriptions = models.BooleanField(default=False)
+    can_view_logs = models.BooleanField(default=False)
+    can_manage_support = models.BooleanField(default=False)
+```
+
+**نمونه گروه‌ها:**
+- پشتیبانی: `can_manage_support=True`, `can_view_users=True`
+- مالی: `can_view_financial=True`, `can_manage_financial=True`
+- فنی: `can_view_logs=True`, `can_view_analytics=True`
+
+### بررسی دسترسی در کد
+
+```python
+# در views
+from accounts.permissions import CanViewFinancial, CanManageSupport
+
+class FinancialView(APIView):
+    permission_classes = [IsAuthenticated, CanViewFinancial]
+
+# یا در کد
+if user.has_staff_permission('view_financial'):
+    # دسترسی دارد
+```
 
 ### فرآیند ثبت‌نام
 
@@ -457,5 +501,11 @@ docker-compose exec -T postgres psql -U tejarat_user tejarat_db < backup.sql
 
 ---
 
-**نسخه:** 1.0.0  
-**آخرین به‌روزرسانی:** 2025-12-15
+**نسخه:** 1.1.0  
+**آخرین به‌روزرسانی:** 2025-12-18
+
+### تغییرات نسخه 1.1.0
+- حذف اپ `admin_panel` و یکپارچه‌سازی با `accounts`
+- ایجاد مدل `StaffGroup` برای گروه‌بندی کارمندان
+- اضافه کردن نقش `owner` به `organization_role`
+- حذف `auth.Group` از پنل ادمین (استفاده از StaffGroup)

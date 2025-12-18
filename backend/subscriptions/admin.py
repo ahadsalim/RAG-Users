@@ -233,9 +233,10 @@ class UserUsageReportAdmin(admin.ModelAdmin):
         if obj.status != 'active':
             return '-'
         from .usage import UsageService
-        daily_used = UsageService.get_daily_usage(obj.user, obj)
-        max_daily = obj.plan.max_queries_per_day or 10
-        return max(0, max_daily - daily_used)
+        monthly_used = UsageService.get_monthly_usage(obj.user, obj)
+        max_monthly = obj.plan.max_queries_per_month or 300
+        remaining = max(0, max_monthly - monthly_used)
+        return f'{remaining} از {max_monthly}'
     remaining_queries.short_description = 'مانده سوال'
     
     def remaining_days(self, obj):
@@ -249,7 +250,17 @@ class UserUsageReportAdmin(admin.ModelAdmin):
     remaining_days.short_description = 'مانده روز'
     
     def date_joined(self, obj):
-        return obj.user.date_joined
+        try:
+            import jdatetime
+            import pytz
+            dt = obj.user.date_joined
+            tehran_tz = pytz.timezone('Asia/Tehran')
+            if dt.tzinfo:
+                dt = dt.astimezone(tehran_tz)
+            j_date = jdatetime.datetime.fromgregorian(datetime=dt)
+            return j_date.strftime('%Y/%m/%d')
+        except Exception:
+            return obj.user.date_joined.strftime('%Y/%m/%d')
     date_joined.short_description = 'تاریخ عضویت'
     date_joined.admin_order_field = 'user__date_joined'
     
