@@ -95,7 +95,7 @@ export default function LoginPage() {
         const methodText = methodUsed === 'bale' ? 'پیام‌رسان (بله)' : 'پیامک'
         
         setOtpSent(true)
-        setOtpTimer(300) // 5 minutes
+        setOtpTimer(120) // 2 minutes
         setCanResend(false)
         toast.success(`کد تایید از طریق ${methodText} به شماره ${phoneNumber} ارسال شد`, {
           duration: 6000,
@@ -104,7 +104,7 @@ export default function LoginPage() {
         // If response is not ok, still allow OTP entry
         const methodText = otpMethod === 'bale' ? 'پیام‌رسان (بله)' : 'پیامک'
         setOtpSent(true)
-        setOtpTimer(300) // 5 minutes
+        setOtpTimer(120) // 2 minutes
         setCanResend(false)
         toast.success(`کد تایید از طریق ${methodText} به شماره ${phoneNumber} ارسال شد`, {
           duration: 6000,
@@ -116,7 +116,7 @@ export default function LoginPage() {
       // Even on error, allow user to proceed
       const methodText = otpMethod === 'bale' ? 'پیام‌رسان (بله)' : 'پیامک'
       setOtpSent(true)
-      setOtpTimer(300) // 5 minutes
+      setOtpTimer(120) // 2 minutes
       setCanResend(false)
       toast.success(`کد تایید از طریق ${methodText} به شماره ${phoneNumber} ارسال شد`, {
         duration: 6000,

@@ -49,9 +49,9 @@ class SendOTPView(APIView):
         # Generate 6-digit OTP
         otp_code = str(random.randint(100000, 999999))
         
-        # Store OTP in cache for 5 minutes
+        # Store OTP in cache for 2 minutes
         cache_key = f"otp_{phone_number}"
-        cache.set(cache_key, otp_code, 300)  # 5 minutes
+        cache.set(cache_key, otp_code, 120)  # 2 minutes
         
         # Set rate limit (2 minutes)
         cache.set(rate_limit_key, True, 120)
