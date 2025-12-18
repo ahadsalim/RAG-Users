@@ -223,7 +223,7 @@ body {
 }
 
 .brand-text {
-    font-size: 14px !important;
+    font-size: 13px !important;
 }
 
 /* Tables */
@@ -259,7 +259,7 @@ label {
 }
 
 .card-title {
-    font-size: 14px !important;
+    font-size: 13px !important;
 }
 
 /* Breadcrumb */
@@ -267,11 +267,22 @@ label {
     font-size: 12px !important;
 }
 
-/* Page titles */
-h1, .h1 { font-size: 1.5rem !important; }
-h2, .h2 { font-size: 1.3rem !important; }
-h3, .h3 { font-size: 1.1rem !important; }
-h4, .h4 { font-size: 1rem !important; }
+/* Page titles - max 13px */
+h1, .h1 { font-size: 13px !important; }
+h2, .h2 { font-size: 13px !important; }
+h3, .h3 { font-size: 13px !important; }
+h4, .h4 { font-size: 13px !important; }
+h5, .h5 { font-size: 12px !important; }
+h6, .h6 { font-size: 12px !important; }
+
+/* Dashboard module titles */
+.dashboard-module h2,
+.module h2,
+caption,
+.card-header h3,
+.card-header h4 {
+    font-size: 13px !important;
+}
 
 /* Navbar */
 .navbar {
