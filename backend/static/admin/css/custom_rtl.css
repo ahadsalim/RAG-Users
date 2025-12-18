@@ -363,49 +363,6 @@ p.help {
     text-align: center !important;
 }
 
-/* RTL fix for filter_horizontal widget - swap columns */
-.selector {
-    direction: ltr !important;
-}
-
-.selector > div {
-    float: none !important;
-}
-
-/* Reorder columns: chosen first (right), then chooser, then available (left) */
-.selector {
-    display: flex !important;
-    flex-direction: row-reverse !important;
-}
-
-.selector .selector-available {
-    order: 3 !important;
-}
-
-.selector .selector-chooser {
-    order: 2 !important;
-}
-
-.selector .selector-chosen {
-    order: 1 !important;
-}
-
-.selector select {
-    direction: rtl;
-    text-align: right;
-}
-
-.selector .selector-filter input {
-    direction: rtl;
-    text-align: right;
-}
-
-/* Fix selector labels */
-.selector-available h2,
-.selector-chosen h2 {
-    text-align: center !important;
-}
-
 /* Fix sidebar horizontal scroll */
 .main-sidebar {
     overflow-x: hidden !important;
