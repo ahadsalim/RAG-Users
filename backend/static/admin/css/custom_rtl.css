@@ -364,8 +364,8 @@ p.help {
 }
 
 .change-list .field-max_active_sessions input {
-    width: 45px !important;
-    min-width: 45px !important;
+    width: 80px !important;
+    min-width: 80px !important;
     text-align: center !important;
 }
 
