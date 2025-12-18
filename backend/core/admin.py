@@ -92,13 +92,14 @@ class PaymentGatewayAdmin(admin.ModelAdmin):
             'fields': (
                 'name', 
                 'gateway_type', 
-                'display_order',
+                'connected_account',
                 'merchant_id', 
                 'api_key', 
                 'api_secret',
                 'is_active', 
                 'is_sandbox', 
                 'commission_percentage', 
+                'display_order',
                 'supported_currencies',
             )
         }),
