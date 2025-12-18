@@ -135,6 +135,12 @@ class SiteSettings(models.Model):
         verbose_name=_('نام پنل مدیریت'),
         help_text=_('نام سایت که در پنل مدیریت نمایش داده می‌شود')
     )
+    copyright_text = models.CharField(
+        max_length=200, 
+        default='تجارت چت © 2024', 
+        verbose_name=_('متن کپی‌رایت'),
+        help_text=_('متن کپی‌رایت که در پایین پنل مدیریت نمایش داده می‌شود')
+    )
     
     # Contact Info (moved to main tab)
     support_email = models.EmailField(blank=True, verbose_name=_('ایمیل پشتیبانی'))

@@ -122,6 +122,7 @@ class SiteSettingsAdmin(admin.ModelAdmin):
             'fields': (
                 'frontend_site_name', 
                 'admin_site_name',
+                'copyright_text',
                 'support_email', 
                 'support_phone',
                 'telegram_url', 

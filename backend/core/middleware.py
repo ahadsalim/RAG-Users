@@ -1,4 +1,5 @@
 from django.conf import settings
+from datetime import datetime
 
 
 class DynamicAdminTitleMiddleware:
@@ -18,6 +19,13 @@ class DynamicAdminTitleMiddleware:
                     admin.site.site_header = site_settings.admin_site_name
                     admin.site.site_title = site_settings.admin_site_name
                     admin.site.index_title = f"خوش آمدید به {site_settings.admin_site_name}"
+                    
+                    # Update Jazzmin settings dynamically
+                    if hasattr(settings, 'JAZZMIN_SETTINGS'):
+                        settings.JAZZMIN_SETTINGS['copyright'] = site_settings.copyright_text or f"{site_settings.admin_site_name} © {datetime.now().year}"
+                        settings.JAZZMIN_SETTINGS['site_title'] = site_settings.admin_site_name
+                        settings.JAZZMIN_SETTINGS['site_header'] = site_settings.admin_site_name
+                        settings.JAZZMIN_SETTINGS['welcome_sign'] = f"خوش آمدید به {site_settings.admin_site_name}"
             except Exception:
                 pass
         
