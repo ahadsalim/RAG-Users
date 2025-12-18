@@ -360,23 +360,10 @@ p.help {
 .change-list .field-duration_days input,
 .change-list .field-max_queries_per_day input,
 .change-list .field-max_queries_per_month input,
-.change-list .field-max_organization_members input {
+.change-list .field-max_organization_members input,
+.change-list .field-max_active_sessions input {
     width: 70px !important;
     min-width: 60px !important;
-    text-align: center !important;
-}
-
-.change-list .field-max_active_sessions input,
-td.field-max_active_sessions input,
-.field-max_active_sessions input[type="number"],
-.field-max_active_sessions input[type="text"],
-input[name="form-0-max_active_sessions"],
-input[name="form-1-max_active_sessions"],
-input[name="form-2-max_active_sessions"],
-input[name="form-3-max_active_sessions"],
-input[name="form-4-max_active_sessions"] {
-    width: 80px !important;
-    min-width: 80px !important;
     text-align: center !important;
 }
 
