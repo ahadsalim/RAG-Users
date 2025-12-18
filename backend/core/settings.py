@@ -402,6 +402,9 @@ KAVENEGAR_SENDER = config('KAVENEGAR_SENDER', default='')
 BALE_USERNAME = config('BALE_USERNAME', default='')
 BALE_PASSWORD = config('BALE_PASSWORD', default='')
 
+# OTP Configuration
+OTP_EXPIRE_SECONDS = config('OTP_EXPIRE_SECONDS', default=120, cast=int)
+
 # ===========================
 # Core RAG API Configuration (deprecated - use RAG_CORE_BASE_URL instead)
 # ===========================

@@ -136,6 +136,8 @@ services:
       # Bale Messenger
       BALE_USERNAME: ${BALE_USERNAME}
       BALE_PASSWORD: ${BALE_PASSWORD}
+      # OTP Configuration
+      OTP_EXPIRE_SECONDS: ${OTP_EXPIRE_SECONDS:-120}
       # S3/MinIO
       S3_ENDPOINT_URL: ${S3_ENDPOINT_URL:-https://s3.tejarat.chat}
       S3_ACCESS_KEY_ID: ${S3_ACCESS_KEY_ID}

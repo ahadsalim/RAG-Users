@@ -93,18 +93,20 @@ export default function LoginPage() {
         // Get the actual method used (backend may fallback to SMS)
         const methodUsed = data.method || otpMethod
         const methodText = methodUsed === 'bale' ? 'پیام‌رسان (بله)' : 'پیامک'
+        // Use expires_in from API response (default 120 seconds)
+        const expiresIn = data.expires_in || 120
         
         setOtpSent(true)
-        setOtpTimer(120) // 2 minutes
+        setOtpTimer(expiresIn)
         setCanResend(false)
         toast.success(`کد تایید از طریق ${methodText} به شماره ${phoneNumber} ارسال شد`, {
           duration: 6000,
         })
       } else {
-        // If response is not ok, still allow OTP entry
+        // If response is not ok, still allow OTP entry with default timer
         const methodText = otpMethod === 'bale' ? 'پیام‌رسان (بله)' : 'پیامک'
         setOtpSent(true)
-        setOtpTimer(120) // 2 minutes
+        setOtpTimer(120) // default 2 minutes
         setCanResend(false)
         toast.success(`کد تایید از طریق ${methodText} به شماره ${phoneNumber} ارسال شد`, {
           duration: 6000,
@@ -113,10 +115,10 @@ export default function LoginPage() {
       
     } catch (err: any) {
       console.error('OTP Send Error:', err)
-      // Even on error, allow user to proceed
+      // Even on error, allow user to proceed with default timer
       const methodText = otpMethod === 'bale' ? 'پیام‌رسان (بله)' : 'پیامک'
       setOtpSent(true)
-      setOtpTimer(120) // 2 minutes
+      setOtpTimer(120) // default 2 minutes
       setCanResend(false)
       toast.success(`کد تایید از طریق ${methodText} به شماره ${phoneNumber} ارسال شد`, {
         duration: 6000,

@@ -8,6 +8,7 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from django.contrib.auth import get_user_model
 from django.core.cache import cache
 from django.utils import timezone
+from django.conf import settings
 from datetime import timedelta
 import random
 import logging
@@ -18,6 +19,9 @@ from .utils import send_otp_sms, send_otp_bale, get_client_ip, get_user_agent_in
 
 logger = logging.getLogger('app')
 User = get_user_model()
+
+# OTP expiration time in seconds (from settings or default 120)
+OTP_EXPIRE_SECONDS = getattr(settings, 'OTP_EXPIRE_SECONDS', 120)
 
 
 class SendOTPView(APIView):
@@ -42,19 +46,20 @@ class SendOTPView(APIView):
         # Check rate limiting
         rate_limit_key = f"otp_rate_limit_{phone_number}"
         if cache.get(rate_limit_key):
+            minutes = OTP_EXPIRE_SECONDS // 60
             return Response({
-                'message': 'لطفا 2 دقیقه صبر کنید و مجدد تلاش کنید'
+                'message': f'لطفا {minutes} دقیقه صبر کنید و مجدد تلاش کنید'
             }, status=status.HTTP_429_TOO_MANY_REQUESTS)
         
         # Generate 6-digit OTP
         otp_code = str(random.randint(100000, 999999))
         
-        # Store OTP in cache for 2 minutes
+        # Store OTP in cache (time from settings)
         cache_key = f"otp_{phone_number}"
-        cache.set(cache_key, otp_code, 120)  # 2 minutes
+        cache.set(cache_key, otp_code, OTP_EXPIRE_SECONDS)
         
-        # Set rate limit (2 minutes)
-        cache.set(rate_limit_key, True, 120)
+        # Set rate limit (same as OTP expiration)
+        cache.set(rate_limit_key, True, OTP_EXPIRE_SECONDS)
         
         # Send OTP via selected method
         try:
@@ -90,7 +95,7 @@ class SendOTPView(APIView):
         return Response({
             'message': 'کد تایید برای شما ارسال شد',
             'method': method_used,
-            'expires_in': 300  # seconds
+            'expires_in': OTP_EXPIRE_SECONDS
         }, status=status.HTTP_200_OK)
 
 
