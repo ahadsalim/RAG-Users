@@ -260,12 +260,8 @@ class StaffGroupAdmin(admin.ModelAdmin):
     ordering = ['-priority', 'name']
     
     fieldsets = (
-        (_('اطلاعات پایه'), {
-            'fields': ('name', 'description', 'priority', 'is_active')
-        }),
-        (_('دسترسی‌ها'), {
-            'fields': ('permissions',),
-            'description': _('دسترسی‌های مورد نظر را از لیست سمت چپ انتخاب کرده و به سمت راست منتقل کنید.')
+        (None, {
+            'fields': ('name', 'description', 'priority', 'is_active', 'permissions')
         }),
     )
     

@@ -1,0 +1,198 @@
+# Persian translations for Django admin
+# Copyright (C) 2024
+# This file is distributed under the same license as Django.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: Tejarat Chat\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2024-01-01 00:00+0000\n"
+"PO-Revision-Date: 2024-12-18 00:00+0000\n"
+"Last-Translator: Admin\n"
+"Language-Team: Persian\n"
+"Language: fa\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n > 1);\n"
+
+# Admin buttons
+msgid "Save"
+msgstr "ذخیره"
+
+msgid "Delete"
+msgstr "حذف"
+
+msgid "Save and add another"
+msgstr "ذخیره و افزودن جدید"
+
+msgid "Save and continue editing"
+msgstr "ذخیره و ادامه ویرایش"
+
+msgid "Save and view"
+msgstr "ذخیره و مشاهده"
+
+msgid "History"
+msgstr "تاریخچه"
+
+msgid "View on site"
+msgstr "مشاهده در سایت"
+
+msgid "Close"
+msgstr "بستن"
+
+msgid "Cancel"
+msgstr "انصراف"
+
+# Filter horizontal widget
+msgid "Available"
+msgstr "موجود"
+
+msgid "Chosen"
+msgstr "انتخاب شده"
+
+msgid "Choose all"
+msgstr "انتخاب همه"
+
+msgid "Remove all"
+msgstr "حذف همه"
+
+msgid "Filter"
+msgstr "فیلتر"
+
+msgid "selected options not visible"
+msgstr "گزینه‌های انتخاب شده قابل مشاهده نیستند"
+
+msgid "click to clear"
+msgstr "برای پاک کردن کلیک کنید"
+
+msgid "Hold down \"Control\", or \"Command\" on a Mac, to select more than one."
+msgstr "برای انتخاب چند مورد، کلید Ctrl (یا Command در مک) را نگه دارید."
+
+# Admin actions
+msgid "Add"
+msgstr "افزودن"
+
+msgid "Change"
+msgstr "ویرایش"
+
+msgid "View"
+msgstr "مشاهده"
+
+msgid "Remove"
+msgstr "حذف"
+
+msgid "Select all"
+msgstr "انتخاب همه"
+
+msgid "Clear selection"
+msgstr "پاک کردن انتخاب"
+
+# Confirmation messages
+msgid "Are you sure?"
+msgstr "آیا مطمئن هستید؟"
+
+msgid "Yes, I'm sure"
+msgstr "بله، مطمئنم"
+
+msgid "No, take me back"
+msgstr "خیر، برگرد"
+
+msgid "Successfully deleted"
+msgstr "با موفقیت حذف شد"
+
+# Date/time
+msgid "Today"
+msgstr "امروز"
+
+msgid "Now"
+msgstr "اکنون"
+
+msgid "Date"
+msgstr "تاریخ"
+
+msgid "Time"
+msgstr "زمان"
+
+# Search
+msgid "Search"
+msgstr "جستجو"
+
+msgid "Go"
+msgstr "برو"
+
+# Pagination
+msgid "Show all"
+msgstr "نمایش همه"
+
+msgid "First"
+msgstr "اول"
+
+msgid "Previous"
+msgstr "قبلی"
+
+msgid "Next"
+msgstr "بعدی"
+
+msgid "Last"
+msgstr "آخر"
+
+# Messages
+msgid "was added successfully."
+msgstr "با موفقیت اضافه شد."
+
+msgid "was changed successfully."
+msgstr "با موفقیت تغییر کرد."
+
+msgid "was deleted successfully."
+msgstr "با موفقیت حذف شد."
+
+# Form errors
+msgid "Please correct the error below."
+msgstr "لطفاً خطای زیر را اصلاح کنید."
+
+msgid "Please correct the errors below."
+msgstr "لطفاً خطاهای زیر را اصلاح کنید."
+
+# Misc
+msgid "None"
+msgstr "هیچکدام"
+
+msgid "Yes"
+msgstr "بله"
+
+msgid "No"
+msgstr "خیر"
+
+msgid "Unknown"
+msgstr "نامشخص"
+
+msgid "Home"
+msgstr "خانه"
+
+msgid "Welcome"
+msgstr "خوش آمدید"
+
+msgid "Log out"
+msgstr "خروج"
+
+msgid "Log in"
+msgstr "ورود"
+
+msgid "Password"
+msgstr "رمز عبور"
+
+msgid "Username"
+msgstr "نام کاربری"
+
+msgid "Action"
+msgstr "عملیات"
+
+msgid "Run the selected action"
+msgstr "اجرای عملیات انتخاب شده"
+
+msgid "Select an action"
+msgstr "انتخاب عملیات"
+
+msgid "Items must be selected in order to perform actions on them. No items have been changed."
+msgstr "برای انجام عملیات باید موردی انتخاب شود. هیچ موردی تغییر نکرد."

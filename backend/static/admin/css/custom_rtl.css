@@ -362,3 +362,42 @@ p.help {
     min-width: 60px !important;
     text-align: center !important;
 }
+
+/* RTL fix for filter_horizontal widget - swap columns */
+.selector {
+    direction: rtl;
+    display: flex;
+    flex-direction: row-reverse;
+}
+
+.selector .selector-available,
+.selector .selector-chosen {
+    direction: rtl;
+    text-align: right;
+}
+
+.selector .selector-chooser {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.selector .selector-chooser li {
+    transform: scaleX(-1);
+}
+
+.selector select {
+    direction: rtl;
+    text-align: right;
+}
+
+.selector .selector-filter input {
+    direction: rtl;
+    text-align: right;
+}
+
+/* Fix selector labels */
+.selector-available h2,
+.selector-chosen h2 {
+    text-align: center !important;
+}
