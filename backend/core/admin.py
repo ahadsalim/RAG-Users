@@ -115,7 +115,7 @@ class SiteSettingsAdmin(admin.ModelAdmin):
         return False
     
     fieldsets = (
-        (_('اطلاعات پایه سایت'), {
+        (_('تنظیمات سایت'), {
             'fields': (
                 'frontend_site_name', 
                 'admin_site_name',
@@ -124,15 +124,10 @@ class SiteSettingsAdmin(admin.ModelAdmin):
                 'telegram_url', 
                 'instagram_url', 
                 'twitter_url',
+                'default_payment_gateway',
+                'maintenance_mode', 
+                'maintenance_message',
             )
-        }),
-        (_('تنظیمات مالی'), {
-            'fields': ('base_currency', 'default_payment_gateway'),
-            'description': _('واحد پولی و درگاه پرداخت پیش‌فرض سایت')
-        }),
-        (_('حالت تعمیر و نگهداری'), {
-            'fields': ('maintenance_mode', 'maintenance_message'),
-            'classes': ('collapse',)
         }),
     )
     

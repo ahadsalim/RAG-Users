@@ -157,17 +157,6 @@ class SiteSettings(models.Model):
     instagram_url = models.URLField(blank=True, verbose_name=_('آدرس اینستاگرام'))
     twitter_url = models.URLField(blank=True, verbose_name=_('آدرس توییتر'))
     
-    # Currency Settings
-    base_currency = models.ForeignKey(
-        Currency,
-        on_delete=models.PROTECT,
-        related_name='base_for_sites',
-        null=True,
-        blank=True,
-        verbose_name=_('واحد پولی پایه'),
-        help_text=_('واحد پولی پایه سایت (تومان، ریال، دلار و ...)')
-    )
-    
     # Payment Settings
     default_payment_gateway = models.ForeignKey(
         PaymentGateway,

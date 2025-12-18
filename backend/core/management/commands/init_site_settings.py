@@ -107,18 +107,12 @@ class Command(BaseCommand):
             # Set defaults
             settings.frontend_site_name = 'تجارت چت'
             settings.admin_site_name = 'پنل مدیریت تجارت چت'
-            settings.base_currency = irt  # Default to Toman
             if created_gateways:
                 settings.default_payment_gateway = created_gateways[0]
             settings.save()
             self.stdout.write(self.style.SUCCESS('✓ Created site settings'))
         else:
-            # Update currency if not set
-            if not settings.base_currency:
-                settings.base_currency = irt
-                settings.save()
             self.stdout.write('  Site settings already exist')
         
         self.stdout.write(self.style.SUCCESS('\n✅ Site settings initialized successfully!'))
-        self.stdout.write(f'\nBase currency: {settings.base_currency}')
         self.stdout.write(f'Default payment gateway: {settings.default_payment_gateway}')

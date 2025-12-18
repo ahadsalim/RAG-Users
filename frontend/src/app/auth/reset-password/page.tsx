@@ -1,9 +1,10 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import toast from 'react-hot-toast'
+import { SiteSubtitle } from '@/components/SiteName'
 
 const API_URL = typeof window !== 'undefined' ? (process.env.NEXT_PUBLIC_API_URL || 'https://admin.tejarat.chat') : 'https://admin.tejarat.chat'
 
@@ -288,7 +289,7 @@ export default function ResetPasswordPage() {
                 height={70}
                 style={{ objectFit: 'contain' }}
               />
-              <p style={styles.subtitle}>سامانه مشاور هوشمند کسب و کار</p>
+              <SiteSubtitle style={styles.subtitle} />
             </div>
             
             <div style={styles.headerTop}>

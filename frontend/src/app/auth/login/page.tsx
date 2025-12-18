@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import toast from 'react-hot-toast'
 import { useAuthStore } from '@/store/auth'
+import { SiteSubtitle } from '@/components/SiteName'
 
 const API_URL = typeof window !== 'undefined' ? (process.env.NEXT_PUBLIC_API_URL || 'https://admin.tejarat.chat') : 'https://admin.tejarat.chat'
 
@@ -520,7 +521,7 @@ export default function LoginPage() {
               height={70}
               style={{ objectFit: 'contain' }}
             />
-            <p style={styles.subtitle}>سامانه مشاور هوشمند کسب و کار</p>
+            <SiteSubtitle style={styles.subtitle} />
           </div>
           
           {/* Title and Theme Button */}

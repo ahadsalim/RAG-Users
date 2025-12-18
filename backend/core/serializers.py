@@ -29,14 +29,13 @@ class PaymentGatewaySerializer(serializers.ModelSerializer):
 
 class SiteSettingsSerializer(serializers.ModelSerializer):
     """Serializer for SiteSettings model"""
-    base_currency = CurrencySerializer(read_only=True)
     default_payment_gateway = PaymentGatewaySerializer(read_only=True)
     
     class Meta:
         model = SiteSettings
         fields = [
             'frontend_site_name', 'admin_site_name',
-            'base_currency', 'default_payment_gateway',
+            'default_payment_gateway',
             'support_email', 'support_phone',
             'telegram_url', 'instagram_url', 'twitter_url',
             'maintenance_mode', 'maintenance_message',

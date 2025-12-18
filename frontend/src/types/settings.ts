@@ -24,7 +24,6 @@ export interface PaymentGateway {
 export interface SiteSettings {
   frontend_site_name: string
   admin_site_name: string
-  base_currency: Currency | null
   default_payment_gateway: PaymentGateway | null
   support_email: string
   support_phone: string
