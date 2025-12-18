@@ -365,25 +365,29 @@ p.help {
 
 /* RTL fix for filter_horizontal widget - swap columns */
 .selector {
-    direction: rtl;
-    display: flex;
-    flex-direction: row-reverse;
+    direction: ltr !important;
 }
 
-.selector .selector-available,
-.selector .selector-chosen {
-    direction: rtl;
-    text-align: right;
+.selector > div {
+    float: none !important;
+}
+
+/* Reorder columns: chosen first (right), then chooser, then available (left) */
+.selector {
+    display: flex !important;
+    flex-direction: row-reverse !important;
+}
+
+.selector .selector-available {
+    order: 3 !important;
 }
 
 .selector .selector-chooser {
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
+    order: 2 !important;
 }
 
-.selector .selector-chooser li {
-    transform: scaleX(-1);
+.selector .selector-chosen {
+    order: 1 !important;
 }
 
 .selector select {
@@ -400,4 +404,25 @@ p.help {
 .selector-available h2,
 .selector-chosen h2 {
     text-align: center !important;
+}
+
+/* Fix sidebar horizontal scroll */
+.main-sidebar {
+    overflow-x: hidden !important;
+}
+
+.main-sidebar .nav-sidebar {
+    overflow-x: hidden !important;
+}
+
+.main-sidebar .nav-sidebar .nav-link {
+    white-space: normal !important;
+    word-wrap: break-word !important;
+}
+
+.main-sidebar .brand-text,
+.main-sidebar .nav-sidebar .nav-link p {
+    white-space: normal !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
 }
