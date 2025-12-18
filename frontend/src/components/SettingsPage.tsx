@@ -995,7 +995,7 @@ const SessionsTab: React.FC = () => {
   const loadSessions = async () => {
     try {
       setLoading(true);
-      const response = await axios.get(`${API_URL}/api/v1/accounts/sessions/with_limit/`);
+      const response = await axios.get(`${API_URL}/api/v1/auth/sessions/with_limit/`);
       setSessionsData(response.data);
     } catch (error) {
       console.error('Error loading sessions:', error);
@@ -1012,7 +1012,7 @@ const SessionsTab: React.FC = () => {
   const handleRevokeSession = async (sessionId: string) => {
     try {
       setRevoking(sessionId);
-      await axios.post(`${API_URL}/api/v1/accounts/sessions/${sessionId}/revoke/`);
+      await axios.post(`${API_URL}/api/v1/auth/sessions/${sessionId}/revoke/`);
       setMessage('✓ جلسه با موفقیت حذف شد');
       loadSessions();
       setTimeout(() => setMessage(''), 3000);
@@ -1031,7 +1031,7 @@ const SessionsTab: React.FC = () => {
   const handleRevokeAll = async () => {
     try {
       setRevoking('all');
-      await axios.post(`${API_URL}/api/v1/accounts/sessions/revoke_all/`);
+      await axios.post(`${API_URL}/api/v1/auth/sessions/revoke_all/`);
       setMessage('✓ تمام جلسات دیگر حذف شدند');
       loadSessions();
       setTimeout(() => setMessage(''), 3000);
