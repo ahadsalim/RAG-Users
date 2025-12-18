@@ -165,6 +165,39 @@ class VerifyOTPView(APIView):
             user.phone_verified = True
             user.save(update_fields=['phone_verified'])
         
+        # Check session limit and remove oldest if exceeded
+        from subscriptions.models import Subscription
+        
+        # Get max sessions from user's plan
+        subscription = Subscription.objects.filter(
+            user=user,
+            status='active'
+        ).select_related('plan').first()
+        
+        max_sessions = 3  # default
+        if subscription and subscription.plan:
+            max_sessions = subscription.plan.max_active_sessions
+        
+        # Get current active sessions count
+        active_sessions = UserSession.objects.filter(user=user, is_active=True).order_by('last_activity')
+        current_count = active_sessions.count()
+        
+        # If at or over limit, deactivate oldest sessions to make room
+        if current_count >= max_sessions:
+            sessions_to_remove = current_count - max_sessions + 1
+            oldest_sessions = active_sessions[:sessions_to_remove]
+            for old_session in oldest_sessions:
+                old_session.is_active = False
+                old_session.save(update_fields=['is_active'])
+                # Blacklist the refresh token
+                if old_session.refresh_token:
+                    try:
+                        old_token = RefreshToken(old_session.refresh_token)
+                        old_token.blacklist()
+                    except Exception:
+                        pass
+            logger.info(f"Removed {sessions_to_remove} oldest sessions for user {user.phone_number} due to session limit")
+        
         # Generate JWT tokens
         refresh = RefreshToken.for_user(user)
         

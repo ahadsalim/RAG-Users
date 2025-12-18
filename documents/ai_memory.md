@@ -198,6 +198,25 @@ docker exec app_backend python manage.py migrate
 - ✅ به‌روزرسانی `analytics/views.py`
 - ✅ Unregister کردن `auth.Group` از admin
 
+### 2025-12-18: سیستم مدیریت جلسات (Sessions)
+- ✅ اضافه کردن `max_active_sessions` به مدل `Plan`
+- ✅ ایجاد تب "جلسات فعال" در تنظیمات کاربر
+- ✅ API برای نمایش و مدیریت sessions (`/api/v1/auth/sessions/`)
+- ✅ محدودیت session: اگر بیش از حد مجاز login شود، قدیمی‌ترین session غیرفعال می‌شود
+- ✅ اصلاح LogoutView برای غیرفعال کردن session با refresh_token
+- ✅ Forward کردن User-Agent و IP از Next.js به backend
+
+### 2025-12-18: تسک‌های زمان‌بندی شده (Celery Beat)
+- ✅ ایجاد `core/tasks.py` با تسک‌های cleanup
+- ✅ اضافه کردن `cleanup-tokens-and-sessions` (هر شب ساعت 3)
+- ✅ اضافه کردن `cleanup-old-files` (هر شب ساعت 2)
+- ✅ اضافه کردن S3 env vars به Celery containers
+- ✅ ایجاد management command `cleanup_tokens`
+
+### 2025-12-18: یکپارچه‌سازی OTP
+- ✅ اضافه کردن `OTP_EXPIRE_SECONDS` به `.env`
+- ✅ Backend از settings می‌خواند، Frontend از API response
+
 ---
 
 ## 📝 نکات مهم
@@ -339,10 +358,82 @@ settings = SiteSettings.get_settings()
 
 ---
 
+## 🔐 سیستم مدیریت جلسات (Sessions)
+
+### محدودیت Session
+- هر پلن دارای `max_active_sessions` است (پیش‌فرض: 3)
+- اگر کاربر بیش از حد مجاز login کند، **قدیمی‌ترین session غیرفعال می‌شود**
+- توکن refresh قدیمی blacklist می‌شود
+
+### API Endpoints
+```
+GET  /api/v1/auth/sessions/           # لیست sessions
+GET  /api/v1/auth/sessions/with_limit/ # با اطلاعات محدودیت پلن
+POST /api/v1/auth/sessions/{id}/revoke/ # حذف یک session
+POST /api/v1/auth/sessions/revoke_all/  # حذف همه sessions دیگر
+```
+
+### فایل‌های مرتبط
+- `accounts/otp_views.py` - منطق محدودیت در VerifyOTPView
+- `accounts/views.py` - UserSessionViewSet
+- `subscriptions/models.py` - فیلد max_active_sessions در Plan
+- `frontend/src/components/SettingsPage.tsx` - تب جلسات فعال
+
+---
+
+## ⏰ تسک‌های زمان‌بندی شده (Celery Beat)
+
+### لیست تسک‌ها
+| تسک | زمان | توضیحات |
+|-----|------|---------|
+| `check-expiring-subscriptions` | 09:00 روزانه | اعلان انقضای اشتراک |
+| `check-expired-subscriptions` | 00:30 روزانه | بررسی اشتراک‌های منقضی |
+| `check-quota-warnings` | هر 6 ساعت | هشدار سهمیه 80% |
+| `cleanup-tokens-and-sessions` | 03:00 روزانه | پاکسازی توکن‌ها |
+| `cleanup-old-files` | 02:00 روزانه | پاکسازی فایل‌های موقت |
+
+### فایل‌های مرتبط
+- `core/settings.py` → `CELERY_BEAT_SCHEDULE`
+- `core/tasks.py` - تسک‌های cleanup
+- `subscriptions/tasks.py` - تسک‌های اشتراک
+
+### دستورات دستی
+```bash
+# پاکسازی توکن‌ها
+docker exec app_backend python manage.py cleanup_tokens
+
+# با پارامترها
+docker exec app_backend python manage.py cleanup_tokens --max-tokens-per-user 3 --session-days 30
+```
+
+---
+
+## 🔑 تنظیمات OTP
+
+### متغیر محیطی
+```env
+OTP_EXPIRE_SECONDS=120  # 2 دقیقه
+```
+
+### نحوه کار
+1. Backend از `settings.OTP_EXPIRE_SECONDS` می‌خواند
+2. API در response فیلد `expires_in` برمی‌گرداند
+3. Frontend تایمر را از response تنظیم می‌کند
+
+### فایل‌های مرتبط
+- `.env` → `OTP_EXPIRE_SECONDS`
+- `core/settings.py` → خواندن از env
+- `accounts/otp_views.py` → استفاده در cache و response
+- `frontend/src/app/auth/login/page.tsx` → تایمر UI
+
+---
+
 ## 🎯 کارهای در انتظار
 
 - [ ] سیستم پرداخت (زرین‌پال، رمزارز)
 - [x] مدیریت اشتراک و پلن‌ها ✅
+- [x] مدیریت جلسات فعال ✅
+- [x] تسک‌های زمان‌بندی شده ✅
 - [ ] بازارچه مشاوران
 - [ ] سیستم اعلان‌ها (Email, SMS, Push)
 - [ ] اپلیکیشن موبایل
