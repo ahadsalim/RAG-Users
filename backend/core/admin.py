@@ -78,11 +78,11 @@ class CurrencyAdmin(admin.ModelAdmin):
 class PaymentGatewayAdmin(admin.ModelAdmin):
     """Admin for PaymentGateway model"""
     list_display = [
-        'name', 'gateway_type', 'is_active', 'is_sandbox', 
+        'name', 'is_active', 'is_sandbox', 
         'commission_percentage', 'display_order'
     ]
     list_editable = ['is_active', 'is_sandbox', 'display_order']
-    list_filter = ['gateway_type', 'is_active', 'is_sandbox']
+    list_filter = ['is_active', 'is_sandbox']
     search_fields = ['name', 'merchant_id']
     filter_horizontal = ['supported_currencies']
     ordering = ['display_order', 'name']
@@ -91,7 +91,6 @@ class PaymentGatewayAdmin(admin.ModelAdmin):
         (_('درگاه پرداخت'), {
             'fields': (
                 'name', 
-                'gateway_type', 
                 'connected_account',
                 'merchant_id', 
                 'api_key', 

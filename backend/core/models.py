@@ -78,20 +78,7 @@ class Currency(models.Model):
 class PaymentGateway(models.Model):
     """Payment gateway configuration"""
     
-    GATEWAY_TYPES = [
-        ('zarinpal', _('زرین‌پال')),
-        ('idpay', _('آیدی‌پی')),
-        ('nextpay', _('نکست‌پی')),
-        ('parsian', _('پارسیان')),
-        ('mellat', _('ملت')),
-        ('saman', _('سامان')),
-        ('pasargad', _('پاسارگاد')),
-        ('stripe', _('Stripe')),
-        ('paypal', _('PayPal')),
-    ]
-    
     name = models.CharField(max_length=50, verbose_name=_('نام درگاه'))
-    gateway_type = models.CharField(max_length=20, choices=GATEWAY_TYPES, verbose_name=_('نوع درگاه'))
     connected_account = models.CharField(max_length=50, blank=True, verbose_name=_('شماره حساب متصل'))
     merchant_id = models.CharField(max_length=255, blank=True, verbose_name=_('شناسه پذیرنده'))
     api_key = models.CharField(max_length=255, blank=True, verbose_name=_('کلید API'))
@@ -129,7 +116,7 @@ class PaymentGateway(models.Model):
         ordering = ['display_order', 'name']
     
     def __str__(self):
-        return f"{self.name} ({self.get_gateway_type_display()})"
+        return self.name
 
 
 class SiteSettings(models.Model):
