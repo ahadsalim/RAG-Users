@@ -33,6 +33,72 @@ economic_code_validator = RegexValidator(
 )
 
 
+class StaffGroup(models.Model):
+    """
+    گروه‌های کارمندی برای مدیریت دسترسی‌ها
+    مثال: پشتیبانی، مالی، فنی، محتوا، ...
+    """
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    name = models.CharField(max_length=100, unique=True, verbose_name=_('نام گروه'))
+    description = models.TextField(blank=True, verbose_name=_('توضیحات'))
+    
+    # دسترسی‌های سفارشی
+    can_view_users = models.BooleanField(default=False, verbose_name=_('مشاهده کاربران'))
+    can_edit_users = models.BooleanField(default=False, verbose_name=_('ویرایش کاربران'))
+    can_delete_users = models.BooleanField(default=False, verbose_name=_('حذف کاربران'))
+    can_view_financial = models.BooleanField(default=False, verbose_name=_('مشاهده امور مالی'))
+    can_manage_financial = models.BooleanField(default=False, verbose_name=_('مدیریت امور مالی'))
+    can_view_analytics = models.BooleanField(default=False, verbose_name=_('مشاهده گزارشات'))
+    can_export_data = models.BooleanField(default=False, verbose_name=_('خروجی داده'))
+    can_manage_content = models.BooleanField(default=False, verbose_name=_('مدیریت محتوا'))
+    can_manage_subscriptions = models.BooleanField(default=False, verbose_name=_('مدیریت اشتراک‌ها'))
+    can_view_logs = models.BooleanField(default=False, verbose_name=_('مشاهده لاگ‌ها'))
+    can_manage_support = models.BooleanField(default=False, verbose_name=_('مدیریت پشتیبانی'))
+    
+    # تنظیمات
+    is_active = models.BooleanField(default=True, verbose_name=_('فعال'))
+    priority = models.IntegerField(default=0, verbose_name=_('اولویت'))
+    
+    # تاریخ‌ها
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name=_('تاریخ ایجاد'))
+    updated_at = models.DateTimeField(auto_now=True, verbose_name=_('تاریخ به‌روزرسانی'))
+    
+    class Meta:
+        verbose_name = _('گروه کارمندی')
+        verbose_name_plural = _('گروه‌های کارمندی')
+        ordering = ['-priority', 'name']
+    
+    def __str__(self):
+        return self.name
+    
+    def get_permissions_list(self):
+        """لیست دسترسی‌های فعال این گروه"""
+        perms = []
+        if self.can_view_users:
+            perms.append('view_users')
+        if self.can_edit_users:
+            perms.append('edit_users')
+        if self.can_delete_users:
+            perms.append('delete_users')
+        if self.can_view_financial:
+            perms.append('view_financial')
+        if self.can_manage_financial:
+            perms.append('manage_financial')
+        if self.can_view_analytics:
+            perms.append('view_analytics')
+        if self.can_export_data:
+            perms.append('export_data')
+        if self.can_manage_content:
+            perms.append('manage_content')
+        if self.can_manage_subscriptions:
+            perms.append('manage_subscriptions')
+        if self.can_view_logs:
+            perms.append('view_logs')
+        if self.can_manage_support:
+            perms.append('manage_support')
+        return perms
+
+
 class CustomUserManager(BaseUserManager):
     """Custom user manager to handle phone or email authentication"""
     
@@ -188,11 +254,21 @@ class User(AbstractUser):
     organization_role = models.CharField(
         max_length=20,
         choices=[
+            ('owner', _('مالک')),
             ('admin', _('مدیر')),
             ('member', _('عضو')),
         ],
         blank=True,
         verbose_name=_('نقش در سازمان')
+    )
+    
+    # Staff Groups (for employees only)
+    staff_groups = models.ManyToManyField(
+        StaffGroup,
+        blank=True,
+        related_name='members',
+        verbose_name=_('گروه‌های کارمندی'),
+        help_text=_('فقط برای کارمندان (is_staff=True) استفاده می‌شود')
     )
     
     # Settings & Preferences
@@ -340,6 +416,39 @@ class User(AbstractUser):
         self.failed_login_attempts = 0
         self.locked_until = None
         self.save(update_fields=['failed_login_attempts', 'locked_until'])
+    
+    def has_staff_permission(self, permission_code):
+        """
+        بررسی دسترسی کارمند بر اساس گروه‌های کارمندی
+        permission_code: مثل 'view_users', 'manage_financial', ...
+        """
+        if not self.is_staff:
+            return False
+        
+        # سوپر یوزر همه دسترسی‌ها را دارد
+        if self.is_superuser:
+            return True
+        
+        # بررسی دسترسی در گروه‌های کارمندی
+        for group in self.staff_groups.filter(is_active=True):
+            if permission_code in group.get_permissions_list():
+                return True
+        
+        return False
+    
+    def get_all_staff_permissions(self):
+        """دریافت لیست تمام دسترسی‌های کارمند"""
+        if not self.is_staff:
+            return []
+        
+        if self.is_superuser:
+            return ['all']
+        
+        all_perms = set()
+        for group in self.staff_groups.filter(is_active=True):
+            all_perms.update(group.get_permissions_list())
+        
+        return list(all_perms)
 
 
 class UserSession(models.Model):

@@ -5,7 +5,7 @@ from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 from django.utils.translation import gettext_lazy as _
 from django.utils.html import format_html
-from .models import User, Organization, UserSession, OrganizationInvitation, AuditLog
+from .models import User, Organization, UserSession, OrganizationInvitation, AuditLog, StaffGroup
 
 
 @admin.register(User)
@@ -36,7 +36,7 @@ class UserAdmin(BaseUserAdmin):
             'classes': ('collapse',)
         }),
         (_('دسترسی‌ها'), {
-            'fields': ('is_active', 'is_staff', 'is_superuser', 'groups', 'user_permissions'),
+            'fields': ('is_active', 'is_staff', 'is_superuser', 'staff_groups'),
         }),
         (_('تنظیمات'), {
             'fields': ('language', 'timezone', 'currency'),
@@ -68,6 +68,7 @@ class UserAdmin(BaseUserAdmin):
         'created_at_display', 'updated_at_display', 'last_login_display', 'last_seen_display',
         'last_password_change'
     ]
+    filter_horizontal = ['staff_groups']
     
     def get_full_name(self, obj):
         return obj.get_full_name() or '-'
@@ -247,3 +248,44 @@ class AuditLogAdmin(admin.ModelAdmin):
     
     def has_change_permission(self, request, obj=None):
         return False
+
+
+@admin.register(StaffGroup)
+class StaffGroupAdmin(admin.ModelAdmin):
+    """Staff Group Admin - گروه‌های کارمندی"""
+    
+    list_display = ['name', 'get_permissions_count', 'member_count', 'priority', 'is_active', 'created_at']
+    list_filter = ['is_active', 'created_at']
+    search_fields = ['name', 'description']
+    ordering = ['-priority', 'name']
+    
+    fieldsets = (
+        (_('اطلاعات پایه'), {
+            'fields': ('name', 'description', 'priority', 'is_active')
+        }),
+        (_('دسترسی‌های کاربران'), {
+            'fields': ('can_view_users', 'can_edit_users', 'can_delete_users')
+        }),
+        (_('دسترسی‌های مالی'), {
+            'fields': ('can_view_financial', 'can_manage_financial')
+        }),
+        (_('دسترسی‌های سیستم'), {
+            'fields': (
+                'can_view_analytics', 'can_export_data', 
+                'can_manage_content', 'can_manage_subscriptions',
+                'can_view_logs', 'can_manage_support'
+            )
+        }),
+    )
+    
+    readonly_fields = ['created_at', 'updated_at']
+    
+    def get_permissions_count(self, obj):
+        count = len(obj.get_permissions_list())
+        return format_html('<strong>{}</strong> دسترسی', count)
+    get_permissions_count.short_description = _('تعداد دسترسی‌ها')
+    
+    def member_count(self, obj):
+        count = obj.members.filter(is_staff=True).count()
+        return format_html('<strong>{}</strong> کارمند', count)
+    member_count.short_description = _('تعداد اعضا')

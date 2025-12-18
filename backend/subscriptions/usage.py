@@ -13,8 +13,8 @@ import logging
 logger = logging.getLogger(__name__)
 
 
-class UsageLog(models.Model):
-    """لاگ مصرف کاربران"""
+class ModelUsageLog(models.Model):
+    """گزارش مصرف مدل‌ها - لاگ هر درخواست به مدل‌های AI"""
     
     ACTION_TYPES = [
         ('query', 'سوال'),
@@ -29,7 +29,7 @@ class UsageLog(models.Model):
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
-        related_name='usage_logs',
+        related_name='model_usage_logs',
         verbose_name='کاربر'
     )
     subscription = models.ForeignKey(
@@ -37,7 +37,7 @@ class UsageLog(models.Model):
         on_delete=models.SET_NULL,
         null=True,
         blank=True,
-        related_name='usage_logs',
+        related_name='model_usage_logs',
         verbose_name='اشتراک'
     )
     
@@ -49,8 +49,9 @@ class UsageLog(models.Model):
         verbose_name='نوع عملیات'
     )
     
-    # مصرف
-    tokens_used = models.IntegerField(default=0, verbose_name='توکن مصرفی')
+    # مصرف توکن - تفکیک ورودی و خروجی
+    input_tokens = models.IntegerField(default=0, verbose_name='توکن ورودی')
+    output_tokens = models.IntegerField(default=0, verbose_name='توکن خروجی')
     
     # نام پلن در زمان ثبت (برای گزارش‌گیری)
     plan_name = models.CharField(
@@ -84,8 +85,8 @@ class UsageLog(models.Model):
     created_at = models.DateTimeField(auto_now_add=True, verbose_name='زمان ایجاد')
     
     class Meta:
-        verbose_name = 'لاگ کاربر'
-        verbose_name_plural = 'لاگ کاربران'
+        verbose_name = 'گزارش مصرف مدل'
+        verbose_name_plural = 'گزارش مصرف مدل‌ها'
         ordering = ['-created_at']
         indexes = [
             models.Index(fields=['user', 'action_type', 'created_at']),
@@ -95,6 +96,15 @@ class UsageLog(models.Model):
     
     def __str__(self):
         return f"{self.user} - {self.action_type} - {self.created_at}"
+    
+    @property
+    def total_tokens(self):
+        """مجموع توکن‌های ورودی و خروجی"""
+        return self.input_tokens + self.output_tokens
+
+
+# Alias for backward compatibility
+UsageLog = ModelUsageLog
 
 
 class UsageService:
@@ -104,12 +114,14 @@ class UsageService:
     def log_usage(
         user,
         action_type: str = 'query',
-        tokens_used: int = 0,
+        input_tokens: int = 0,
+        output_tokens: int = 0,
+        tokens_used: int = 0,  # backward compatibility
         subscription=None,
         metadata: dict = None,
         ip_address: str = None,
         user_agent: str = None
-    ) -> UsageLog:
+    ) -> ModelUsageLog:
         """ثبت یک مصرف جدید"""
         
         # اگر subscription ارسال نشده، اشتراک فعال کاربر را پیدا کن
@@ -124,18 +136,23 @@ class UsageService:
         if subscription and subscription.plan:
             plan_name = subscription.plan.name
         
-        log = UsageLog.objects.create(
+        # backward compatibility: اگر tokens_used داده شده ولی input/output نه
+        if tokens_used > 0 and input_tokens == 0 and output_tokens == 0:
+            input_tokens = tokens_used
+        
+        log = ModelUsageLog.objects.create(
             user=user,
             subscription=subscription,
             action_type=action_type,
-            tokens_used=tokens_used,
+            input_tokens=input_tokens,
+            output_tokens=output_tokens,
             plan_name=plan_name,
             metadata=metadata or {},
             ip_address=ip_address,
             user_agent=user_agent or ''
         )
         
-        logger.info(f"Usage logged: {user} - {action_type} - {tokens_used} tokens")
+        logger.info(f"Usage logged: {user} - {action_type} - {input_tokens}+{output_tokens} tokens")
         return log
     
     @staticmethod
@@ -179,19 +196,26 @@ class UsageService:
         ).count()
     
     @staticmethod
-    def get_tokens_used_today(user) -> int:
+    def get_tokens_used_today(user) -> dict:
         """توکن‌های مصرفی امروز"""
         today = timezone.now().date()
         
-        result = UsageLog.objects.filter(
+        result = ModelUsageLog.objects.filter(
             user=user,
             created_at__date=today
-        ).aggregate(total=Sum('tokens_used'))
+        ).aggregate(
+            input_total=Sum('input_tokens'),
+            output_total=Sum('output_tokens')
+        )
         
-        return result['total'] or 0
+        return {
+            'input': result['input_total'] or 0,
+            'output': result['output_total'] or 0,
+            'total': (result['input_total'] or 0) + (result['output_total'] or 0)
+        }
     
     @staticmethod
-    def get_tokens_used_month(user, year=None, month=None) -> int:
+    def get_tokens_used_month(user, year=None, month=None) -> dict:
         """توکن‌های مصرفی این ماه"""
         now = timezone.now()
         if year is None:
@@ -199,13 +223,20 @@ class UsageService:
         if month is None:
             month = now.month
         
-        result = UsageLog.objects.filter(
+        result = ModelUsageLog.objects.filter(
             user=user,
             created_at__year=year,
             created_at__month=month
-        ).aggregate(total=Sum('tokens_used'))
+        ).aggregate(
+            input_total=Sum('input_tokens'),
+            output_total=Sum('output_tokens')
+        )
         
-        return result['total'] or 0
+        return {
+            'input': result['input_total'] or 0,
+            'output': result['output_total'] or 0,
+            'total': (result['input_total'] or 0) + (result['output_total'] or 0)
+        }
     
     @staticmethod
     def get_usage_stats(user, days: int = 30) -> dict:
@@ -214,25 +245,31 @@ class UsageService:
         start_date = timezone.now() - timedelta(days=days)
         
         # آمار کلی
-        logs = UsageLog.objects.filter(
+        logs = ModelUsageLog.objects.filter(
             user=user,
             created_at__gte=start_date
         )
         
         total_queries = logs.filter(action_type='query').count()
-        total_tokens = logs.aggregate(total=Sum('tokens_used'))['total'] or 0
+        token_totals = logs.aggregate(
+            input_total=Sum('input_tokens'),
+            output_total=Sum('output_tokens')
+        )
         
         # آمار روزانه
         daily_stats = logs.filter(action_type='query').annotate(
             date=TruncDate('created_at')
         ).values('date').annotate(
             count=Count('id'),
-            tokens=Sum('tokens_used')
+            input_tokens=Sum('input_tokens'),
+            output_tokens=Sum('output_tokens')
         ).order_by('date')
         
         return {
             'total_queries': total_queries,
-            'total_tokens': total_tokens,
+            'total_input_tokens': token_totals['input_total'] or 0,
+            'total_output_tokens': token_totals['output_total'] or 0,
+            'total_tokens': (token_totals['input_total'] or 0) + (token_totals['output_total'] or 0),
             'daily_stats': list(daily_stats),
             'period_days': days
         }

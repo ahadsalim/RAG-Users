@@ -1,5 +1,6 @@
 """
 Custom Admin Login Views with OTP Support
+Moved from admin_panel app
 """
 import random
 import logging
@@ -11,7 +12,7 @@ from django.views import View
 from django.core.cache import cache
 from django.contrib import messages
 from django.http import JsonResponse
-from accounts.utils import send_otp_sms
+from .utils import send_otp_sms
 
 logger = logging.getLogger(__name__)
 User = get_user_model()

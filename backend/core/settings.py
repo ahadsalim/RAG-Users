@@ -40,7 +40,6 @@ INSTALLED_APPS = [
     # Local apps
     'core',
     'accounts',
-    'admin_panel',
     'subscriptions',
     'payments',
     'chat',

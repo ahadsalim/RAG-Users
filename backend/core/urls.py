@@ -7,7 +7,7 @@ from django.conf import settings
 from django.conf.urls.static import static
 from rest_framework_simplejwt.views import TokenRefreshView
 from drf_spectacular.views import SpectacularAPIView, SpectacularRedocView, SpectacularSwaggerView
-from admin_panel.views import AdminLoginView
+from accounts.admin_views import AdminLoginView
 
 # برای تنظیم عنوان پنل ادمین
 admin.site.site_header = "پنل مدیریت پلتفرم مشاور"

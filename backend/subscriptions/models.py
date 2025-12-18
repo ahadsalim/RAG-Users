@@ -168,3 +168,12 @@ class Subscription(models.Model):
         """تعداد query های این ماه - از UsageLog"""
         from .usage import UsageService
         return UsageService.get_monthly_usage(self.user, self)
+
+
+class UserUsageReport(Subscription):
+    """Proxy model برای گزارش مصرف کاربران"""
+    
+    class Meta:
+        proxy = True
+        verbose_name = 'گزارش مصرف کاربر'
+        verbose_name_plural = 'گزارش مصرف کاربران'

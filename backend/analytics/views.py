@@ -17,7 +17,7 @@ from .serializers import (
     RevenueAnalyticsSerializer, SystemMetricsSerializer,
     DashboardSummarySerializer, ChartDataSerializer
 )
-from admin_panel.permissions import IsAdminUser, HasAdminPermission
+from accounts.permissions import IsStaffUser, CanViewAnalytics, CanViewFinancial, CanExportData
 
 logger = logging.getLogger(__name__)
 
@@ -25,7 +25,7 @@ logger = logging.getLogger(__name__)
 class DashboardSummaryView(APIView):
     """خلاصه داشبورد"""
     
-    permission_classes = [permissions.IsAuthenticated, HasAdminPermission('view_analytics')]
+    permission_classes = [permissions.IsAuthenticated, CanViewAnalytics]
     
     def get(self, request):
         """دریافت خلاصه آمار داشبورد"""
@@ -131,7 +131,7 @@ class DashboardSummaryView(APIView):
 class ChartDataView(APIView):
     """داده‌های نمودار"""
     
-    permission_classes = [permissions.IsAuthenticated, HasAdminPermission('view_analytics')]
+    permission_classes = [permissions.IsAuthenticated, CanViewAnalytics]
     
     def get(self, request):
         """دریافت داده‌های نمودار"""
@@ -290,7 +290,7 @@ class UserAnalyticsViewSet(viewsets.ModelViewSet):
     
     queryset = UserAnalytics.objects.all()
     serializer_class = UserAnalyticsSerializer
-    permission_classes = [permissions.IsAuthenticated, HasAdminPermission('view_analytics')]
+    permission_classes = [permissions.IsAuthenticated, CanViewAnalytics]
     
     @action(detail=False, methods=['get'])
     def top_users(self, request):
@@ -346,7 +346,7 @@ class RevenueAnalyticsViewSet(viewsets.ModelViewSet):
     
     queryset = RevenueAnalytics.objects.all()
     serializer_class = RevenueAnalyticsSerializer
-    permission_classes = [permissions.IsAuthenticated, HasAdminPermission('view_financial')]
+    permission_classes = [permissions.IsAuthenticated, CanViewFinancial]
     
     @action(detail=False, methods=['get'])
     def summary(self, request):
@@ -433,7 +433,7 @@ class SystemMetricsViewSet(viewsets.ModelViewSet):
     
     queryset = SystemMetrics.objects.all()
     serializer_class = SystemMetricsSerializer
-    permission_classes = [permissions.IsAuthenticated, HasAdminPermission('view_analytics')]
+    permission_classes = [permissions.IsAuthenticated, CanViewAnalytics]
     
     @action(detail=False, methods=['get'])
     def realtime(self, request):
@@ -494,7 +494,7 @@ class SystemMetricsViewSet(viewsets.ModelViewSet):
 class MetricsExportView(APIView):
     """خروجی گرفتن از متریک‌ها"""
     
-    permission_classes = [permissions.IsAuthenticated, HasAdminPermission('export_data')]
+    permission_classes = [permissions.IsAuthenticated, CanExportData]
     
     def post(self, request):
         """تولید گزارش"""

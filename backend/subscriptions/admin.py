@@ -1,9 +1,10 @@
 from django.contrib import admin
 from django.utils.html import format_html
 from django.utils import timezone
+from django.db.models import Sum
 from django import forms
-from .models import Plan, Subscription
-from .usage import UsageLog
+from .models import Plan, Subscription, UserUsageReport
+from .usage import ModelUsageLog
 from core.models import Currency
 
 
@@ -157,13 +158,14 @@ class SubscriptionAdmin(admin.ModelAdmin):
     extend_subscription.short_description = 'تمدید 30 روزه'
 
 
-@admin.register(UsageLog)
-class UsageLogAdmin(admin.ModelAdmin):
-    list_display = ['user_info', 'action_type', 'tokens_used', 'subscription_plan', 'created_at']
+@admin.register(ModelUsageLog)
+class ModelUsageLogAdmin(admin.ModelAdmin):
+    """گزارش مصرف مدل‌ها - لاگ هر درخواست به مدل‌های AI"""
+    list_display = ['user_info', 'action_type', 'input_tokens', 'output_tokens', 'subscription_plan', 'created_at']
     list_filter = ['action_type', 'created_at']
     search_fields = ['user__email', 'user__phone_number', 'user__first_name', 'user__last_name']
     date_hierarchy = 'created_at'
-    readonly_fields = ['id', 'user', 'subscription', 'action_type', 'tokens_used', 'metadata', 'ip_address', 'user_agent', 'created_at']
+    readonly_fields = ['id', 'user', 'subscription', 'action_type', 'input_tokens', 'output_tokens', 'metadata', 'ip_address', 'user_agent', 'created_at']
     
     def user_info(self, obj):
         return format_html(
@@ -174,10 +176,8 @@ class UsageLogAdmin(admin.ModelAdmin):
     user_info.short_description = 'کاربر'
     
     def subscription_plan(self, obj):
-        # اول از plan_name ذخیره شده استفاده کن (نام پلن در زمان ثبت)
         if obj.plan_name:
             return obj.plan_name
-        # اگر نبود، از اشتراک فعلی بخوان (برای لاگ‌های قدیمی)
         if obj.subscription:
             return obj.subscription.plan.name
         return '-'
@@ -187,4 +187,77 @@ class UsageLogAdmin(admin.ModelAdmin):
         return False
     
     def has_change_permission(self, request, obj=None):
+        return False
+
+
+@admin.register(UserUsageReport)
+class UserUsageReportAdmin(admin.ModelAdmin):
+    """گزارش مصرف کاربران - خلاصه مصرف هر کاربر"""
+    
+    list_display = ['user_info', 'plan_name', 'input_tokens_display', 'output_tokens_display', 
+                    'remaining_queries', 'remaining_days', 'date_joined']
+    list_filter = ['plan', 'status']
+    search_fields = ['user__email', 'user__phone_number', 'user__first_name', 'user__last_name']
+    ordering = ['-user__date_joined']
+    
+    def get_queryset(self, request):
+        return super().get_queryset(request).select_related('user', 'plan')
+    
+    def user_info(self, obj):
+        return format_html(
+            '<strong>{}</strong><br/><small>{}</small>',
+            obj.user.get_full_name() or obj.user.phone_number,
+            obj.user.phone_number or obj.user.email
+        )
+    user_info.short_description = 'کاربر'
+    
+    def plan_name(self, obj):
+        return obj.plan.name if obj.plan else '-'
+    plan_name.short_description = 'پلن'
+    
+    def input_tokens_display(self, obj):
+        tokens = ModelUsageLog.objects.filter(user=obj.user).aggregate(
+            total=Sum('input_tokens')
+        )
+        return tokens['total'] or 0
+    input_tokens_display.short_description = 'توکن ورودی'
+    
+    def output_tokens_display(self, obj):
+        tokens = ModelUsageLog.objects.filter(user=obj.user).aggregate(
+            total=Sum('output_tokens')
+        )
+        return tokens['total'] or 0
+    output_tokens_display.short_description = 'توکن خروجی'
+    
+    def remaining_queries(self, obj):
+        if obj.status != 'active':
+            return '-'
+        from .usage import UsageService
+        daily_used = UsageService.get_daily_usage(obj.user, obj)
+        max_daily = obj.plan.max_queries_per_day or 10
+        return max(0, max_daily - daily_used)
+    remaining_queries.short_description = 'مانده سوال'
+    
+    def remaining_days(self, obj):
+        if obj.status != 'active' or not obj.end_date:
+            return '-'
+        delta = obj.end_date - timezone.now()
+        days = max(0, delta.days)
+        if days > 0:
+            return format_html('<span style="color: green;">{} روز</span>', days)
+        return format_html('<span style="color: red;">منقضی</span>')
+    remaining_days.short_description = 'مانده روز'
+    
+    def date_joined(self, obj):
+        return obj.user.date_joined
+    date_joined.short_description = 'تاریخ عضویت'
+    date_joined.admin_order_field = 'user__date_joined'
+    
+    def has_add_permission(self, request):
+        return False
+    
+    def has_change_permission(self, request, obj=None):
+        return False
+    
+    def has_delete_permission(self, request, obj=None):
         return False

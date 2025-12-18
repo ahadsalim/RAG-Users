@@ -3,10 +3,14 @@ Override admin for third-party apps to add Persian names
 This will be called from accounts/apps.py ready() method
 """
 from django.contrib import admin
+from django.contrib.auth.models import Group
 from django.apps import apps
 from django.utils.translation import gettext_lazy as _
 from django.utils.html import format_html
 from .models import Currency, PaymentGateway, SiteSettings
+
+# Unregister Django's default Group model (we use custom StaffGroup in accounts)
+admin.site.unregister(Group)
 
 
 def setup_token_blacklist_persian():
