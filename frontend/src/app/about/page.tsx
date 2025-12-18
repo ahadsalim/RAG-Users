@@ -2,15 +2,21 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
+import { getSiteSettings } from '@/services/settingsService'
+import type { SiteSettings } from '@/types/settings'
 
 export default function AboutPage() {
   const [theme, setTheme] = useState<'light' | 'dark'>('light')
+  const [settings, setSettings] = useState<SiteSettings | null>(null)
 
   useEffect(() => {
     const savedTheme = localStorage.getItem('theme') as 'light' | 'dark' | null
     if (savedTheme) {
       setTheme(savedTheme)
     }
+    
+    // Load site settings for social media links
+    getSiteSettings().then(setSettings).catch(console.error)
   }, [])
 
   const styles = {
@@ -208,6 +214,92 @@ export default function AboutPage() {
         <Link href="/auth/login" style={styles.backLink}>
           بازگشت به صفحه ورود
         </Link>
+        
+        {/* Social Media Links */}
+        {settings && (settings.telegram_url || settings.instagram_url || settings.twitter_url) && (
+          <div style={{
+            marginTop: '32px',
+            paddingTop: '24px',
+            borderTop: `1px solid ${theme === 'light' ? '#e2e8f0' : '#4a5568'}`,
+            textAlign: 'center' as const,
+          }}>
+            <p style={{
+              fontSize: '14px',
+              color: theme === 'light' ? '#718096' : '#a0aec0',
+              marginBottom: '16px',
+            }}>
+              ما را در شبکه‌های اجتماعی دنبال کنید
+            </p>
+            <div style={{ display: 'flex', justifyContent: 'center', gap: '16px' }}>
+              {settings.telegram_url && (
+                <a 
+                  href={settings.telegram_url} 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    width: '44px',
+                    height: '44px',
+                    borderRadius: '50%',
+                    background: '#0088cc',
+                    color: '#fff',
+                    fontSize: '20px',
+                    textDecoration: 'none',
+                  }}
+                  title="تلگرام"
+                >
+                  📱
+                </a>
+              )}
+              {settings.instagram_url && (
+                <a 
+                  href={settings.instagram_url} 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    width: '44px',
+                    height: '44px',
+                    borderRadius: '50%',
+                    background: 'linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%)',
+                    color: '#fff',
+                    fontSize: '20px',
+                    textDecoration: 'none',
+                  }}
+                  title="اینستاگرام"
+                >
+                  📷
+                </a>
+              )}
+              {settings.twitter_url && (
+                <a 
+                  href={settings.twitter_url} 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    width: '44px',
+                    height: '44px',
+                    borderRadius: '50%',
+                    background: '#1da1f2',
+                    color: '#fff',
+                    fontSize: '20px',
+                    textDecoration: 'none',
+                  }}
+                  title="توییتر"
+                >
+                  🐦
+                </a>
+              )}
+            </div>
+          </div>
+        )}
       </div>
     </div>
   )

@@ -116,26 +116,22 @@ class SiteSettingsAdmin(admin.ModelAdmin):
     
     fieldsets = (
         (_('اطلاعات پایه سایت'), {
-            'fields': ('site_name', 'site_url', 'site_description')
+            'fields': (
+                'frontend_site_name', 
+                'admin_site_name',
+                'support_email', 
+                'support_phone',
+                'telegram_url', 
+                'instagram_url', 
+                'twitter_url',
+            )
         }),
         (_('تنظیمات مالی'), {
             'fields': ('base_currency', 'default_payment_gateway'),
             'description': _('واحد پولی و درگاه پرداخت پیش‌فرض سایت')
         }),
-        (_('اطلاعات تماس'), {
-            'fields': ('support_email', 'support_phone'),
-            'classes': ('collapse',)
-        }),
-        (_('شبکه‌های اجتماعی'), {
-            'fields': ('telegram_url', 'instagram_url', 'twitter_url'),
-            'classes': ('collapse',)
-        }),
         (_('حالت تعمیر و نگهداری'), {
             'fields': ('maintenance_mode', 'maintenance_message'),
-            'classes': ('collapse',)
-        }),
-        (_('تنظیمات امنیتی'), {
-            'fields': ('allow_registration', 'require_email_verification', 'enable_two_factor'),
             'classes': ('collapse',)
         }),
     )

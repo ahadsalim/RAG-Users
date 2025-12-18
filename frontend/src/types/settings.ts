@@ -22,9 +22,8 @@ export interface PaymentGateway {
 }
 
 export interface SiteSettings {
-  site_name: string
-  site_url: string
-  site_description: string
+  frontend_site_name: string
+  admin_site_name: string
   base_currency: Currency | null
   default_payment_gateway: PaymentGateway | null
   support_email: string
@@ -34,9 +33,6 @@ export interface SiteSettings {
   twitter_url: string
   maintenance_mode: boolean
   maintenance_message: string
-  allow_registration: boolean
-  require_email_verification: boolean
-  enable_two_factor: boolean
 }
 
 export interface CurrencyConversionRequest {

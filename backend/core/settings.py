@@ -60,6 +60,7 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'subscriptions.middleware.SubscriptionMiddleware',  # Check subscription limits
+    'core.middleware.DynamicAdminTitleMiddleware',  # Dynamic admin title from SiteSettings
 ]
 
 ROOT_URLCONF = 'core.urls'

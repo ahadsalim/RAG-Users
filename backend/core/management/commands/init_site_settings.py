@@ -105,15 +105,11 @@ class Command(BaseCommand):
         settings, created = SiteSettings.objects.get_or_create(pk=1)
         if created:
             # Set defaults
-            settings.site_name = 'تجارت چت'
-            settings.site_url = 'https://tejarat.chat'
-            settings.site_description = 'سیستم هوشمند مشاوره تجاری با هوش مصنوعی'
+            settings.frontend_site_name = 'تجارت چت'
+            settings.admin_site_name = 'پنل مدیریت تجارت چت'
             settings.base_currency = irt  # Default to Toman
             if created_gateways:
                 settings.default_payment_gateway = created_gateways[0]
-            settings.allow_registration = True
-            settings.require_email_verification = True
-            settings.enable_two_factor = True
             settings.save()
             self.stdout.write(self.style.SUCCESS('✓ Created site settings'))
         else:

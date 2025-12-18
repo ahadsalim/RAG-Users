@@ -134,10 +134,28 @@ class PaymentGateway(models.Model):
 class SiteSettings(models.Model):
     """Site-wide settings (Singleton pattern)"""
     
-    # Basic Info
-    site_name = models.CharField(max_length=100, default='تجارت چت', verbose_name=_('نام سایت'))
-    site_url = models.URLField(default='https://tejarat.chat', verbose_name=_('آدرس سایت'))
-    site_description = models.TextField(blank=True, verbose_name=_('توضیحات سایت'))
+    # Basic Info - All in one tab
+    frontend_site_name = models.CharField(
+        max_length=100, 
+        default='تجارت چت', 
+        verbose_name=_('نام سایت کاربران'),
+        help_text=_('نام سایت که در فرانت‌اند نمایش داده می‌شود')
+    )
+    admin_site_name = models.CharField(
+        max_length=100, 
+        default='پنل مدیریت تجارت چت', 
+        verbose_name=_('نام پنل مدیریت'),
+        help_text=_('نام سایت که در پنل مدیریت نمایش داده می‌شود')
+    )
+    
+    # Contact Info (moved to main tab)
+    support_email = models.EmailField(blank=True, verbose_name=_('ایمیل پشتیبانی'))
+    support_phone = models.CharField(max_length=20, blank=True, verbose_name=_('تلفن پشتیبانی'))
+    
+    # Social Media (moved to main tab)
+    telegram_url = models.URLField(blank=True, verbose_name=_('آدرس تلگرام'))
+    instagram_url = models.URLField(blank=True, verbose_name=_('آدرس اینستاگرام'))
+    twitter_url = models.URLField(blank=True, verbose_name=_('آدرس توییتر'))
     
     # Currency Settings
     base_currency = models.ForeignKey(
@@ -160,15 +178,6 @@ class SiteSettings(models.Model):
         verbose_name=_('درگاه پرداخت پیش‌فرض')
     )
     
-    # Contact Info
-    support_email = models.EmailField(blank=True, verbose_name=_('ایمیل پشتیبانی'))
-    support_phone = models.CharField(max_length=20, blank=True, verbose_name=_('تلفن پشتیبانی'))
-    
-    # Social Media
-    telegram_url = models.URLField(blank=True, verbose_name=_('آدرس تلگرام'))
-    instagram_url = models.URLField(blank=True, verbose_name=_('آدرس اینستاگرام'))
-    twitter_url = models.URLField(blank=True, verbose_name=_('آدرس توییتر'))
-    
     # Maintenance
     maintenance_mode = models.BooleanField(default=False, verbose_name=_('حالت تعمیر و نگهداری'))
     maintenance_message = models.TextField(
@@ -176,11 +185,6 @@ class SiteSettings(models.Model):
         verbose_name=_('پیام حالت تعمیر'),
         help_text=_('پیامی که در حالت تعمیر به کاربران نمایش داده می‌شود')
     )
-    
-    # Feature Flags
-    allow_registration = models.BooleanField(default=True, verbose_name=_('امکان ثبت‌نام'))
-    require_email_verification = models.BooleanField(default=True, verbose_name=_('الزام تأیید ایمیل'))
-    enable_two_factor = models.BooleanField(default=True, verbose_name=_('فعال‌سازی احراز هویت دو مرحله‌ای'))
     
     # Timestamps
     updated_at = models.DateTimeField(auto_now=True)
@@ -197,7 +201,7 @@ class SiteSettings(models.Model):
         verbose_name_plural = _('تنظیمات سایت')
     
     def __str__(self):
-        return self.site_name
+        return self.frontend_site_name
     
     def save(self, *args, **kwargs):
         # Ensure only one instance exists (Singleton pattern)

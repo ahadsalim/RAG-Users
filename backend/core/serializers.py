@@ -35,10 +35,9 @@ class SiteSettingsSerializer(serializers.ModelSerializer):
     class Meta:
         model = SiteSettings
         fields = [
-            'site_name', 'site_url', 'site_description',
+            'frontend_site_name', 'admin_site_name',
             'base_currency', 'default_payment_gateway',
             'support_email', 'support_phone',
             'telegram_url', 'instagram_url', 'twitter_url',
             'maintenance_mode', 'maintenance_message',
-            'allow_registration', 'require_email_verification', 'enable_two_factor'
         ]
