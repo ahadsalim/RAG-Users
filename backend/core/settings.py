@@ -308,6 +308,16 @@ CELERY_BEAT_SCHEDULE = {
         'task': 'subscriptions.tasks.check_quota_warnings',
         'schedule': crontab(hour='*/6', minute=0),
     },
+    # پاکسازی توکن‌ها و session های قدیمی - هر شب ساعت 3 صبح
+    'cleanup-tokens-and-sessions': {
+        'task': 'core.tasks.cleanup_tokens_and_sessions',
+        'schedule': crontab(hour=3, minute=0),
+    },
+    # پاکسازی فایل‌های موقت - هر شب ساعت 2 صبح
+    'cleanup-old-files': {
+        'task': 'core.tasks.cleanup_old_files',
+        'schedule': crontab(hour=2, minute=0),
+    },
 }
 
 # Payment Gateways
