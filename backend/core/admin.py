@@ -88,16 +88,19 @@ class PaymentGatewayAdmin(admin.ModelAdmin):
     ordering = ['display_order', 'name']
     
     fieldsets = (
-        (_('اطلاعات پایه'), {
-            'fields': ('name', 'gateway_type', 'display_order')
-        }),
-        (_('اطلاعات API'), {
-            'fields': ('merchant_id', 'api_key', 'api_secret'),
-            'classes': ('collapse',),
-            'description': _('اطلاعات احراز هویت درگاه پرداخت')
-        }),
-        (_('تنظیمات'), {
-            'fields': ('is_active', 'is_sandbox', 'commission_percentage', 'supported_currencies')
+        (_('درگاه پرداخت'), {
+            'fields': (
+                'name', 
+                'gateway_type', 
+                'display_order',
+                'merchant_id', 
+                'api_key', 
+                'api_secret',
+                'is_active', 
+                'is_sandbox', 
+                'commission_percentage', 
+                'supported_currencies',
+            )
         }),
     )
 
