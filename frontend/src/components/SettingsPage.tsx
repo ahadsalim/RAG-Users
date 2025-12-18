@@ -1071,40 +1071,25 @@ const SessionsTab: React.FC = () => {
   }
 
   return (
-    <div className="space-y-6">
-      {/* Session Limit Info */}
-      <div className="bg-gradient-to-l from-blue-600 via-purple-600 to-indigo-600 rounded-xl p-4 text-white shadow-lg">
+    <div className="space-y-3">
+      {/* Session Limit Info - Compact */}
+      <div className="bg-gradient-to-l from-blue-600 via-purple-600 to-indigo-600 rounded-lg p-3 text-white">
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center">
-              <Monitor className="w-6 h-6" />
-            </div>
-            <div>
-              <p className="text-xs opacity-80">جلسات فعال</p>
-              <p className="text-xl font-bold">
-                {sessionsData?.current_sessions_count || 0} از {sessionsData?.max_sessions || 3}
-              </p>
-            </div>
+          <div className="flex items-center gap-2">
+            <Monitor className="w-5 h-5" />
+            <span className="text-sm font-medium">
+              {sessionsData?.current_sessions_count || 0} از {sessionsData?.max_sessions || 3} جلسه فعال
+            </span>
           </div>
           {sessionsData && !sessionsData.can_create_new_session && (
-            <div className="px-3 py-1 rounded-full text-xs font-medium bg-red-400/20 text-red-100">
-              ⚠️ به حداکثر رسیده
-            </div>
+            <span className="text-xs bg-red-400/30 px-2 py-0.5 rounded">⚠️ حداکثر</span>
           )}
         </div>
-        <p className="text-xs opacity-80 mt-2">
-          بر اساس پلن شما، می‌توانید حداکثر {sessionsData?.max_sessions || 3} دستگاه همزمان داشته باشید.
-          {sessionsData && !sessionsData.can_create_new_session && (
-            <span className="block mt-1 text-yellow-200">
-              برای ورود از دستگاه جدید، ابتدا یکی از جلسات فعال را حذف کنید.
-            </span>
-          )}
-        </p>
       </div>
 
       {/* Message */}
       {message && (
-        <div className={`text-sm py-2 px-4 rounded-lg ${
+        <div className={`text-xs py-1.5 px-3 rounded ${
           message.includes('✓') 
             ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300' 
             : 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300'
@@ -1113,33 +1098,33 @@ const SessionsTab: React.FC = () => {
         </div>
       )}
 
-      {/* Sessions List */}
-      <div className="bg-gray-50 dark:bg-gray-800 rounded-xl p-6">
-        <div className="flex items-center justify-between mb-4">
-          <h4 className="text-lg font-semibold text-gray-900 dark:text-white">دستگاه‌های متصل</h4>
+      {/* Sessions List - Compact */}
+      <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-3">
+        <div className="flex items-center justify-between mb-2">
+          <h4 className="text-sm font-semibold text-gray-900 dark:text-white">دستگاه‌های متصل</h4>
           {sessionsData && sessionsData.sessions.length > 1 && (
             <button
               onClick={handleRevokeAll}
               disabled={revoking === 'all'}
-              className="text-sm text-red-500 hover:text-red-600 disabled:opacity-50"
+              className="text-xs text-red-500 hover:text-red-600 disabled:opacity-50"
             >
-              {revoking === 'all' ? 'در حال حذف...' : 'حذف همه جلسات دیگر'}
+              {revoking === 'all' ? 'حذف...' : 'حذف همه'}
             </button>
           )}
         </div>
 
-        <div className="space-y-3">
+        <div className="space-y-2">
           {sessionsData?.sessions.map((session) => (
             <div 
               key={session.id}
-              className={`flex items-center justify-between p-4 rounded-lg border transition-all ${
+              className={`flex items-center justify-between p-2 rounded border text-xs ${
                 session.is_current
                   ? 'border-green-500 bg-green-50 dark:bg-green-900/20'
-                  : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600'
+                  : 'border-gray-200 dark:border-gray-700'
               }`}
             >
-              <div className="flex items-center gap-4">
-                <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${
+              <div className="flex items-center gap-2">
+                <div className={`w-7 h-7 rounded flex items-center justify-center ${
                   session.is_current
                     ? 'bg-green-500 text-white'
                     : 'bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-400'
@@ -1147,20 +1132,16 @@ const SessionsTab: React.FC = () => {
                   {getDeviceIcon(session.device_type)}
                 </div>
                 <div>
-                  <div className="flex items-center gap-2">
-                    <p className="font-medium text-gray-900 dark:text-white">
-                      {session.device_name || session.browser || 'دستگاه ناشناس'}
-                    </p>
+                  <div className="flex items-center gap-1">
+                    <span className="font-medium text-gray-900 dark:text-white">
+                      {session.browser || 'ناشناس'}
+                    </span>
                     {session.is_current && (
-                      <span className="px-2 py-0.5 text-xs bg-green-500 text-white rounded-full">
-                        این دستگاه
-                      </span>
+                      <span className="px-1 py-0.5 text-[10px] bg-green-500 text-white rounded">فعلی</span>
                     )}
                   </div>
-                  <div className="text-xs text-gray-500 dark:text-gray-400 mt-1 space-y-0.5">
-                    <p>{session.os} • {session.browser}</p>
-                    <p>IP: {session.ip_address} {session.location && `• ${session.location}`}</p>
-                    <p>آخرین فعالیت: {formatDate(session.last_activity)}</p>
+                  <div className="text-gray-500 dark:text-gray-400">
+                    {session.os} • {session.ip_address} • {formatDate(session.last_activity)}
                   </div>
                 </div>
               </div>
@@ -1169,13 +1150,13 @@ const SessionsTab: React.FC = () => {
                 <button
                   onClick={() => handleRevokeSession(session.id)}
                   disabled={revoking === session.id}
-                  className="p-2 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors disabled:opacity-50"
-                  title="حذف جلسه"
+                  className="p-1 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded disabled:opacity-50"
+                  title="حذف"
                 >
                   {revoking === session.id ? (
-                    <div className="w-5 h-5 border-2 border-red-500 border-t-transparent rounded-full animate-spin"></div>
+                    <div className="w-4 h-4 border-2 border-red-500 border-t-transparent rounded-full animate-spin"></div>
                   ) : (
-                    <Trash2 className="w-5 h-5" />
+                    <Trash2 className="w-4 h-4" />
                   )}
                 </button>
               )}
@@ -1183,20 +1164,18 @@ const SessionsTab: React.FC = () => {
           ))}
 
           {(!sessionsData?.sessions || sessionsData.sessions.length === 0) && (
-            <div className="text-center py-8 text-gray-500 dark:text-gray-400">
+            <div className="text-center py-4 text-xs text-gray-500 dark:text-gray-400">
               هیچ جلسه فعالی یافت نشد
             </div>
           )}
         </div>
       </div>
 
-      {/* Info Box */}
-      <div className="bg-blue-50 dark:bg-blue-900/20 rounded-xl p-4 border border-blue-200 dark:border-blue-800">
-        <h5 className="font-medium text-blue-800 dark:text-blue-300 mb-2">💡 نکته امنیتی</h5>
-        <p className="text-sm text-blue-700 dark:text-blue-400">
-          اگر دستگاهی را نمی‌شناسید یا به آن دسترسی ندارید، آن را حذف کنید و رمز عبور خود را تغییر دهید.
-          برای افزایش تعداد جلسات مجاز، می‌توانید پلن خود را ارتقا دهید.
-        </p>
+      {/* Info Box - Compact */}
+      <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-2 border border-blue-200 dark:border-blue-800 text-xs">
+        <span className="text-blue-700 dark:text-blue-400">
+          💡 دستگاه ناشناس را حذف کنید. برای افزایش سقف، پلن را ارتقا دهید.
+        </span>
       </div>
     </div>
   );

@@ -362,8 +362,8 @@ p.help {
 .change-list .field-max_queries_per_month input,
 .change-list .field-max_organization_members input,
 .change-list .field-max_active_sessions input {
-    width: 70px !important;
-    min-width: 60px !important;
+    width: 100px !important;
+    min-width: 90px !important;
     text-align: center !important;
 }
 

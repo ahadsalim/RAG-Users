@@ -675,18 +675,37 @@ class LogoutView(APIView):
         try:
             # Get refresh token from request
             refresh_token = request.data.get('refresh_token')
-            if refresh_token:
-                token = RefreshToken(refresh_token)
-                token.blacklist()
+            session_invalidated = False
             
-            # Invalidate current session
-            session = UserSession.objects.filter(
-                user=request.user,
-                session_key=request.session.session_key
-            ).first()
-            if session:
-                session.is_active = False
-                session.save(update_fields=['is_active'])
+            if refresh_token:
+                # Find and invalidate session by refresh_token
+                session = UserSession.objects.filter(
+                    user=request.user,
+                    refresh_token=refresh_token,
+                    is_active=True
+                ).first()
+                if session:
+                    session.is_active = False
+                    session.save(update_fields=['is_active'])
+                    session_invalidated = True
+                
+                # Blacklist the token
+                try:
+                    token = RefreshToken(refresh_token)
+                    token.blacklist()
+                except Exception:
+                    pass
+            
+            # Fallback: try to find by session_key if available
+            if not session_invalidated and request.session.session_key:
+                session = UserSession.objects.filter(
+                    user=request.user,
+                    session_key=request.session.session_key,
+                    is_active=True
+                ).first()
+                if session:
+                    session.is_active = False
+                    session.save(update_fields=['is_active'])
             
             # Log logout
             AuditLog.objects.create(
