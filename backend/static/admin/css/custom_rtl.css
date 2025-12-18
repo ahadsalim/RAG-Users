@@ -31,8 +31,11 @@ body {
     margin-left: 0;
 }
 
-.sidebar .nav-sidebar .nav-item > .nav-link {
-    text-align: right;
+.sidebar .nav-sidebar .nav-item > .nav-link,
+.nav-sidebar .nav-item > .nav-link {
+    text-align: right !important;
+    justify-content: flex-end !important;
+    padding-right: 1rem !important;
 }
 
 .sidebar .nav-sidebar .nav-link > .right {
