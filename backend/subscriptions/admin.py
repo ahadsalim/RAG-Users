@@ -74,11 +74,6 @@ class PlanAdmin(admin.ModelAdmin):
             return format_html('<span style="color: green;">●</span> فعال')
         return format_html('<span style="color: red;">●</span> غیرفعال')
     colored_status.short_description = 'وضعیت'
-    
-    class Media:
-        css = {
-            'all': ('admin/css/plan_admin.css',)
-        }
 
 
 @admin.register(Subscription)

@@ -363,6 +363,12 @@ p.help {
     text-align: center !important;
 }
 
+.change-list .field-max_active_sessions input {
+    width: 45px !important;
+    min-width: 45px !important;
+    text-align: center !important;
+}
+
 /* Fix sidebar horizontal scroll */
 .main-sidebar {
     overflow-x: hidden !important;
