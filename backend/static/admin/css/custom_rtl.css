@@ -352,3 +352,13 @@ fieldset .selector + p.help {
 p.help {
     display: none !important;
 }
+
+/* Narrow columns for numeric editable fields in Plan list */
+.change-list .field-duration_days input,
+.change-list .field-max_queries_per_day input,
+.change-list .field-max_queries_per_month input,
+.change-list .field-max_organization_members input {
+    width: 70px !important;
+    min-width: 60px !important;
+    text-align: center !important;
+}
