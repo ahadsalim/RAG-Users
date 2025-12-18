@@ -263,25 +263,17 @@ class StaffGroupAdmin(admin.ModelAdmin):
         (_('اطلاعات پایه'), {
             'fields': ('name', 'description', 'priority', 'is_active')
         }),
-        (_('دسترسی‌های کاربران'), {
-            'fields': ('can_view_users', 'can_edit_users', 'can_delete_users')
-        }),
-        (_('دسترسی‌های مالی'), {
-            'fields': ('can_view_financial', 'can_manage_financial')
-        }),
-        (_('دسترسی‌های سیستم'), {
-            'fields': (
-                'can_view_analytics', 'can_export_data', 
-                'can_manage_content', 'can_manage_subscriptions',
-                'can_view_logs', 'can_manage_support'
-            )
+        (_('دسترسی‌ها'), {
+            'fields': ('permissions',),
+            'description': _('دسترسی‌های مورد نظر را از لیست سمت چپ انتخاب کرده و به سمت راست منتقل کنید.')
         }),
     )
     
     readonly_fields = ['created_at', 'updated_at']
+    filter_horizontal = ['permissions']
     
     def get_permissions_count(self, obj):
-        count = len(obj.get_permissions_list())
+        count = obj.permissions.count()
         return format_html('<strong>{}</strong> دسترسی', count)
     get_permissions_count.short_description = _('تعداد دسترسی‌ها')
     

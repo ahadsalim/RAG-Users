@@ -42,18 +42,13 @@ class StaffGroup(models.Model):
     name = models.CharField(max_length=100, unique=True, verbose_name=_('نام گروه'))
     description = models.TextField(blank=True, verbose_name=_('توضیحات'))
     
-    # دسترسی‌های سفارشی
-    can_view_users = models.BooleanField(default=False, verbose_name=_('مشاهده کاربران'))
-    can_edit_users = models.BooleanField(default=False, verbose_name=_('ویرایش کاربران'))
-    can_delete_users = models.BooleanField(default=False, verbose_name=_('حذف کاربران'))
-    can_view_financial = models.BooleanField(default=False, verbose_name=_('مشاهده امور مالی'))
-    can_manage_financial = models.BooleanField(default=False, verbose_name=_('مدیریت امور مالی'))
-    can_view_analytics = models.BooleanField(default=False, verbose_name=_('مشاهده گزارشات'))
-    can_export_data = models.BooleanField(default=False, verbose_name=_('خروجی داده'))
-    can_manage_content = models.BooleanField(default=False, verbose_name=_('مدیریت محتوا'))
-    can_manage_subscriptions = models.BooleanField(default=False, verbose_name=_('مدیریت اشتراک‌ها'))
-    can_view_logs = models.BooleanField(default=False, verbose_name=_('مشاهده لاگ‌ها'))
-    can_manage_support = models.BooleanField(default=False, verbose_name=_('مدیریت پشتیبانی'))
+    # دسترسی‌ها - استفاده از سیستم Permission جنگو
+    permissions = models.ManyToManyField(
+        'auth.Permission',
+        blank=True,
+        verbose_name=_('دسترسی‌ها'),
+        help_text=_('دسترسی‌های این گروه کارمندی')
+    )
     
     # تنظیمات
     is_active = models.BooleanField(default=True, verbose_name=_('فعال'))
@@ -72,31 +67,8 @@ class StaffGroup(models.Model):
         return self.name
     
     def get_permissions_list(self):
-        """لیست دسترسی‌های فعال این گروه"""
-        perms = []
-        if self.can_view_users:
-            perms.append('view_users')
-        if self.can_edit_users:
-            perms.append('edit_users')
-        if self.can_delete_users:
-            perms.append('delete_users')
-        if self.can_view_financial:
-            perms.append('view_financial')
-        if self.can_manage_financial:
-            perms.append('manage_financial')
-        if self.can_view_analytics:
-            perms.append('view_analytics')
-        if self.can_export_data:
-            perms.append('export_data')
-        if self.can_manage_content:
-            perms.append('manage_content')
-        if self.can_manage_subscriptions:
-            perms.append('manage_subscriptions')
-        if self.can_view_logs:
-            perms.append('view_logs')
-        if self.can_manage_support:
-            perms.append('manage_support')
-        return perms
+        """لیست دسترسی‌های این گروه"""
+        return list(self.permissions.values_list('codename', flat=True))
 
 
 class CustomUserManager(BaseUserManager):
@@ -420,7 +392,7 @@ class User(AbstractUser):
     def has_staff_permission(self, permission_code):
         """
         بررسی دسترسی کارمند بر اساس گروه‌های کارمندی
-        permission_code: مثل 'view_users', 'manage_financial', ...
+        permission_code: کد دسترسی جنگو مثل 'view_user', 'add_plan', ...
         """
         if not self.is_staff:
             return False
@@ -430,11 +402,10 @@ class User(AbstractUser):
             return True
         
         # بررسی دسترسی در گروه‌های کارمندی
-        for group in self.staff_groups.filter(is_active=True):
-            if permission_code in group.get_permissions_list():
-                return True
-        
-        return False
+        return self.staff_groups.filter(
+            is_active=True,
+            permissions__codename=permission_code
+        ).exists()
     
     def get_all_staff_permissions(self):
         """دریافت لیست تمام دسترسی‌های کارمند"""
@@ -444,11 +415,10 @@ class User(AbstractUser):
         if self.is_superuser:
             return ['all']
         
-        all_perms = set()
-        for group in self.staff_groups.filter(is_active=True):
-            all_perms.update(group.get_permissions_list())
-        
-        return list(all_perms)
+        from django.contrib.auth.models import Permission
+        return list(Permission.objects.filter(
+            staffgroup__in=self.staff_groups.filter(is_active=True)
+        ).values_list('codename', flat=True).distinct())
 
 
 class UserSession(models.Model):
