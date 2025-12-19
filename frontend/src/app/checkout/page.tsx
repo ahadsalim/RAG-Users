@@ -13,6 +13,7 @@ interface Plan {
   name: string
   description: string
   price: number
+  display_price: number
   formatted_price: string
   currency_symbol: string
   duration_days: number
@@ -188,7 +189,7 @@ export default function CheckoutPage() {
   const formatPrice = (price: number) => toPersianNumber(price.toLocaleString('en-US'))
   
   const taxRate = financialSettings?.tax_rate || 10
-  const basePrice = Number(plan?.price) || 0
+  const basePrice = Number(plan?.display_price ?? plan?.price) || 0
   const taxAmount = Math.round(basePrice * taxRate / 100)
   const totalPrice = basePrice + taxAmount
 

@@ -76,16 +76,24 @@ class Currency(models.Model):
             return f"{int(amount_float):,} {self.symbol}"
     
     def convert_from_base(self, base_amount):
-        """تبدیل مبلغ از ارز پایه به این ارز"""
+        """تبدیل مبلغ از ارز پایه به این ارز
+        
+        exchange_rate نشان می‌دهد چند واحد از ارز پایه برابر 1 واحد از این ارز است.
+        مثال: اگر ارز پایه ریال باشد و exchange_rate تومان = 10، یعنی 10 ریال = 1 تومان
+        پس برای تبدیل ریال به تومان باید تقسیم بر 10 کنیم.
+        """
         if isinstance(base_amount, Decimal):
-            return base_amount * Decimal(str(self.exchange_rate))
-        return float(base_amount) * float(self.exchange_rate)
+            return base_amount / Decimal(str(self.exchange_rate))
+        return float(base_amount) / float(self.exchange_rate)
     
     def convert_to_base(self, amount):
-        """تبدیل مبلغ از این ارز به ارز پایه"""
+        """تبدیل مبلغ از این ارز به ارز پایه
+        
+        برای تبدیل تومان به ریال باید ضرب در 10 کنیم.
+        """
         if isinstance(amount, Decimal):
-            return amount / Decimal(str(self.exchange_rate))
-        return float(amount) / float(self.exchange_rate)
+            return amount * Decimal(str(self.exchange_rate))
+        return float(amount) * float(self.exchange_rate)
 
 
 class PaymentGateway(models.Model):
