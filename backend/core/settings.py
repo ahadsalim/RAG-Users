@@ -45,6 +45,7 @@ INSTALLED_APPS = [
     'chat',
     'notifications',
     'analytics',
+    'finance',
 ]
 
 MIDDLEWARE = [
@@ -447,7 +448,7 @@ JAZZMIN_SETTINGS = {
     "navigation_expanded": True,
     "hide_apps": [],
     "hide_models": [],
-    "order_with_respect_to": ["accounts", "admin_panel", "chat", "subscriptions", "payments", "notifications", "analytics"],
+    "order_with_respect_to": ["accounts", "admin_panel", "chat", "subscriptions", "payments", "finance", "notifications", "analytics"],
     
     # Icons
     "icons": {
@@ -471,6 +472,10 @@ JAZZMIN_SETTINGS = {
         "subscriptions.Subscription": "fas fa-crown",
         "subscriptions.SubscriptionPlan": "fas fa-clipboard-list",
         "payments.Payment": "fas fa-credit-card",
+        "finance": "fas fa-file-invoice-dollar",
+        "finance.FinancialSettings": "fas fa-cog",
+        "finance.Invoice": "fas fa-file-invoice",
+        "finance.TaxReport": "fas fa-chart-pie",
         "notifications.Notification": "fas fa-bell",
         "analytics.Analytics": "fas fa-chart-line",
     },
