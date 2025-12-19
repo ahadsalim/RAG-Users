@@ -87,15 +87,10 @@ class FinancialSettingsAdmin(admin.ModelAdmin):
     """مدیریت تنظیمات مالی"""
     
     fieldsets = (
-        ('اطلاعات فروشنده', {
-            'fields': (
-                'company_name', 'company_name_en', 'company_address',
-                'postal_code', 'phone', 'fax', 'email', 'website'
-            )
-        }),
         ('اطلاعات مالیاتی', {
             'fields': (
-                'economic_code', 'national_id', 'registration_number', 'tax_rate'
+                'company_name', 'company_name_en', 'company_address',
+                'postal_code', 'phone', 'national_id', 'registration_number', 'tax_rate'
             )
         }),
         ('درگاه پرداخت', {

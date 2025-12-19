@@ -132,18 +132,12 @@ class PaymentGateway(models.Model):
 class FinancialSettings(models.Model):
     """تنظیمات مالی سایت - فقط یک رکورد"""
     
-    # اطلاعات فروشنده
+    # اطلاعات مالیاتی
     company_name = models.CharField(max_length=255, verbose_name='نام شرکت/فروشنده', default='تجارت چت')
     company_name_en = models.CharField(max_length=255, verbose_name='نام انگلیسی شرکت', blank=True)
     company_address = models.TextField(verbose_name='آدرس', blank=True)
     postal_code = models.CharField(max_length=20, verbose_name='کد پستی', blank=True)
     phone = models.CharField(max_length=20, verbose_name='تلفن', blank=True)
-    fax = models.CharField(max_length=20, verbose_name='فکس', blank=True)
-    email = models.EmailField(verbose_name='ایمیل', blank=True)
-    website = models.URLField(verbose_name='وب‌سایت', blank=True)
-    
-    # اطلاعات مالیاتی
-    economic_code = models.CharField(max_length=20, verbose_name='کد اقتصادی', blank=True)
     national_id = models.CharField(max_length=20, verbose_name='شناسه ملی', blank=True)
     registration_number = models.CharField(max_length=20, verbose_name='شماره ثبت', blank=True)
     tax_rate = models.DecimalField(max_digits=5, decimal_places=2, default=10, verbose_name='درصد مالیات ارزش افزوده')
