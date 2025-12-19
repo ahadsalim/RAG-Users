@@ -744,8 +744,21 @@ const NotificationsTab: React.FC = () => {
     }
   };
 
-  const handleToggle = (key: keyof NotificationPreferences) => {
-    setPreferences(prev => ({ ...prev, [key]: !prev[key] }));
+  const handleToggle = async (key: keyof NotificationPreferences) => {
+    const newPreferences = { ...preferences, [key]: !preferences[key] };
+    setPreferences(newPreferences);
+    
+    // ذخیره خودکار
+    try {
+      await axios.put('/api/v1/notifications/preferences/', newPreferences);
+      setMessage('✓ ذخیره شد');
+      setTimeout(() => setMessage(''), 2000);
+    } catch (error) {
+      console.error('Error saving notification preferences:', error);
+      setMessage('✗ خطا در ذخیره');
+      // برگرداندن به حالت قبلی
+      setPreferences(preferences);
+    }
   };
 
   if (loading) {
@@ -831,21 +844,17 @@ const NotificationsTab: React.FC = () => {
         </div>
       </div>
 
-      {/* دکمه ذخیره */}
-      <div className="flex items-center justify-between">
-        {message && (
-          <span className={`text-sm ${message.includes('✓') ? 'text-green-600' : 'text-red-600'}`}>
-            {message}
-          </span>
-        )}
-        <button
-          onClick={savePreferences}
-          disabled={saving}
-          className="px-6 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:opacity-50 transition-colors font-medium"
-        >
-          {saving ? 'در حال ذخیره...' : 'ذخیره تنظیمات'}
-        </button>
-      </div>
+      {/* پیام وضعیت */}
+      {message && (
+        <div className={`text-sm text-center py-2 ${message.includes('✓') ? 'text-green-600' : 'text-red-600'}`}>
+          {message}
+        </div>
+      )}
+      
+      {/* توضیح: تنظیمات با دکمه اصلی ذخیره می‌شوند */}
+      <p className="text-xs text-gray-500 dark:text-gray-400 text-center">
+        تغییرات به صورت خودکار ذخیره می‌شوند
+      </p>
     </div>
   );
 };
