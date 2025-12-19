@@ -69,7 +69,7 @@ class Plan(models.Model):
     
     def get_price_display(self):
         """Get price display for admin (in base currency)"""
-        from core.models import Currency
+        from finance.models import Currency
         base = Currency.get_base_currency()
         if base:
             return base.format_price(self.price)
