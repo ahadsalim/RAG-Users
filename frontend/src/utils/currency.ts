@@ -2,22 +2,30 @@ import type { Currency } from '@/types/settings'
 
 /**
  * Format price according to currency settings
+ * قیمت‌ها به ریال (ارز پایه) ذخیره شده‌اند و باید به ارز مقصد تبدیل شوند
+ * exchange_rate نشان می‌دهد چند واحد ریال برابر 1 واحد از این ارز است
+ * مثال: تومان exchange_rate = 10 یعنی 10 ریال = 1 تومان
  */
 export function formatPrice(amount: number, currency?: Currency | null): string {
   if (!currency) {
-    // Fallback to plain formatting without decimals (default for Toman)
-    return `${Math.floor(amount).toLocaleString('fa-IR')} تومان`
+    // Fallback: فرض می‌کنیم تومان است (تقسیم بر 10)
+    const convertedAmount = amount / 10
+    return `${Math.floor(convertedAmount).toLocaleString('fa-IR')} تومان`
   }
+
+  // تبدیل از ریال به ارز مقصد
+  const exchangeRate = parseFloat(currency.exchange_rate) || 1
+  const convertedAmount = amount / exchangeRate
 
   // Check if currency should show decimals
   const showDecimals = currency.has_decimals && currency.decimal_places > 0
   
   const formattedNumber = showDecimals
-    ? amount.toLocaleString('fa-IR', {
+    ? convertedAmount.toLocaleString('fa-IR', {
         minimumFractionDigits: currency.decimal_places,
         maximumFractionDigits: currency.decimal_places,
       })
-    : Math.floor(amount).toLocaleString('fa-IR')
+    : Math.floor(convertedAmount).toLocaleString('fa-IR')
 
   return `${formattedNumber} ${currency.symbol}`
 }

@@ -360,16 +360,6 @@ const SubscriptionTab: React.FC<{ subscription: SubscriptionInfo | null; loading
   const [usageStats, setUsageStats] = React.useState<any>(null);
   const [loading, setLoading] = React.useState(initialLoading);
   const { formatPrice, activeCurrency } = useCurrency();
-  
-  // Helper function to format price without decimals for Toman
-  const formatPlanPrice = (price: number) => {
-    // If currency is loaded and has no decimals, or if it's Toman, don't show decimals
-    if (activeCurrency && !activeCurrency.has_decimals) {
-      return `${Math.floor(price).toLocaleString('fa-IR')} ${activeCurrency.symbol}`;
-    }
-    // Fallback: assume Toman with no decimals
-    return `${Math.floor(price).toLocaleString('fa-IR')} تومان`;
-  };
 
   // بارگذاری پلن‌ها و آمار مصرف
   React.useEffect(() => {
@@ -577,7 +567,7 @@ const SubscriptionTab: React.FC<{ subscription: SubscriptionInfo | null; loading
                 )}
                 <h5 className="font-semibold text-gray-900 dark:text-white mb-2">{plan.name}</h5>
                 <p className="text-2xl font-bold text-blue-500 mb-2">
-                  {formatPlanPrice(plan.price)}
+                  {formatPrice(plan.price)}
                 </p>
                 <div className="text-sm text-gray-600 dark:text-gray-400 mb-4 space-y-1">
                   <p>📅 {plan.duration_days} روز</p>
