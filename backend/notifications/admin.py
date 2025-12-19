@@ -163,8 +163,8 @@ class DeviceTokenAdmin(admin.ModelAdmin):
     fields = ['user', 'token', 'device_type', 'device_name', 'is_active', 'last_used_at', 'created_at', 'updated_at']
     
     def changelist_view(self, request, extra_context=None):
-        extra_context = extra_context or {}
-        extra_context['title'] = 'توکن‌های دستگاه - برای توضیحات کامل فایل notifications/models.py را ببینید'
+        from django.contrib import messages
+        messages.info(request, '📱 توکن‌های دستگاه برای Push Notification استفاده می‌شود. برای توضیحات کامل فایل notifications/models.py را ببینید.')
         return super().changelist_view(request, extra_context=extra_context)
 
 
