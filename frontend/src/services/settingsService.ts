@@ -4,8 +4,6 @@ import type { SiteSettings, Currency, PaymentGateway, CurrencyConversionRequest,
 // Fallback currencies for when API is not available
 const FALLBACK_CURRENCIES: Currency[] = [
   { id: 1, code: 'IRT', name: 'تومان', symbol: 'تومان', has_decimals: false, decimal_places: 0, exchange_rate: '10', is_active: true, display_order: 1 },
-  { id: 2, code: 'USD', name: 'دلار آمریکا', symbol: '$', has_decimals: true, decimal_places: 2, exchange_rate: '1260950', is_active: true, display_order: 2 },
-  { id: 3, code: 'EUR', name: 'یورو', symbol: '€', has_decimals: true, decimal_places: 2, exchange_rate: '14680900', is_active: true, display_order: 3 },
 ]
 
 /**
@@ -21,7 +19,7 @@ export async function getSiteSettings(): Promise<SiteSettings> {
  */
 export async function getCurrencies(): Promise<Currency[]> {
   try {
-    const response = await api.get('/api/v1/currencies/')
+    const response = await api.get('/api/v1/finance/currencies/')
     const data = response.data.results || response.data
     return data.length > 0 ? data : FALLBACK_CURRENCIES
   } catch (error) {
@@ -42,6 +40,6 @@ export async function getPaymentGateways(): Promise<PaymentGateway[]> {
  * Convert currency
  */
 export async function convertCurrency(request: CurrencyConversionRequest): Promise<CurrencyConversionResponse> {
-  const response = await api.post('/api/v1/currencies/convert/', request)
+  const response = await api.post('/api/v1/finance/currencies/convert/', request)
   return response.data
 }
