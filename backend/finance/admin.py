@@ -55,14 +55,20 @@ class CurrencyAdmin(admin.ModelAdmin):
 class PaymentGatewayAdmin(admin.ModelAdmin):
     """مدیریت درگاه‌های پرداخت"""
     list_display = [
-        'name', 'is_active', 'is_sandbox', 
+        'name', 'is_default_display', 'is_active', 'is_sandbox', 
         'commission_percentage', 'display_order'
     ]
     list_editable = ['is_active', 'is_sandbox', 'display_order']
-    list_filter = ['is_active', 'is_sandbox']
+    list_filter = ['is_active', 'is_sandbox', 'is_default']
     search_fields = ['name', 'merchant_id']
     filter_horizontal = ['supported_currencies']
     ordering = ['display_order', 'name']
+    
+    def is_default_display(self, obj):
+        if obj.is_default:
+            return format_html('<span style="color: green; font-weight: bold;">✓ پیش‌فرض</span>')
+        return ''
+    is_default_display.short_description = _('پیش‌فرض')
     
     fieldsets = (
         (_('درگاه پرداخت'), {
@@ -73,7 +79,8 @@ class PaymentGatewayAdmin(admin.ModelAdmin):
                 'api_key', 
                 'api_secret',
                 'is_active', 
-                'is_sandbox', 
+                'is_sandbox',
+                'is_default',
                 'commission_percentage', 
                 'display_order',
                 'supported_currencies',

@@ -35,16 +35,6 @@ class SiteSettings(models.Model):
     instagram_url = models.URLField(blank=True, verbose_name=_('آدرس اینستاگرام'))
     twitter_url = models.URLField(blank=True, verbose_name=_('آدرس توییتر'))
     
-    # Payment Settings
-    default_payment_gateway = models.ForeignKey(
-        'finance.PaymentGateway',
-        on_delete=models.SET_NULL,
-        null=True,
-        blank=True,
-        related_name='default_for_sites',
-        verbose_name=_('درگاه پرداخت پیش‌فرض')
-    )
-    
     # Maintenance
     maintenance_mode = models.BooleanField(default=False, verbose_name=_('حالت تعمیر و نگهداری'))
     maintenance_message = models.TextField(

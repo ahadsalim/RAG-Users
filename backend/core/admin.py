@@ -55,7 +55,6 @@ class SiteSettingsAdmin(admin.ModelAdmin):
                 'telegram_url', 
                 'instagram_url', 
                 'twitter_url',
-                'default_payment_gateway',
                 'maintenance_mode', 
                 'maintenance_message',
             )

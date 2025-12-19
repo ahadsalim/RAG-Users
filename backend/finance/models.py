@@ -99,6 +99,7 @@ class PaymentGateway(models.Model):
     
     is_active = models.BooleanField(default=True, verbose_name=_('فعال'))
     is_sandbox = models.BooleanField(default=False, verbose_name=_('حالت تست'))
+    is_default = models.BooleanField(default=False, verbose_name=_('درگاه پیش‌فرض'))
     
     supported_currencies = models.ManyToManyField(
         Currency,
@@ -127,6 +128,17 @@ class PaymentGateway(models.Model):
     
     def __str__(self):
         return self.name
+    
+    def save(self, *args, **kwargs):
+        if self.is_default:
+            # فقط یک درگاه می‌تواند پیش‌فرض باشد
+            PaymentGateway.objects.filter(is_default=True).exclude(pk=self.pk).update(is_default=False)
+        super().save(*args, **kwargs)
+    
+    @classmethod
+    def get_default_gateway(cls):
+        """دریافت درگاه پیش‌فرض"""
+        return cls.objects.filter(is_default=True, is_active=True).first()
 
 
 class FinancialSettings(models.Model):
