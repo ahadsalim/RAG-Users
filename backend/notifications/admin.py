@@ -151,12 +151,21 @@ class NotificationPreferenceAdmin(admin.ModelAdmin):
 
 @admin.register(DeviceToken)
 class DeviceTokenAdmin(admin.ModelAdmin):
+    """
+    توکن‌های دستگاه برای Push Notification
+    برای توضیحات کامل فایل notifications/models.py را ببینید
+    """
     list_display = ['user', 'device_type', 'device_name', 'is_active', 'last_used_at', 'created_at']
     list_filter = ['device_type', 'is_active', 'created_at']
     search_fields = ['user__email', 'device_name', 'token']
     readonly_fields = ['created_at', 'updated_at', 'last_used_at']
     
     fields = ['user', 'token', 'device_type', 'device_name', 'is_active', 'last_used_at', 'created_at', 'updated_at']
+    
+    def changelist_view(self, request, extra_context=None):
+        extra_context = extra_context or {}
+        extra_context['title'] = 'توکن‌های دستگاه - برای توضیحات کامل فایل notifications/models.py را ببینید'
+        return super().changelist_view(request, extra_context=extra_context)
 
 
 @admin.register(NotificationLog)
