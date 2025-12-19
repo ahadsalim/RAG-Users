@@ -110,7 +110,7 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ isOpen, onClose }) => {
       setSaving(true);
       setSaveMessage('');
       
-      // ذخیره در localStorage
+      // ذخیره تنظیمات عمومی در localStorage
       localStorage.setItem('userSettings', JSON.stringify(settings));
       
       // اعمال تم
@@ -120,7 +120,18 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ isOpen, onClose }) => {
         document.documentElement.classList.remove('dark');
       }
       
-      // TODO: ارسال به سرور
+      // ذخیره تنظیمات اعلان‌ها (اگر تغییر کرده باشد)
+      const notificationPrefs = localStorage.getItem('notificationPreferences');
+      if (notificationPrefs) {
+        try {
+          await axios.put('/api/v1/notifications/preferences/', JSON.parse(notificationPrefs));
+          localStorage.removeItem('notificationPreferences'); // پاک کردن بعد از ذخیره موفق
+        } catch (error) {
+          console.error('Error saving notification preferences:', error);
+        }
+      }
+      
+      // TODO: ارسال سایر تنظیمات به سرور
       // await axios.post('/api/v1/users/settings/', settings);
       
       setSaveMessage('✓ تنظیمات با موفقیت ذخیره شد');
@@ -744,21 +755,12 @@ const NotificationsTab: React.FC = () => {
     }
   };
 
-  const handleToggle = async (key: keyof NotificationPreferences) => {
+  const handleToggle = (key: keyof NotificationPreferences) => {
     const newPreferences = { ...preferences, [key]: !preferences[key] };
     setPreferences(newPreferences);
     
-    // ذخیره خودکار
-    try {
-      await axios.put('/api/v1/notifications/preferences/', newPreferences);
-      setMessage('✓ ذخیره شد');
-      setTimeout(() => setMessage(''), 2000);
-    } catch (error) {
-      console.error('Error saving notification preferences:', error);
-      setMessage('✗ خطا در ذخیره');
-      // برگرداندن به حالت قبلی
-      setPreferences(preferences);
-    }
+    // ذخیره در localStorage برای ذخیره با دکمه اصلی
+    localStorage.setItem('notificationPreferences', JSON.stringify(newPreferences));
   };
 
   if (loading) {
@@ -844,17 +846,6 @@ const NotificationsTab: React.FC = () => {
         </div>
       </div>
 
-      {/* پیام وضعیت */}
-      {message && (
-        <div className={`text-sm text-center py-2 ${message.includes('✓') ? 'text-green-600' : 'text-red-600'}`}>
-          {message}
-        </div>
-      )}
-      
-      {/* توضیح: تنظیمات با دکمه اصلی ذخیره می‌شوند */}
-      <p className="text-xs text-gray-500 dark:text-gray-400 text-center">
-        تغییرات به صورت خودکار ذخیره می‌شوند
-      </p>
     </div>
   );
 };
