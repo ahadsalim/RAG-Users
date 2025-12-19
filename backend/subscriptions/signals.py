@@ -39,7 +39,7 @@ def create_free_trial_subscription(sender, instance, created, **kwargs):
                     status='active',  # باید active باشد تا کاربر بتواند از سیستم استفاده کند
                     start_date=timezone.now(),
                     end_date=timezone.now() + timedelta(days=30),
-                    auto_renew=False
+                    auto_renew=True  # پلن رایگان خودکار تمدید شود
                 )
                 logger.info(f"Free trial subscription created for user {instance.phone_number}: {subscription.id}")
             else:

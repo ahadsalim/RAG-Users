@@ -342,8 +342,49 @@ class SubscriptionScheduledTasks:
             sub.status = 'expired'
             sub.save()
             SubscriptionNotificationService.notify_subscription_expired(sub)
+            
+            # ایجاد اشتراک رایگان جدید برای کاربر
+            SubscriptionScheduledTasks._assign_free_subscription(sub.user)
         
         logger.info(f"Expired {expired.count()} subscriptions")
+    
+    @staticmethod
+    def _assign_free_subscription(user):
+        """ایجاد اشتراک رایگان برای کاربر"""
+        from .models import Subscription, Plan
+        
+        # بررسی اینکه آیا کاربر اشتراک فعال دارد
+        active_sub = Subscription.objects.filter(
+            user=user,
+            status='active',
+            end_date__gt=timezone.now()
+        ).exists()
+        
+        if active_sub:
+            return  # کاربر اشتراک فعال دارد
+        
+        # پیدا کردن پلن رایگان
+        free_plan = Plan.objects.filter(
+            price=0,
+            is_active=True
+        ).first()
+        
+        if not free_plan:
+            free_plan = Plan.objects.filter(
+                name__icontains='free',
+                is_active=True
+            ).first()
+        
+        if free_plan:
+            Subscription.objects.create(
+                user=user,
+                plan=free_plan,
+                status='active',
+                start_date=timezone.now(),
+                end_date=timezone.now() + timedelta(days=30),
+                auto_renew=True  # پلن رایگان خودکار تمدید شود
+            )
+            logger.info(f"Free subscription assigned to user {user.phone_number}")
     
     @staticmethod
     def check_quota_warnings():

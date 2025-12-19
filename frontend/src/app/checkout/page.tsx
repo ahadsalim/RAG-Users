@@ -47,7 +47,16 @@ export default function CheckoutPage() {
       }
 
       try {
-        const token = localStorage.getItem('access_token')
+        // Get token from zustand persist storage
+        let token = null
+        const authStorage = localStorage.getItem('auth-storage')
+        if (authStorage) {
+          try {
+            const parsed = JSON.parse(authStorage)
+            token = parsed?.state?.accessToken
+          } catch (e) {}
+        }
+        
         if (!token) {
           router.push('/auth/login?redirect=/checkout?plan=' + planId)
           return
@@ -90,7 +99,15 @@ export default function CheckoutPage() {
     setError(null)
 
     try {
-      const token = localStorage.getItem('access_token')
+      // Get token from zustand persist storage
+      let token = null
+      const authStorage = localStorage.getItem('auth-storage')
+      if (authStorage) {
+        try {
+          const parsed = JSON.parse(authStorage)
+          token = parsed?.state?.accessToken
+        } catch (e) {}
+      }
       const headers = { Authorization: `Bearer ${token}` }
 
       // Create payment request
