@@ -246,7 +246,7 @@ class User(AbstractUser):
     # Settings & Preferences
     language = models.CharField(max_length=5, choices=LANGUAGE_CHOICES, default='fa', verbose_name=_('زبان'))
     preferred_currency = models.ForeignKey(
-        'core.Currency',
+        'finance.Currency',
         on_delete=models.SET_NULL,
         null=True,
         blank=True,

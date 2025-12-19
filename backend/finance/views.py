@@ -1,8 +1,8 @@
 """
 ویوهای امور مالی
 """
-from rest_framework import viewsets, permissions, status
-from rest_framework.decorators import action
+from rest_framework import viewsets, permissions, status, generics
+from rest_framework.decorators import action, api_view, permission_classes as perm_classes
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from django.db.models import Sum, Count, Q
@@ -10,12 +10,59 @@ from django.utils import timezone
 from datetime import timedelta
 from decimal import Decimal
 
-from .models import FinancialSettings, Invoice, InvoiceItem, TaxReport
+from .models import Currency, FinancialSettings, Invoice, InvoiceItem, TaxReport
 from .serializers import (
+    CurrencySerializer,
     FinancialSettingsSerializer, FinancialSettingsPublicSerializer,
     InvoiceSerializer, InvoiceListSerializer, InvoiceItemSerializer,
     TaxReportSerializer, FinancialDashboardSerializer
 )
+
+
+class CurrencyListView(generics.ListAPIView):
+    """لیست ارزهای فعال"""
+    permission_classes = [permissions.AllowAny]
+    serializer_class = CurrencySerializer
+    queryset = Currency.objects.filter(is_active=True)
+
+
+class CurrencyDetailView(generics.RetrieveAPIView):
+    """جزئیات ارز"""
+    permission_classes = [permissions.AllowAny]
+    serializer_class = CurrencySerializer
+    queryset = Currency.objects.filter(is_active=True)
+
+
+@api_view(['POST'])
+@perm_classes([permissions.AllowAny])
+def convert_currency(request):
+    """تبدیل مبلغ بین ارزها"""
+    from_currency_code = request.data.get('from_currency')
+    to_currency_code = request.data.get('to_currency')
+    amount = request.data.get('amount', 0)
+    
+    try:
+        amount = Decimal(str(amount))
+    except (ValueError, TypeError):
+        return Response({'error': 'مبلغ نامعتبر است'}, status=status.HTTP_400_BAD_REQUEST)
+    
+    try:
+        from_currency = Currency.objects.get(code=from_currency_code, is_active=True)
+        to_currency = Currency.objects.get(code=to_currency_code, is_active=True)
+    except Currency.DoesNotExist:
+        return Response({'error': 'ارز یافت نشد'}, status=status.HTTP_404_NOT_FOUND)
+    
+    # تبدیل به ارز پایه و سپس به ارز مقصد
+    base_amount = from_currency.convert_to_base(amount)
+    converted_amount = to_currency.convert_from_base(base_amount)
+    
+    return Response({
+        'from_currency': from_currency_code,
+        'to_currency': to_currency_code,
+        'amount': float(amount),
+        'converted_amount': round(float(converted_amount), to_currency.decimal_places),
+        'formatted': to_currency.format_price(converted_amount)
+    })
 
 
 class IsAdminUser(permissions.BasePermission):

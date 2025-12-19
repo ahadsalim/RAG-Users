@@ -13,7 +13,7 @@ from .models import (
     Transaction, PaymentGateway as PaymentGatewayChoices, PaymentStatus,
     ZarinpalPayment, StripePayment, CryptoPayment, Wallet
 )
-from core.models import PaymentGateway as PaymentGatewayModel
+from finance.models import PaymentGateway as PaymentGatewayModel
 from .serializers import (
     TransactionSerializer, TransactionDetailSerializer,
     CreatePaymentSerializer, VerifyPaymentSerializer,

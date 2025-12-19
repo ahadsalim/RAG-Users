@@ -48,7 +48,7 @@ class Plan(models.Model):
         Returns:
             قیمت فرمت شده با واحد ارز
         """
-        from core.models import Currency
+        from finance.models import Currency
         
         if target_currency is None:
             # Use base currency

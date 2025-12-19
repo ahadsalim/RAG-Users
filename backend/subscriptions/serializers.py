@@ -14,7 +14,7 @@ class PlanSerializer(serializers.ModelSerializer):
         return obj.get_price_display()
     
     def get_currency_symbol(self, obj):
-        from core.models import Currency
+        from finance.models import Currency
         base = Currency.get_base_currency()
         return base.symbol if base else 'تومان'
 

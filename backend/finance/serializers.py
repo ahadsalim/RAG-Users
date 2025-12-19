@@ -2,7 +2,30 @@
 سریالایزرهای امور مالی
 """
 from rest_framework import serializers
-from .models import FinancialSettings, Invoice, InvoiceItem, TaxReport
+from .models import Currency, PaymentGateway, FinancialSettings, Invoice, InvoiceItem, TaxReport
+
+
+class CurrencySerializer(serializers.ModelSerializer):
+    """سریالایزر ارز"""
+    
+    class Meta:
+        model = Currency
+        fields = [
+            'id', 'code', 'name', 'symbol', 'has_decimals', 
+            'decimal_places', 'exchange_rate', 'is_active', 'is_base', 'display_order'
+        ]
+
+
+class PaymentGatewaySerializer(serializers.ModelSerializer):
+    """سریالایزر درگاه پرداخت"""
+    supported_currencies = CurrencySerializer(many=True, read_only=True)
+    
+    class Meta:
+        model = PaymentGateway
+        fields = [
+            'id', 'name', 'is_active', 'is_sandbox',
+            'supported_currencies', 'commission_percentage', 'display_order'
+        ]
 
 
 class FinancialSettingsSerializer(serializers.ModelSerializer):

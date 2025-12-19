@@ -136,7 +136,7 @@ class CreatePaymentSerializer(serializers.Serializer):
     
     def validate(self, attrs):
         """اعتبارسنجی داده‌ها"""
-        from core.models import PaymentGateway as PaymentGatewayModel
+        from finance.models import PaymentGateway as PaymentGatewayModel
         
         # اگر gateway_id داده شده، gateway_type را از آن بگیر
         if attrs.get('gateway_id'):

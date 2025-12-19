@@ -5,7 +5,7 @@ from django.db.models import Sum
 from django import forms
 from .models import Plan, Subscription, UserUsageReport
 from .usage import ModelUsageLog
-from core.models import Currency
+from finance.models import Currency
 
 
 class PlanAdminForm(forms.ModelForm):

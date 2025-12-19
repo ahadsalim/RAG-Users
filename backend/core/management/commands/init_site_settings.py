@@ -1,5 +1,6 @@
 from django.core.management.base import BaseCommand
-from core.models import Currency, SiteSettings, PaymentGateway
+from core.models import SiteSettings
+from finance.models import Currency, PaymentGateway
 
 
 class Command(BaseCommand):

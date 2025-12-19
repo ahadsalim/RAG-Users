@@ -6,8 +6,7 @@ from django.contrib import admin
 from django.contrib.auth.models import Group
 from django.apps import apps
 from django.utils.translation import gettext_lazy as _
-from django.utils.html import format_html
-from .models import Currency, PaymentGateway, SiteSettings
+from .models import SiteSettings
 
 # Unregister Django's default Group model (we use custom StaffGroup in accounts)
 admin.site.unregister(Group)
@@ -31,82 +30,6 @@ def setup_token_blacklist_persian():
         BlacklistedToken._meta.verbose_name_plural = _('توکن‌های مسدود شده')
     except ImportError:
         pass
-
-
-@admin.register(Currency)
-class CurrencyAdmin(admin.ModelAdmin):
-    """Admin for Currency model"""
-    list_display = [
-        'code', 'name', 'symbol', 'is_base_display', 'has_decimals', 'decimal_places', 
-        'exchange_rate_display', 'is_active', 'display_order'
-    ]
-    list_editable = ['is_active', 'display_order']
-    list_filter = ['is_active', 'has_decimals', 'is_base']
-    search_fields = ['code', 'name']
-    ordering = ['display_order', 'code']
-    
-    def is_base_display(self, obj):
-        """Display base currency with icon"""
-        if obj.is_base:
-            return format_html('<span style="color: green; font-weight: bold;">✓</span>')
-        return ''
-    is_base_display.short_description = _('پایه')
-    
-    def exchange_rate_display(self, obj):
-        """Display exchange rate with max 2 decimal places"""
-        if obj.exchange_rate == int(obj.exchange_rate):
-            return f"{int(obj.exchange_rate):,}"
-        return f"{float(obj.exchange_rate):,.2f}"
-    exchange_rate_display.short_description = _('نرخ تبدیل به واحد پایه')
-    
-    fieldsets = (
-        (_('اطلاعات پایه'), {
-            'fields': ('code', 'name', 'symbol', 'display_order')
-        }),
-        (_('تنظیمات اعشار'), {
-            'fields': ('has_decimals', 'decimal_places'),
-            'description': _('برای تومان و ریال، "دارای اعشار" را خاموش کنید')
-        }),
-        (_('نرخ تبدیل'), {
-            'fields': ('exchange_rate',),
-            'description': _('نرخ تبدیل این ارز به واحد پایه سایت (1 = واحد پایه)')
-        }),
-        (_('وضعیت'), {
-            'fields': ('is_active', 'is_base'),
-            'description': _('فقط یک ارز می‌تواند ارز پایه باشد')
-        }),
-    )
-
-
-@admin.register(PaymentGateway)
-class PaymentGatewayAdmin(admin.ModelAdmin):
-    """Admin for PaymentGateway model"""
-    list_display = [
-        'name', 'is_active', 'is_sandbox', 
-        'commission_percentage', 'display_order'
-    ]
-    list_editable = ['is_active', 'is_sandbox', 'display_order']
-    list_filter = ['is_active', 'is_sandbox']
-    search_fields = ['name', 'merchant_id']
-    filter_horizontal = ['supported_currencies']
-    ordering = ['display_order', 'name']
-    
-    fieldsets = (
-        (_('درگاه پرداخت'), {
-            'fields': (
-                'name', 
-                'connected_account',
-                'merchant_id', 
-                'api_key', 
-                'api_secret',
-                'is_active', 
-                'is_sandbox', 
-                'commission_percentage', 
-                'display_order',
-                'supported_currencies',
-            )
-        }),
-    )
 
 
 @admin.register(SiteSettings)

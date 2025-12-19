@@ -4,7 +4,82 @@
 from django.contrib import admin
 from django.utils.html import format_html
 from django.urls import reverse
-from .models import FinancialSettings, Invoice, InvoiceItem, TaxReport
+from django.utils.translation import gettext_lazy as _
+from .models import Currency, PaymentGateway, FinancialSettings, Invoice, InvoiceItem, TaxReport
+
+
+@admin.register(Currency)
+class CurrencyAdmin(admin.ModelAdmin):
+    """مدیریت ارزها"""
+    list_display = [
+        'code', 'name', 'symbol', 'is_base_display', 'has_decimals', 'decimal_places', 
+        'exchange_rate_display', 'is_active', 'display_order'
+    ]
+    list_editable = ['is_active', 'display_order']
+    list_filter = ['is_active', 'has_decimals', 'is_base']
+    search_fields = ['code', 'name']
+    ordering = ['display_order', 'code']
+    
+    def is_base_display(self, obj):
+        if obj.is_base:
+            return format_html('<span style="color: green; font-weight: bold;">✓</span>')
+        return ''
+    is_base_display.short_description = _('پایه')
+    
+    def exchange_rate_display(self, obj):
+        if obj.exchange_rate == int(obj.exchange_rate):
+            return f"{int(obj.exchange_rate):,}"
+        return f"{float(obj.exchange_rate):,.2f}"
+    exchange_rate_display.short_description = _('نرخ تبدیل')
+    
+    fieldsets = (
+        (_('اطلاعات پایه'), {
+            'fields': ('code', 'name', 'symbol', 'display_order')
+        }),
+        (_('تنظیمات اعشار'), {
+            'fields': ('has_decimals', 'decimal_places'),
+            'description': _('برای تومان و ریال، "دارای اعشار" را خاموش کنید')
+        }),
+        (_('نرخ تبدیل'), {
+            'fields': ('exchange_rate',),
+            'description': _('نرخ تبدیل این ارز به واحد پایه سایت (1 = واحد پایه)')
+        }),
+        (_('وضعیت'), {
+            'fields': ('is_active', 'is_base'),
+            'description': _('فقط یک ارز می‌تواند ارز پایه باشد')
+        }),
+    )
+
+
+@admin.register(PaymentGateway)
+class PaymentGatewayAdmin(admin.ModelAdmin):
+    """مدیریت درگاه‌های پرداخت"""
+    list_display = [
+        'name', 'is_active', 'is_sandbox', 
+        'commission_percentage', 'display_order'
+    ]
+    list_editable = ['is_active', 'is_sandbox', 'display_order']
+    list_filter = ['is_active', 'is_sandbox']
+    search_fields = ['name', 'merchant_id']
+    filter_horizontal = ['supported_currencies']
+    ordering = ['display_order', 'name']
+    
+    fieldsets = (
+        (_('درگاه پرداخت'), {
+            'fields': (
+                'name', 
+                'connected_account',
+                'merchant_id', 
+                'api_key', 
+                'api_secret',
+                'is_active', 
+                'is_sandbox', 
+                'commission_percentage', 
+                'display_order',
+                'supported_currencies',
+            )
+        }),
+    )
 
 
 @admin.register(FinancialSettings)
