@@ -537,12 +537,19 @@ const SubscriptionTab: React.FC<{ subscription: SubscriptionInfo | null; loading
       </div>
 
       {/* Available Plans */}
+      {/* Available Plans - فقط پلن‌های پولی */}
       <div>
         <h4 className="text-lg font-semibold mb-4 text-gray-900 dark:text-white">پلن‌های موجود</h4>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {plans.length > 0 ? plans.filter((plan) => {
+          {plans.filter((plan) => {
             // پلن رایگان را نمایش نده (چون خودکار به همه تعلق می‌گیرد)
-            if (plan.price === 0) return false;
+            // بررسی قیمت و نام برای اطمینان
+            if (plan.price === 0 || plan.price <= 0) return false;
+            if (plan.name?.toLowerCase().includes('free') || plan.name?.toLowerCase().includes('رایگان')) return false;
+            return true;
+          }).length > 0 ? plans.filter((plan) => {
+            if (plan.price === 0 || plan.price <= 0) return false;
+            if (plan.name?.toLowerCase().includes('free') || plan.name?.toLowerCase().includes('رایگان')) return false;
             return true;
           }).map((plan) => {
             const isCurrentPlan = usageStats?.subscription?.plan === plan.name;
