@@ -37,6 +37,13 @@ interface FinancialSettings {
   postal_code: string
 }
 
+interface SiteSettings {
+  frontend_site_name: string
+  admin_site_name: string
+  support_email: string
+  support_phone: string
+}
+
 export default function CheckoutPage() {
   const router = useRouter()
   const searchParams = useSearchParams()
@@ -49,6 +56,7 @@ export default function CheckoutPage() {
   const [processing, setProcessing] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [financialSettings, setFinancialSettings] = useState<FinancialSettings | null>(null)
+  const [siteSettings, setSiteSettings] = useState<SiteSettings | null>(null)
 
   useEffect(() => {
     const fetchData = async () => {
@@ -102,6 +110,19 @@ export default function CheckoutPage() {
             national_id: '',
             phone: '',
             postal_code: ''
+          })
+        }
+
+        // Fetch site settings
+        try {
+          const siteResponse = await axios.get(`${API_URL}/api/v1/core/settings/`)
+          setSiteSettings(siteResponse.data)
+        } catch (e) {
+          setSiteSettings({
+            frontend_site_name: 'تجارت چت',
+            admin_site_name: 'پنل مدیریت',
+            support_email: '',
+            support_phone: ''
           })
         }
       } catch (err: any) {
@@ -158,10 +179,16 @@ export default function CheckoutPage() {
     }
   }
 
-  const formatPrice = (price: number) => price.toLocaleString('fa-IR')
+  // تبدیل اعداد به فارسی
+  const toPersianNumber = (num: number | string) => {
+    const persianDigits = ['۰', '۱', '۲', '۳', '۴', '۵', '۶', '۷', '۸', '۹']
+    return String(num).replace(/\d/g, (d) => persianDigits[parseInt(d)])
+  }
+  
+  const formatPrice = (price: number) => toPersianNumber(price.toLocaleString('en-US'))
   
   const taxRate = financialSettings?.tax_rate || 10
-  const basePrice = plan?.price || 0
+  const basePrice = Number(plan?.price) || 0
   const taxAmount = Math.round(basePrice * taxRate / 100)
   const totalPrice = basePrice + taxAmount
 
@@ -206,13 +233,13 @@ export default function CheckoutPage() {
             <div className="flex items-center gap-2">
               <Image 
                 src="/logo.svg" 
-                alt="تجارت چت" 
+                alt={siteSettings?.frontend_site_name || 'تجارت چت'} 
                 width={28} 
                 height={28}
                 className="dark:invert"
                 onError={(e) => { e.currentTarget.style.display = 'none' }}
               />
-              <span className="font-bold text-gray-900 dark:text-white">تجارت چت</span>
+              <span className="font-bold text-gray-900 dark:text-white">{siteSettings?.frontend_site_name || 'تجارت چت'}</span>
             </div>
             <div className="w-8" />
           </div>
@@ -254,15 +281,15 @@ export default function CheckoutPage() {
                   </tr>
                   <tr>
                     <td className="py-2 text-gray-500">مدت</td>
-                    <td className="py-2 text-left text-gray-700 dark:text-gray-300">{plan.duration_days} روز</td>
+                    <td className="py-2 text-left text-gray-700 dark:text-gray-300">{toPersianNumber(plan.duration_days)} روز</td>
                   </tr>
                   <tr>
                     <td className="py-2 text-gray-500">سهمیه روزانه</td>
-                    <td className="py-2 text-left text-gray-700 dark:text-gray-300">{plan.max_queries_per_day} سوال</td>
+                    <td className="py-2 text-left text-gray-700 dark:text-gray-300">{toPersianNumber(plan.max_queries_per_day)} سوال</td>
                   </tr>
                   <tr>
                     <td className="py-2 text-gray-500">سهمیه ماهانه</td>
-                    <td className="py-2 text-left text-gray-700 dark:text-gray-300">{plan.max_queries_per_month} سوال</td>
+                    <td className="py-2 text-left text-gray-700 dark:text-gray-300">{toPersianNumber(plan.max_queries_per_month)} سوال</td>
                   </tr>
                 </tbody>
               </table>
@@ -274,7 +301,7 @@ export default function CheckoutPage() {
                   <span className="text-gray-700 dark:text-gray-300">{formatPrice(basePrice)} تومان</span>
                 </div>
                 <div className="flex justify-between text-xs">
-                  <span className="text-gray-500">مالیات ارزش افزوده ({taxRate}%)</span>
+                  <span className="text-gray-500">مالیات ارزش افزوده ({toPersianNumber(taxRate)}٪)</span>
                   <span className="text-gray-700 dark:text-gray-300">{formatPrice(taxAmount)} تومان</span>
                 </div>
                 <div className="flex justify-between pt-2 border-t border-gray-200 dark:border-gray-600">
