@@ -16,6 +16,7 @@ import uuid
 
 from .models import UserSession, AuditLog
 from .utils import send_otp_sms, send_otp_bale, get_client_ip, get_user_agent_info
+from notifications.services import NotificationService
 
 logger = logging.getLogger('app')
 User = get_user_model()
@@ -223,6 +224,36 @@ class VerifyOTPView(APIView):
             ip_address=get_client_ip(request),
             user_agent=request.META.get('HTTP_USER_AGENT', '')
         )
+        
+        # Send notifications
+        try:
+            if created:
+                # Welcome notification for new users
+                NotificationService.create_notification(
+                    user=user,
+                    template_code='welcome',
+                    context={
+                        'user_name': user.get_full_name() or user.phone_number,
+                        'site_name': 'تجارت چت',
+                    },
+                    channels=['in_app']
+                )
+            else:
+                # Login from new device notification
+                device_info = get_user_agent_info(request)
+                device_name = f"{device_info.get('browser', 'مرورگر')} روی {device_info.get('os', 'دستگاه')}"
+                NotificationService.create_notification(
+                    user=user,
+                    template_code='login_from_new_device',
+                    context={
+                        'user_name': user.get_full_name() or user.phone_number,
+                        'device_name': device_name,
+                        'location': get_client_ip(request),
+                    },
+                    channels=['in_app']
+                )
+        except Exception as e:
+            logger.warning(f"Failed to send notification: {e}")
         
         return Response({
             'access': str(refresh.access_token),

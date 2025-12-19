@@ -10,6 +10,7 @@ from .serializers import PlanSerializer, SubscriptionSerializer
 from .usage import UsageService, UsageLog
 from .auto_renewal import AutoRenewalService
 from .reports import UsageReportService
+from .notification_service import SubscriptionNotificationService
 
 
 class PlanViewSet(viewsets.ReadOnlyModelViewSet):
@@ -64,6 +65,12 @@ class SubscriptionViewSet(viewsets.ModelViewSet):
         """Activate subscription"""
         subscription = self.get_object()
         subscription.activate()
+        
+        # Send subscription activated notification
+        try:
+            SubscriptionNotificationService.notify_subscription_activated(subscription)
+        except Exception:
+            pass
         
         return Response({'message': 'اشتراک فعال شد'})
     

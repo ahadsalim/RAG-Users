@@ -162,7 +162,13 @@ class NotificationViewSet(viewsets.ModelViewSet):
         
         return Response({'message': 'اعلان تایید شد'})
     
-    @action(detail=False, methods=['delete'])
+    @action(detail=False, methods=['post'])
+    def mark_all_read(self, request):
+        """علامت‌گذاری همه اعلان‌ها به عنوان خوانده شده"""
+        NotificationService.mark_all_as_read(request.user)
+        return Response({'message': 'همه اعلان‌ها به عنوان خوانده شده علامت‌گذاری شدند'})
+    
+    @action(detail=False, methods=['post', 'delete'])
     def delete_read(self, request):
         """حذف اعلان‌های خوانده شده"""
         deleted_count = Notification.objects.filter(

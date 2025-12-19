@@ -16,6 +16,7 @@ import string
 import logging
 
 from .models import User, Organization, UserSession, OrganizationInvitation, AuditLog
+from notifications.services import NotificationService
 from .serializers import (
     CustomTokenObtainPairSerializer,
     UserRegistrationSerializer,
@@ -302,6 +303,19 @@ class PasswordChangeView(APIView):
             ip_address=get_client_ip(request),
             user_agent=request.META.get('HTTP_USER_AGENT', '')
         )
+        
+        # Send password changed notification
+        try:
+            NotificationService.create_notification(
+                user=user,
+                template_code='password_changed',
+                context={
+                    'user_name': user.get_full_name() or user.phone_number,
+                },
+                channels=['in_app', 'email']
+            )
+        except Exception as e:
+            logger.warning(f"Failed to send password change notification: {e}")
         
         return Response({
             'message': _('Password changed successfully.')

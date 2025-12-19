@@ -6,6 +6,7 @@ import { useAuthStore } from '@/store/auth'
 import clsx from 'clsx'
 import axios from 'axios'
 import SettingsPage from '@/components/SettingsPage'
+import NotificationsPanel from '@/components/NotificationsPanel'
 
 interface ChatHeaderProps {
   onToggleSidebar: () => void
@@ -26,7 +27,25 @@ export function ChatHeader({ onToggleSidebar, conversation, isConnected }: ChatH
   const [loadingUsage, setLoadingUsage] = useState(false)
   const [showUserMenu, setShowUserMenu] = useState(false)
   const [isSettingsOpen, setIsSettingsOpen] = useState(false)
+  const [isNotificationsOpen, setIsNotificationsOpen] = useState(false)
+  const [unreadCount, setUnreadCount] = useState(0)
   const { user, logout } = useAuthStore()
+  
+  // Load unread count on mount
+  useEffect(() => {
+    const loadUnreadCount = async () => {
+      try {
+        const response = await axios.get('/api/v1/notifications/unread_count/')
+        setUnreadCount(response.data.count || 0)
+      } catch (error) {
+        console.error('Error loading unread count:', error)
+      }
+    }
+    loadUnreadCount()
+    // Refresh every 60 seconds
+    const interval = setInterval(loadUnreadCount, 60000)
+    return () => clearInterval(interval)
+  }, [])
   
   // Get user display name
   const getUserDisplayName = () => {
@@ -186,12 +205,18 @@ export function ChatHeader({ onToggleSidebar, conversation, isConnected }: ChatH
           <div className="relative">
             <button
               onClick={() => setShowUserMenu(!showUserMenu)}
-              className="w-9 h-9 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center hover:ring-2 hover:ring-blue-400 transition-all shadow-md"
+              className="relative w-9 h-9 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center hover:ring-2 hover:ring-blue-400 transition-all shadow-md"
               title={getUserDisplayName()}
             >
               <span className="text-sm font-bold text-white">
                 {getUserDisplayName().charAt(0).toUpperCase()}
               </span>
+              {/* Notification Badge */}
+              {unreadCount > 0 && (
+                <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-xs rounded-full flex items-center justify-center font-bold shadow-lg">
+                  {unreadCount > 9 ? '9+' : unreadCount}
+                </span>
+              )}
             </button>
             
             {/* User Dropdown Menu */}
@@ -222,6 +247,18 @@ export function ChatHeader({ onToggleSidebar, conversation, isConnected }: ChatH
                   {/* Menu Items */}
                   <div className="py-1">
                     <button 
+                      onClick={() => { setIsNotificationsOpen(true); setShowUserMenu(false); }}
+                      className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-gray-100 dark:hover:bg-gray-700 text-right text-sm text-gray-700 dark:text-gray-300"
+                    >
+                      <span>🔔</span>
+                      <span>اعلان‌ها</span>
+                      {unreadCount > 0 && (
+                        <span className="mr-auto bg-red-500 text-white text-xs px-2 py-0.5 rounded-full">
+                          {unreadCount}
+                        </span>
+                      )}
+                    </button>
+                    <button 
                       onClick={() => { setIsSettingsOpen(true); setShowUserMenu(false); }}
                       className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-gray-100 dark:hover:bg-gray-700 text-right text-sm text-gray-700 dark:text-gray-300"
                     >
@@ -248,6 +285,13 @@ export function ChatHeader({ onToggleSidebar, conversation, isConnected }: ChatH
     <SettingsPage 
       isOpen={isSettingsOpen} 
       onClose={() => setIsSettingsOpen(false)} 
+    />
+    
+    {/* Notifications Panel */}
+    <NotificationsPanel 
+      isOpen={isNotificationsOpen} 
+      onClose={() => setIsNotificationsOpen(false)}
+      onUnreadCountChange={setUnreadCount}
     />
     </>
   )

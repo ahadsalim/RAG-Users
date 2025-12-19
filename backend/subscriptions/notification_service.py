@@ -179,6 +179,31 @@ class SubscriptionNotificationService:
             logger.error(f"Failed to send quota exceeded notification: {e}")
     
     @staticmethod
+    def notify_subscription_activated(subscription):
+        """اعلان فعال‌سازی اشتراک"""
+        user = subscription.user
+        channels = SubscriptionNotificationService.get_user_notification_channels(user)
+        
+        context = {
+            'user_name': user.get_full_name() or user.phone_number,
+            'plan_name': subscription.plan.name,
+            'expiry_date': to_jalali(subscription.end_date),
+            'login_url': '/auth/login',
+        }
+        
+        try:
+            NotificationService.create_notification(
+                user=user,
+                template_code='subscription_activated',
+                context=context,
+                channels=channels,
+                priority='high'
+            )
+            logger.info(f"Subscription activated notification sent to {user.phone_number}")
+        except Exception as e:
+            logger.error(f"Failed to send activated notification: {e}")
+    
+    @staticmethod
     def notify_subscription_renewed(subscription):
         """اعلان تمدید موفق اشتراک"""
         user = subscription.user
