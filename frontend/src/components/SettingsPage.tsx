@@ -669,9 +669,7 @@ const PreferencesTab: React.FC<{ settings: UserSettings; setSettings: React.Disp
           <select
             value={activeCurrency?.code || 'IRT'}
             onChange={(e) => handleCurrencyChange(e.target.value)}
-            className="px-3 py-1.5 pl-8 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-sm text-right appearance-none"
-            dir="rtl"
-            style={{ backgroundImage: "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%236b7280'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E\")", backgroundRepeat: "no-repeat", backgroundPosition: "right 0.5rem center", backgroundSize: "1rem" }}
+            className="px-3 py-1.5 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-sm cursor-pointer"
           >
             {currencies.map((currency: any) => (
               <option key={currency.id} value={currency.code}>
@@ -695,9 +693,7 @@ const PreferencesTab: React.FC<{ settings: UserSettings; setSettings: React.Disp
                 enable_web_search: value === 'default' ? null : value === 'enabled' 
               });
             }}
-            className="px-3 py-1.5 pl-8 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-sm text-right appearance-none"
-            dir="rtl"
-            style={{ backgroundImage: "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%236b7280'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E\")", backgroundRepeat: "no-repeat", backgroundPosition: "right 0.5rem center", backgroundSize: "1rem" }}
+            className="px-3 py-1.5 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-sm cursor-pointer"
           >
             <option value="default">پیش‌فرض</option>
             <option value="enabled">فعال</option>
