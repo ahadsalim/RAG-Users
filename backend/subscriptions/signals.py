@@ -28,8 +28,13 @@ def create_free_trial_subscription(sender, instance, created, **kwargs):
             ).first()
             
             if not free_plan:
-                # اگر پلن رایگان نبود، اولین پلن فعال را بگیر
-                free_plan = Plan.objects.filter(is_active=True).first()
+                # اگر پلن رایگان نبود، پلنی با قیمت صفر را بگیر
+                free_plan = Plan.objects.filter(is_active=True, price=0).first()
+            
+            if not free_plan:
+                # اگر هیچ پلن رایگانی نبود، کاربر بدون اشتراک می‌ماند
+                logger.info(f"No free plan found for new user {instance.phone_number}, user will have no subscription")
+                return
             
             if free_plan:
                 # ایجاد اشتراک active برای 30 روز

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { X, User, Bell, Shield, CreditCard, Palette, Globe, Monitor, Brain, Building2, Smartphone, Laptop, Trash2 } from 'lucide-react';
+import { X, User, Bell, Shield, CreditCard, Palette, Globe, Monitor, Brain, Building2, Smartphone, Laptop, Trash2, ChevronDown } from 'lucide-react';
 import axios from 'axios';
 import { useTheme } from 'next-themes';
 import { useAuthStore } from '@/store/auth';
@@ -666,17 +666,20 @@ const PreferencesTab: React.FC<{ settings: UserSettings; setSettings: React.Disp
         {/* واحد پولی */}
         <div className="flex items-center justify-between">
           <span className="text-sm font-medium text-gray-700 dark:text-gray-300">واحد پولی</span>
-          <select
-            value={activeCurrency?.code || 'IRT'}
-            onChange={(e) => handleCurrencyChange(e.target.value)}
-            className="px-3 py-1.5 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-sm cursor-pointer"
-          >
-            {currencies.map((currency: any) => (
-              <option key={currency.id} value={currency.code}>
-                {currency.name} ({currency.symbol})
-              </option>
-            ))}
-          </select>
+          <div className="relative">
+            <select
+              value={activeCurrency?.code || 'IRT'}
+              onChange={(e) => handleCurrencyChange(e.target.value)}
+              className="pl-8 pr-3 py-1.5 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-sm cursor-pointer appearance-none"
+            >
+              {currencies.map((currency: any) => (
+                <option key={currency.id} value={currency.code}>
+                  {currency.name} ({currency.symbol})
+                </option>
+              ))}
+            </select>
+            <ChevronDown className="absolute left-2 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500 pointer-events-none" />
+          </div>
         </div>
 
         <div className="border-t border-gray-200 dark:border-gray-700" />
@@ -684,21 +687,24 @@ const PreferencesTab: React.FC<{ settings: UserSettings; setSettings: React.Disp
         {/* ابزار جستجوی وب */}
         <div className="flex items-center justify-between">
           <span className="text-sm font-medium text-gray-700 dark:text-gray-300">ابزار جستجوی وب</span>
-          <select
-            value={settings.enable_web_search === null ? 'default' : settings.enable_web_search ? 'enabled' : 'disabled'}
-            onChange={(e) => {
-              const value = e.target.value;
-              setSettings({ 
-                ...settings, 
-                enable_web_search: value === 'default' ? null : value === 'enabled' 
-              });
-            }}
-            className="px-3 py-1.5 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-sm cursor-pointer"
-          >
-            <option value="default">پیش‌فرض</option>
-            <option value="enabled">فعال</option>
-            <option value="disabled">غیرفعال</option>
-          </select>
+          <div className="relative">
+            <select
+              value={settings.enable_web_search === null ? 'default' : settings.enable_web_search ? 'enabled' : 'disabled'}
+              onChange={(e) => {
+                const value = e.target.value;
+                setSettings({ 
+                  ...settings, 
+                  enable_web_search: value === 'default' ? null : value === 'enabled' 
+                });
+              }}
+              className="pl-8 pr-3 py-1.5 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-sm cursor-pointer appearance-none"
+            >
+              <option value="default">پیش‌فرض</option>
+              <option value="enabled">فعال</option>
+              <option value="disabled">غیرفعال</option>
+            </select>
+            <ChevronDown className="absolute left-2 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500 pointer-events-none" />
+          </div>
         </div>
       </div>
     </div>
