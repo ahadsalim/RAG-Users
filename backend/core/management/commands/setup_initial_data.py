@@ -46,7 +46,10 @@ class Command(BaseCommand):
         # 5. ایجاد تنظیمات مالی
         self.create_financial_settings()
         
-        # 6. ایجاد کاربر سوپر ادمین
+        # 6. ایجاد قالب‌های اعلان
+        self.create_notification_templates()
+        
+        # 7. ایجاد کاربر سوپر ادمین
         if not options['skip_admin']:
             admin_password = options.get('admin_password')
             if not admin_password:
@@ -219,3 +222,118 @@ class Command(BaseCommand):
                     auto_renew=False
                 )
                 self.stdout.write(self.style.SUCCESS('  ✓ اشتراک نامحدود برای سوپر ادمین ایجاد شد'))
+
+    def create_notification_templates(self):
+        """ایجاد قالب‌های اعلان"""
+        from notifications.models import NotificationTemplate, NotificationCategory
+        
+        templates = [
+            # اعلان‌های اشتراک
+            {
+                'code': 'subscription_expiring',
+                'name': 'نزدیک به انقضای اشتراک',
+                'category': 'subscription',
+                'title_template': 'اشتراک شما {{days_remaining}} روز دیگر منقضی می‌شود',
+                'body_template': '{{user_name}} عزیز، اشتراک {{plan_name}} شما در تاریخ {{end_date}} منقضی می‌شود. برای تمدید اقدام کنید.',
+                'sms_template': 'اشتراک شما {{days_remaining}} روز دیگر منقضی می‌شود. برای تمدید وارد سایت شوید.',
+                'channels': ['sms', 'in_app'],
+                'default_priority': 'high',
+            },
+            {
+                'code': 'subscription_expired',
+                'name': 'انقضای اشتراک',
+                'category': 'subscription',
+                'title_template': 'اشتراک شما منقضی شد',
+                'body_template': '{{user_name}} عزیز، اشتراک {{plan_name}} شما منقضی شده است. برای ادامه استفاده، اقدام به تمدید کنید.',
+                'sms_template': 'اشتراک شما منقضی شد. برای تمدید وارد سایت شوید.',
+                'channels': ['sms', 'in_app'],
+                'default_priority': 'urgent',
+            },
+            {
+                'code': 'subscription_renewed',
+                'name': 'تمدید اشتراک',
+                'category': 'subscription',
+                'title_template': 'اشتراک شما تمدید شد',
+                'body_template': '{{user_name}} عزیز، اشتراک {{plan_name}} شما با موفقیت تمدید شد. تاریخ انقضای جدید: {{end_date}}',
+                'sms_template': 'اشتراک {{plan_name}} شما تمدید شد. انقضا: {{end_date}}',
+                'channels': ['sms', 'in_app'],
+                'default_priority': 'normal',
+            },
+            {
+                'code': 'subscription_activated',
+                'name': 'فعال‌سازی اشتراک',
+                'category': 'subscription',
+                'title_template': 'اشتراک شما فعال شد',
+                'body_template': '{{user_name}} عزیز، اشتراک {{plan_name}} شما با موفقیت فعال شد. تاریخ انقضا: {{expiry_date}}',
+                'sms_template': 'اشتراک {{plan_name}} فعال شد. انقضا: {{expiry_date}}',
+                'channels': ['sms', 'in_app'],
+                'default_priority': 'high',
+            },
+            # اعلان‌های سهمیه
+            {
+                'code': 'quota_warning',
+                'name': 'هشدار سهمیه',
+                'category': 'subscription',
+                'title_template': '{{usage_percentage}}% از سهمیه {{quota_type}} شما استفاده شده',
+                'body_template': '{{user_name}} عزیز، {{usage_percentage}}% از سهمیه {{quota_type}} ({{limit_text}}) شما استفاده شده است.',
+                'sms_template': '{{usage_percentage}}% سهمیه {{quota_type}} شما استفاده شده.',
+                'channels': ['in_app'],
+                'default_priority': 'normal',
+            },
+            {
+                'code': 'quota_exceeded',
+                'name': 'اتمام سهمیه',
+                'category': 'subscription',
+                'title_template': 'سهمیه {{quota_type}} شما تمام شد',
+                'body_template': '{{user_name}} عزیز، سهمیه {{quota_type}} شما به پایان رسیده است. برای ادامه استفاده، پلن خود را ارتقا دهید.',
+                'sms_template': 'سهمیه {{quota_type}} شما تمام شد. برای ارتقا وارد سایت شوید.',
+                'channels': ['sms', 'in_app'],
+                'default_priority': 'high',
+            },
+            # اعلان‌های پرداخت
+            {
+                'code': 'payment_success',
+                'name': 'پرداخت موفق',
+                'category': 'payment',
+                'title_template': 'پرداخت شما موفق بود',
+                'body_template': '{{user_name}} عزیز، پرداخت {{amount}} تومان برای {{plan_name}} با موفقیت انجام شد.',
+                'sms_template': 'پرداخت {{amount}} تومان برای {{plan_name}} موفق بود.',
+                'channels': ['sms', 'in_app'],
+                'default_priority': 'normal',
+            },
+            {
+                'code': 'payment_failed',
+                'name': 'پرداخت ناموفق',
+                'category': 'payment',
+                'title_template': 'پرداخت شما ناموفق بود',
+                'body_template': '{{user_name}} عزیز، پرداخت {{amount}} تومان ناموفق بود. علت: {{error_message}}',
+                'sms_template': 'پرداخت {{amount}} تومان ناموفق بود.',
+                'channels': ['sms', 'in_app'],
+                'default_priority': 'high',
+            },
+            # اعلان عضویت کاربر جدید (برای ادمین‌ها)
+            {
+                'code': 'new_user_registered',
+                'name': 'عضویت کاربر جدید',
+                'category': 'system',
+                'title_template': 'کاربر جدید ثبت‌نام کرد',
+                'body_template': 'کاربر جدید با شماره {{user_phone}} در سایت ثبت‌نام کرد.',
+                'sms_template': 'کاربر جدید: {{user_phone}}',
+                'channels': ['sms'],
+                'default_priority': 'low',
+            },
+        ]
+        
+        created_count = 0
+        for template_data in templates:
+            template, created = NotificationTemplate.objects.update_or_create(
+                code=template_data['code'],
+                defaults=template_data
+            )
+            if created:
+                created_count += 1
+        
+        if created_count > 0:
+            self.stdout.write(self.style.SUCCESS(f'  ✓ {created_count} قالب اعلان ایجاد شد'))
+        else:
+            self.stdout.write(self.style.WARNING('  - قالب‌های اعلان از قبل وجود دارند'))

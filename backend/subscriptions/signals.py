@@ -42,3 +42,37 @@ def create_free_subscription(sender, instance, created, **kwargs):
         
     except Exception as e:
         logger.error(f"Error creating subscription for user {instance.phone_number}: {e}")
+
+
+@receiver(post_save, sender=User)
+def notify_admins_new_user(sender, instance, created, **kwargs):
+    """
+    ارسال پیامک به سوپر ادمین‌ها هنگام ثبت‌نام کاربر جدید
+    """
+    if not created or instance.is_superuser:
+        return
+    
+    try:
+        from notifications.services import NotificationService
+        
+        # پیدا کردن همه سوپر ادمین‌ها
+        superusers = User.objects.filter(is_superuser=True, is_active=True)
+        
+        for admin in superusers:
+            try:
+                NotificationService.create_notification(
+                    user=admin,
+                    template_code='new_user_registered',
+                    context={
+                        'user_phone': instance.phone_number,
+                        'user_name': instance.get_full_name() or instance.phone_number,
+                    },
+                    channels=['sms'],
+                    priority='low'
+                )
+                logger.info(f"New user notification sent to admin {admin.phone_number}")
+            except Exception as e:
+                logger.error(f"Failed to notify admin {admin.phone_number}: {e}")
+                
+    except Exception as e:
+        logger.error(f"Error notifying admins about new user {instance.phone_number}: {e}")
