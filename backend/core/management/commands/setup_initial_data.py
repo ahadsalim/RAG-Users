@@ -322,6 +322,37 @@ class Command(BaseCommand):
                 'channels': ['sms'],
                 'default_priority': 'low',
             },
+            # اعلان‌های حساب کاربری
+            {
+                'code': 'welcome',
+                'name': 'خوش‌آمدگویی',
+                'category': 'account',
+                'title_template': 'به {{site_name}} خوش آمدید',
+                'body_template': '{{user_name}} عزیز، به {{site_name}} خوش آمدید! از اینکه ما را انتخاب کردید متشکریم.',
+                'sms_template': '{{user_name}} عزیز، به {{site_name}} خوش آمدید!',
+                'channels': ['sms', 'in_app'],
+                'default_priority': 'normal',
+            },
+            {
+                'code': 'login_from_new_device',
+                'name': 'ورود از دستگاه جدید',
+                'category': 'security',
+                'title_template': 'ورود از دستگاه جدید',
+                'body_template': '{{user_name}} عزیز، ورود جدیدی از دستگاه {{device_name}} در تاریخ {{login_time}} ثبت شد. اگر شما نبودید، رمز عبور خود را تغییر دهید.',
+                'sms_template': 'ورود جدید از {{device_name}}. اگر شما نبودید رمز را تغییر دهید.',
+                'channels': ['sms', 'in_app'],
+                'default_priority': 'high',
+            },
+            {
+                'code': 'password_changed',
+                'name': 'تغییر رمز عبور',
+                'category': 'security',
+                'title_template': 'رمز عبور شما تغییر کرد',
+                'body_template': '{{user_name}} عزیز، رمز عبور حساب شما با موفقیت تغییر کرد. اگر شما این کار را انجام نداده‌اید، فوراً با پشتیبانی تماس بگیرید.',
+                'sms_template': 'رمز عبور شما تغییر کرد. اگر شما نبودید با پشتیبانی تماس بگیرید.',
+                'channels': ['sms', 'in_app'],
+                'default_priority': 'high',
+            },
         ]
         
         created_count = 0

@@ -78,10 +78,7 @@ class NotificationService:
         )
         
         # ارسال به کانال‌های مختلف
-        if prefs.should_send_now():
-            NotificationService._send_to_channels(notification, rendered, prefs)
-        else:
-            logger.info(f"Notification queued for later (quiet hours): {notification.id}")
+        NotificationService._send_to_channels(notification, rendered, prefs)
         
         return notification
     

@@ -95,9 +95,6 @@ class NotificationPreferenceSerializer(serializers.ModelSerializer):
             'subscription_notifications', 'chat_notifications',
             'account_notifications', 'security_notifications',
             'marketing_notifications', 'support_notifications',
-            'quiet_hours_enabled', 'quiet_hours_start', 'quiet_hours_end',
-            'digest_enabled', 'digest_time',
-            'custom_preferences',
             'created_at', 'updated_at'
         ]
         read_only_fields = ['user', 'created_at', 'updated_at']
