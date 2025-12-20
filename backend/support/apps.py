@@ -5,3 +5,6 @@ class SupportConfig(AppConfig):
     default_auto_field = 'django.db.models.BigAutoField'
     name = 'support'
     verbose_name = 'پشتیبانی'
+    
+    def ready(self):
+        import support.signals  # noqa

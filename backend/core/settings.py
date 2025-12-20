@@ -46,6 +46,7 @@ INSTALLED_APPS = [
     'notifications',
     'analytics',
     'finance',
+    'support',
 ]
 
 MIDDLEWARE = [
@@ -478,6 +479,14 @@ JAZZMIN_SETTINGS = {
         "finance.TaxReport": "fas fa-chart-pie",
         "notifications.Notification": "fas fa-bell",
         "analytics.Analytics": "fas fa-chart-line",
+        "support": "fas fa-headset",
+        "support.Ticket": "fas fa-ticket-alt",
+        "support.TicketDepartment": "fas fa-building",
+        "support.TicketCategory": "fas fa-tags",
+        "support.TicketMessage": "fas fa-comment-dots",
+        "support.CannedResponse": "fas fa-reply-all",
+        "support.TicketTag": "fas fa-tag",
+        "support.SLAPolicy": "fas fa-clock",
     },
     
     # UI Tweaks

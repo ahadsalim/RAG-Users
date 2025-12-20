@@ -35,6 +35,7 @@ urlpatterns = [
     path('api/v1/notifications/', include('notifications.urls')),
     path('api/v1/analytics/', include('analytics.urls')),
     path('api/v1/finance/', include('finance.urls')),
+    path('api/v1/support/', include('support.urls')),
     
     # WebSocket URLs (برای چت real-time)
     # این‌ها در asgi.py تنظیم می‌شوند
