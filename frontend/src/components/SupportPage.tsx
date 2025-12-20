@@ -113,19 +113,26 @@ export default function SupportPage({ isOpen, onClose }: SupportPageProps) {
     try {
       setLoading(true)
       const response = await axios.get(`/api/v1/support/tickets/${ticketId}/`)
-      setSelectedTicket(response.data)
       
-      // بارگذاری پیام‌ها به صورت جداگانه اگر در response نبودند
-      if (response.data.messages && Array.isArray(response.data.messages)) {
-        setTicketMessages(response.data.messages)
-      } else {
-        setTicketMessages([])
+      if (response.data) {
+        setSelectedTicket(response.data)
+        
+        // فیلتر کردن پیام‌ها - فقط reply و question برای کاربر قابل رویت است
+        if (response.data.messages && Array.isArray(response.data.messages)) {
+          const visibleMessages = response.data.messages.filter(
+            (msg: any) => msg.message_type === 'reply' || msg.message_type === 'question'
+          )
+          setTicketMessages(visibleMessages)
+        } else {
+          setTicketMessages([])
+        }
+        
+        setView('detail')
       }
-      
-      setView('detail')
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error loading ticket detail:', error)
-      alert('خطا در بارگذاری جزئیات تیکت')
+      const errorMsg = error.response?.data?.detail || error.message || 'خطا در بارگذاری جزئیات تیکت'
+      alert(errorMsg)
     } finally {
       setLoading(false)
     }
@@ -181,15 +188,14 @@ export default function SupportPage({ isOpen, onClose }: SupportPageProps) {
   }
 
   const getStatusColor = (status: string) => {
-    const colors: Record<string, string> = {
-      open: 'bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300',
-      in_progress: 'bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300',
-      waiting: 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900 dark:text-yellow-300',
-      on_hold: 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300',
-      resolved: 'bg-purple-100 text-purple-700 dark:bg-purple-900 dark:text-purple-300',
-      closed: 'bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-300'
+    switch (status) {
+      case 'open': return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
+      case 'in_progress': return 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200'
+      case 'waiting': return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200'
+      case 'answered': return 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200'
+      case 'closed': return 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
+      default: return 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200'
     }
-    return colors[status] || 'bg-gray-100 text-gray-700'
   }
 
   const getPriorityColor = (priority: string) => {
