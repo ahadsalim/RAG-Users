@@ -1,7 +1,7 @@
 # 🧠 حافظه هوش مصنوعی - پروژه تجارت چت
 
 > **این فایل را قبل از هر اقدام بخوانید!**
-> آخرین به‌روزرسانی: 2025-12-18
+> آخرین به‌روزرسانی: 2025-12-20
 
 ---
 
@@ -114,7 +114,12 @@ if user.has_staff_permission('view_financial'):
 │   ├── usage.py           # ModelUsageLog, UsageService
 │   └── admin.py           # PlanAdmin, SubscriptionAdmin, ...
 ├── payments/              # سیستم پرداخت
-├── notifications/         # اعلان‌ها
+├── notifications/         # سیستم اعلان‌رسانی
+│   ├── models.py          # NotificationTemplate, Notification, NotificationPreference
+│   ├── services.py        # NotificationService, EmailService, SMSService
+│   ├── admin.py           # مدیریت اعلان‌ها و تنظیمات
+│   ├── signals.py         # ایجاد خودکار NotificationPreference
+│   └── views.py           # API endpoints
 ├── analytics/             # گزارشات
 │   └── views.py           # استفاده از permissions جدید
 ├── schedule/              # زمان‌بندی
@@ -216,6 +221,16 @@ docker exec app_backend python manage.py migrate
 ### 2025-12-18: یکپارچه‌سازی OTP
 - ✅ اضافه کردن `OTP_EXPIRE_SECONDS` به `.env`
 - ✅ Backend از settings می‌خواند، Frontend از API response
+
+### 2025-12-20: سیستم اعلان‌رسانی کامل
+- ✅ ایجاد ۱۲ قالب اعلان (subscription, payment, account, security)
+- ✅ ساده‌سازی مدل NotificationPreference (حذف quiet_hours, digest, custom_preferences)
+- ✅ ایجاد خودکار NotificationPreference برای همه کاربران
+- ✅ Signal برای ارسال SMS به سوپر ادمین‌ها هنگام ثبت‌نام کاربر جدید
+- ✅ بهبود UI پنل ادمین: نمایش تاریخ شمسی، فیلد کاربر readonly
+- ✅ اضافه کردن همه قالب‌ها به setup_initial_data.py
+- ✅ NotificationService از تنظیمات کاربر استفاده می‌کند (کانال‌ها و دسته‌ها)
+- ✅ دوطرفه بودن تنظیمات بین پنل کاربر و مدیر
 
 ---
 
@@ -428,14 +443,112 @@ OTP_EXPIRE_SECONDS=120  # 2 دقیقه
 
 ---
 
+---
+
+## 🔔 سیستم اعلان‌رسانی
+
+### مدل‌های اصلی (در `notifications/`)
+
+#### NotificationTemplate (قالب اعلان)
+```python
+# فیلدهای کلیدی:
+- code: کد یکتا (subscription_expiring, payment_success, ...)
+- name: نام قالب
+- category: دسته (system, payment, subscription, chat, account, security, marketing, support)
+- title_template, body_template: قالب عنوان و متن
+- sms_template: قالب مخصوص SMS (کوتاه‌تر)
+- email_subject_template, email_html_template: قالب ایمیل
+- channels: لیست کانال‌ها ['sms', 'email', 'push', 'in_app']
+- default_priority: اولویت پیش‌فرض
+```
+
+#### NotificationPreference (تنظیمات کاربر)
+```python
+# کانال‌ها:
+- email_enabled, sms_enabled, push_enabled, in_app_enabled
+
+# دسته‌بندی‌ها:
+- system_notifications, payment_notifications
+- subscription_notifications, chat_notifications
+- account_notifications, security_notifications
+- marketing_notifications, support_notifications
+```
+
+#### Notification (اعلان ارسال شده)
+```python
+# فیلدهای کلیدی:
+- user: گیرنده
+- template: قالب استفاده شده
+- title, body: محتوای رندر شده
+- channels: کانال‌های ارسال
+- sent_via_email, sent_via_sms, sent_via_push: وضعیت ارسال
+- is_read, read_at: وضعیت خواندن
+```
+
+### قالب‌های موجود (۱۲ عدد)
+
+| کد | نام | دسته | کانال‌ها |
+|----|-----|-------|----------|
+| `subscription_expiring` | نزدیک به انقضای اشتراک | subscription | sms, in_app |
+| `subscription_expired` | انقضای اشتراک | subscription | sms, in_app |
+| `subscription_renewed` | تمدید اشتراک | subscription | sms, in_app |
+| `subscription_activated` | فعال‌سازی اشتراک | subscription | sms, in_app |
+| `quota_warning` | هشدار سهمیه | subscription | in_app |
+| `quota_exceeded` | اتمام سهمیه | subscription | sms, in_app |
+| `payment_success` | پرداخت موفق | payment | sms, in_app |
+| `payment_failed` | پرداخت ناموفق | payment | sms, in_app |
+| `new_user_registered` | عضویت کاربر جدید | system | sms |
+| `welcome` | خوش‌آمدگویی | account | sms, in_app |
+| `login_from_new_device` | ورود از دستگاه جدید | security | sms, in_app |
+| `password_changed` | تغییر رمز عبور | security | sms, in_app |
+
+### NotificationService
+```python
+from notifications.services import NotificationService
+
+# ارسال اعلان
+NotificationService.create_notification(
+    user=user,
+    template_code='subscription_expiring',
+    context={'days_remaining': 3, 'plan_name': 'پایه'},
+    channels=['sms', 'in_app'],
+    priority='high'
+)
+```
+
+### نکات مهم
+1. **تنظیمات کاربر**: سرویس اعلان از `NotificationPreference` استفاده می‌کند
+2. **فیلتر کانال‌ها**: اگر کاربر SMS را غیرفعال کرده، پیامک ارسال نمی‌شود
+3. **فیلتر دسته‌ها**: اگر دسته غیرفعال باشد، فقط in_app ارسال می‌شود
+4. **SMS Template**: برای صرفه‌جویی در هزینه، از `sms_template` کوتاه‌تر استفاده می‌شود
+5. **دوطرفه**: تغییرات در پنل کاربر یا مدیر برای طرف مقابل قابل مشاهده است
+
+### Signal ثبت‌نام کاربر جدید
+```python
+# در subscriptions/signals.py
+@receiver(post_save, sender=User)
+def notify_admins_new_user(sender, instance, created, **kwargs):
+    # ارسال SMS به همه سوپر ادمین‌ها
+    if created and not instance.is_superuser:
+        for admin in User.objects.filter(is_superuser=True, is_active=True):
+            NotificationService.create_notification(
+                user=admin,
+                template_code='new_user_registered',
+                context={'user_phone': instance.phone_number},
+                channels=['sms']
+            )
+```
+
+---
+
 ## 🎯 کارهای در انتظار
 
 - [ ] سیستم پرداخت (زرین‌پال، رمزارز)
 - [x] مدیریت اشتراک و پلن‌ها ✅
 - [x] مدیریت جلسات فعال ✅
 - [x] تسک‌های زمان‌بندی شده ✅
+- [x] سیستم اعلان‌ها (SMS, Email, Push, In-App) ✅
 - [ ] بازارچه مشاوران
-- [ ] سیستم اعلان‌ها (Email, SMS, Push)
 - [ ] اپلیکیشن موبایل
 
 ---
