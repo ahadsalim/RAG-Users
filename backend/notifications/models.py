@@ -355,42 +355,6 @@ class NotificationPreference(models.Model):
     marketing_notifications = models.BooleanField(default=False, verbose_name='اعلان‌های بازاریابی')
     support_notifications = models.BooleanField(default=True, verbose_name='اعلان‌های پشتیبانی')
     
-    # ساعات ارسال
-    quiet_hours_enabled = models.BooleanField(
-        default=False,
-        verbose_name='ساعات سکوت فعال',
-        help_text='عدم ارسال اعلان در ساعات خاص'
-    )
-    quiet_hours_start = models.TimeField(
-        null=True,
-        blank=True,
-        verbose_name='شروع ساعات سکوت'
-    )
-    quiet_hours_end = models.TimeField(
-        null=True,
-        blank=True,
-        verbose_name='پایان ساعات سکوت'
-    )
-    
-    # گروه‌بندی اعلان‌ها
-    digest_enabled = models.BooleanField(
-        default=False,
-        verbose_name='خلاصه اعلان‌ها',
-        help_text='ارسال اعلان‌ها به صورت خلاصه روزانه'
-    )
-    digest_time = models.TimeField(
-        null=True,
-        blank=True,
-        verbose_name='زمان ارسال خلاصه'
-    )
-    
-    # تنظیمات اضافی
-    custom_preferences = models.JSONField(
-        default=dict,
-        blank=True,
-        verbose_name='تنظیمات سفارشی'
-    )
-    
     # تاریخ‌ها
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -400,7 +364,7 @@ class NotificationPreference(models.Model):
         verbose_name_plural = 'تنظیمات اعلان‌رسانی'
     
     def __str__(self):
-        return f"Preferences for {self.user.email}"
+        return f"Preferences for {self.user.phone_number}"
     
     def is_channel_enabled(self, channel):
         """بررسی فعال بودن یک کانال"""
@@ -425,22 +389,6 @@ class NotificationPreference(models.Model):
             'support': self.support_notifications,
         }
         return category_map.get(category, True)
-    
-    def should_send_now(self):
-        """بررسی اینکه آیا الان زمان مناسب ارسال است"""
-        if not self.quiet_hours_enabled:
-            return True
-        
-        if not self.quiet_hours_start or not self.quiet_hours_end:
-            return True
-        
-        now = timezone.now().time()
-        
-        # اگر ساعت پایان کوچکتر از شروع باشد (مثلا 23:00 تا 07:00)
-        if self.quiet_hours_end < self.quiet_hours_start:
-            return not (now >= self.quiet_hours_start or now <= self.quiet_hours_end)
-        else:
-            return not (self.quiet_hours_start <= now <= self.quiet_hours_end)
 
 
 class DeviceToken(models.Model):

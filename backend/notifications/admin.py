@@ -118,9 +118,10 @@ class NotificationAdmin(admin.ModelAdmin):
 
 @admin.register(NotificationPreference)
 class NotificationPreferenceAdmin(admin.ModelAdmin):
-    list_display = ['user', 'email_enabled', 'sms_enabled', 'push_enabled', 'in_app_enabled', 'quiet_hours_enabled']
+    list_display = ['user', 'email_enabled', 'sms_enabled', 'push_enabled', 'in_app_enabled', 'updated_at']
     list_filter = ['email_enabled', 'sms_enabled', 'push_enabled', 'in_app_enabled']
-    search_fields = ['user__email']
+    search_fields = ['user__phone_number', 'user__email']
+    readonly_fields = ['created_at', 'updated_at']
     
     fieldsets = (
         ('کاربر', {
@@ -136,14 +137,8 @@ class NotificationPreferenceAdmin(admin.ModelAdmin):
                 'marketing_notifications', 'support_notifications'
             )
         }),
-        ('ساعات سکوت', {
-            'fields': ('quiet_hours_enabled', 'quiet_hours_start', 'quiet_hours_end')
-        }),
-        ('خلاصه روزانه', {
-            'fields': ('digest_enabled', 'digest_time')
-        }),
-        ('سفارشی', {
-            'fields': ('custom_preferences',),
+        ('تاریخ‌ها', {
+            'fields': ('created_at', 'updated_at'),
             'classes': ('collapse',)
         }),
     )
