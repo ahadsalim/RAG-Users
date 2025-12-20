@@ -9,15 +9,47 @@ from .models import (
 )
 
 
-class TicketMessageInline(admin.TabularInline):
+class TicketMessageReadOnlyInline(admin.TabularInline):
+    """نمایش پیام‌های قبلی (فقط خواندنی)"""
     model = TicketMessage
     extra = 0
-    readonly_fields = ['sender', 'message_type', 'is_staff_reply', 'created_at']
-    fields = ['sender', 'content', 'message_type', 'is_staff_reply', 'created_at']
+    can_delete = False
+    fields = ['sender', 'content', 'is_staff_reply', 'created_at']
+    readonly_fields = ['sender', 'content', 'message_type', 'is_staff_reply', 'created_at']
+    verbose_name = 'پیام قبلی'
+    verbose_name_plural = '💬 تاریخچه مکالمات'
     ordering = ['created_at']
+    
+    def has_add_permission(self, request, obj=None):
+        return False
     
     def has_delete_permission(self, request, obj=None):
         return False
+
+
+class TicketMessageInline(admin.StackedInline):
+    """افزودن پاسخ جدید"""
+    model = TicketMessage
+    extra = 1
+    max_num = 1
+    can_delete = False
+    fields = ['content', 'message_type']
+    verbose_name = 'پاسخ جدید'
+    verbose_name_plural = '✍️ ارسال پاسخ به کاربر'
+    
+    def get_queryset(self, request):
+        # فقط پیام‌های جدید (که هنوز ذخیره نشده‌اند) را نشان بده
+        return super().get_queryset(request).none()
+    
+    def save_formset(self, request, form, formset, change):
+        instances = formset.save(commit=False)
+        for instance in instances:
+            if not instance.pk:
+                instance.sender = request.user
+                instance.is_staff_reply = True
+                instance.ticket = form.instance
+                instance.save()
+        formset.save_m2m()
 
 
 class TicketAttachmentInline(admin.TabularInline):
@@ -112,36 +144,38 @@ class TicketAdmin(admin.ModelAdmin):
     list_filter = ['status', 'priority', 'department', 'category', 'source', 'created_at']
     search_fields = ['ticket_number', 'subject', 'description', 'user__phone_number', 'user__email']
     readonly_fields = [
-        'ticket_number', 'user', 'organization', 'source',
+        'ticket_number', 'user', 'organization', 'subject', 'description', 'source',
         'first_response_at', 'resolved_at', 'closed_at',
-        'created_at', 'updated_at'
+        'created_at', 'updated_at', 'user_read', 'staff_read'
     ]
     raw_id_fields = ['user', 'assigned_to']
     date_hierarchy = 'created_at'
     ordering = ['-created_at']
     
-    inlines = [TicketMessageInline, TicketAttachmentInline, TicketHistoryInline]
+    inlines = [TicketMessageReadOnlyInline, TicketMessageInline, TicketAttachmentInline, TicketHistoryInline]
     
     fieldsets = (
-        (_('اطلاعات اصلی'), {
-            'fields': ('ticket_number', 'user', 'organization', 'subject', 'description')
+        (_('🎫 اطلاعات تیکت (فقط خواندنی)'), {
+            'fields': ('ticket_number', 'user', 'organization', 'subject', 'description'),
+            'description': '⚠️ موضوع و توضیحات تیکت توسط کاربر ثبت شده و قابل ویرایش نیست.'
         }),
-        (_('دسته‌بندی'), {
+        (_('📋 مدیریت تیکت'), {
+            'fields': ('status', 'priority', 'assigned_to'),
+            'description': 'وضعیت و اولویت تیکت را مدیریت کنید و به کارشناس مناسب تخصیص دهید.'
+        }),
+        (_('📁 دسته‌بندی'), {
             'fields': ('category', 'department', 'tags')
         }),
-        (_('وضعیت'), {
-            'fields': ('status', 'priority', 'source', 'assigned_to')
-        }),
-        (_('SLA'), {
+        (_('⏱️ SLA و زمان‌بندی'), {
             'fields': ('response_due', 'resolution_due', 'first_response_at', 'resolved_at'),
             'classes': ('collapse',)
         }),
-        (_('رضایت کاربر'), {
+        (_('⭐ رضایت کاربر'), {
             'fields': ('satisfaction_rating', 'satisfaction_feedback'),
             'classes': ('collapse',)
         }),
-        (_('تاریخ‌ها'), {
-            'fields': ('created_at', 'updated_at', 'closed_at'),
+        (_('📊 اطلاعات سیستمی'), {
+            'fields': ('source', 'user_read', 'staff_read', 'created_at', 'updated_at', 'closed_at'),
             'classes': ('collapse',)
         }),
     )

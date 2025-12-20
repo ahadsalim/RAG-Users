@@ -114,10 +114,18 @@ export default function SupportPage({ isOpen, onClose }: SupportPageProps) {
       setLoading(true)
       const response = await axios.get(`/api/v1/support/tickets/${ticketId}/`)
       setSelectedTicket(response.data)
-      setTicketMessages(response.data.messages || [])
+      
+      // بارگذاری پیام‌ها به صورت جداگانه اگر در response نبودند
+      if (response.data.messages && Array.isArray(response.data.messages)) {
+        setTicketMessages(response.data.messages)
+      } else {
+        setTicketMessages([])
+      }
+      
       setView('detail')
     } catch (error) {
       console.error('Error loading ticket detail:', error)
+      alert('خطا در بارگذاری جزئیات تیکت')
     } finally {
       setLoading(false)
     }
