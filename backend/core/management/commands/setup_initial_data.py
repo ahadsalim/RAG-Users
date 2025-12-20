@@ -166,17 +166,33 @@ class Command(BaseCommand):
     def create_superuser(self, password):
         """ایجاد کاربر سوپر ادمین"""
         User = get_user_model()
+        from subscriptions.models import Subscription, Plan
+        from datetime import timedelta
         
-        if User.objects.filter(is_superuser=True).exists():
+        user = User.objects.filter(phone_number='09121082690').first()
+        
+        if user:
             self.stdout.write(self.style.WARNING('  - کاربر سوپر ادمین از قبل وجود دارد'))
-            return
+        else:
+            user = User.objects.create_superuser(
+                phone_number='09121082690',
+                email='admin@tejarat.chat',
+                password=password,
+                first_name='مدیر',
+                last_name='سیستم',
+            )
+            self.stdout.write(self.style.SUCCESS(f'  ✓ کاربر سوپر ادمین ایجاد شد: {user.phone_number}'))
         
-        user = User.objects.create_superuser(
-            phone_number='09121082690',
-            email='admin@tejarat.chat',
-            password=password,
-            first_name='مدیر',
-            last_name='سیستم',
-        )
-        
-        self.stdout.write(self.style.SUCCESS(f'  ✓ کاربر سوپر ادمین ایجاد شد: {user.phone_number}'))
+        # ایجاد اشتراک رایگان برای ادمین
+        if not Subscription.objects.filter(user=user).exists():
+            free_plan = Plan.objects.filter(name='رایگان').first()
+            if free_plan:
+                Subscription.objects.create(
+                    user=user,
+                    plan=free_plan,
+                    status='active',
+                    start_date=timezone.now(),
+                    end_date=timezone.now() + timedelta(days=365*10),  # 10 سال
+                    auto_renew=True
+                )
+                self.stdout.write(self.style.SUCCESS('  ✓ اشتراک رایگان برای ادمین ایجاد شد'))
