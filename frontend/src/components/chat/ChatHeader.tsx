@@ -7,6 +7,7 @@ import clsx from 'clsx'
 import axios from 'axios'
 import SettingsPage from '@/components/SettingsPage'
 import NotificationsPanel from '@/components/NotificationsPanel'
+import SupportPage from '@/components/SupportPage'
 
 interface ChatHeaderProps {
   onToggleSidebar: () => void
@@ -28,6 +29,7 @@ export function ChatHeader({ onToggleSidebar, conversation, isConnected }: ChatH
   const [showUserMenu, setShowUserMenu] = useState(false)
   const [isSettingsOpen, setIsSettingsOpen] = useState(false)
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false)
+  const [isSupportOpen, setIsSupportOpen] = useState(false)
   const [unreadCount, setUnreadCount] = useState(0)
   const { user, logout } = useAuthStore()
   
@@ -266,6 +268,13 @@ export function ChatHeader({ onToggleSidebar, conversation, isConnected }: ChatH
                       <span>اطلاعات کاربری</span>
                     </button>
                     <button 
+                      onClick={() => { setIsSupportOpen(true); setShowUserMenu(false); }}
+                      className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-gray-100 dark:hover:bg-gray-700 text-right text-sm text-gray-700 dark:text-gray-300"
+                    >
+                      <span>🎧</span>
+                      <span>پشتیبانی</span>
+                    </button>
+                    <button 
                       onClick={() => { logout(); setShowUserMenu(false); }}
                       className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-gray-100 dark:hover:bg-gray-700 text-red-500 text-right text-sm"
                     >
@@ -292,6 +301,12 @@ export function ChatHeader({ onToggleSidebar, conversation, isConnected }: ChatH
       isOpen={isNotificationsOpen} 
       onClose={() => setIsNotificationsOpen(false)}
       onUnreadCountChange={setUnreadCount}
+    />
+    
+    {/* Support Page */}
+    <SupportPage 
+      isOpen={isSupportOpen} 
+      onClose={() => setIsSupportOpen(false)} 
     />
     </>
   )
