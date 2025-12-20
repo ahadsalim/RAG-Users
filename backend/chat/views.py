@@ -233,10 +233,27 @@ class QueryView(APIView):
             # به‌روزرسانی مصرف اشتراک
             if 'active_subscription' in locals() and active_subscription:
                 from subscriptions.usage import UsageService
+                import re
+                
+                # استخراج توکن‌های ورودی و خروجی از پاسخ
+                input_tokens = response.get('input_tokens', 0)
+                output_tokens = response.get('output_tokens', 0)
+                
+                # اگر توکن‌ها در پاسخ نبودند، از متن DEBUG استخراج کن
+                if not input_tokens or not output_tokens:
+                    answer_text = response.get('answer', '')
+                    input_match = re.search(r'توکن ورودی[:\s]*`?(\d+)`?', answer_text)
+                    output_match = re.search(r'توکن خروجی[:\s]*`?(\d+)`?', answer_text)
+                    if input_match:
+                        input_tokens = int(input_match.group(1))
+                    if output_match:
+                        output_tokens = int(output_match.group(1))
+                
                 UsageService.log_usage(
                     user=user,
                     action_type='query',
-                    tokens_used=assistant_message.tokens or 0,
+                    input_tokens=input_tokens,
+                    output_tokens=output_tokens,
                     subscription=active_subscription,
                     metadata={
                         'conversation_id': str(conversation.id),
