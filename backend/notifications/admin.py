@@ -123,29 +123,15 @@ class NotificationPreferenceAdmin(admin.ModelAdmin):
     search_fields = ['user__phone_number', 'user__email']
     readonly_fields = ['user_display', 'get_created_at_jalali', 'get_updated_at_jalali']
     
-    fieldsets = (
-        ('کاربر', {
-            'fields': ('user_display',),
-        }),
-        ('کانال‌های اطلاع‌رسانی', {
-            'fields': (
-                ('email_enabled', 'sms_enabled'),
-                ('push_enabled', 'in_app_enabled'),
-            ),
-        }),
-        ('دسته‌بندی اعلان‌ها', {
-            'fields': (
-                ('system_notifications', 'payment_notifications'),
-                ('subscription_notifications', 'chat_notifications'),
-                ('account_notifications', 'security_notifications'),
-                ('marketing_notifications', 'support_notifications'),
-            ),
-        }),
-        ('تاریخچه', {
-            'fields': (
-                ('get_created_at_jalali', 'get_updated_at_jalali'),
-            ),
-        }),
+    fields = (
+        'user_display',
+        ('email_enabled', 'sms_enabled'),
+        ('push_enabled', 'in_app_enabled'),
+        ('system_notifications', 'payment_notifications'),
+        ('subscription_notifications', 'chat_notifications'),
+        ('account_notifications', 'security_notifications'),
+        ('marketing_notifications', 'support_notifications'),
+        ('get_created_at_jalali', 'get_updated_at_jalali'),
     )
     
     def get_user_display(self, obj):
