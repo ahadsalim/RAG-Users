@@ -275,64 +275,56 @@ const ProfileTab: React.FC<{ settings: UserSettings; setSettings: React.Dispatch
   const isBusiness = userType === 'business';
   
   return (
-    <div className="space-y-6">
-      <div className="bg-gray-50 dark:bg-gray-800 rounded-xl p-6">
-        <h4 className="text-lg font-semibold mb-4 text-gray-900 dark:text-white">اطلاعات کاربری</h4>
-        <div className="space-y-4">
-          {isBusiness ? (
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">نام شرکت/سازمان</label>
-              <input
-                type="text"
-                value={settings.company_name}
-                onChange={(e) => setSettings({ ...settings, company_name: e.target.value })}
-                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white"
-                placeholder="نام شرکت یا سازمان خود را وارد کنید"
-              />
-            </div>
-          ) : (
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">نام و نام خانوادگی</label>
-              <input
-                type="text"
-                value={settings.full_name}
-                onChange={(e) => setSettings({ ...settings, full_name: e.target.value })}
-                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white"
-                placeholder="نام خود را وارد کنید"
-              />
-            </div>
-          )}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">ایمیل</label>
-            <input
-              type="email"
-              value={settings.email}
-              onChange={(e) => setSettings({ ...settings, email: e.target.value })}
-              className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white"
-              placeholder="email@example.com"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              شماره تلفن
-              {!isBusiness && <span className="text-xs text-gray-500 mr-2">(غیرقابل تغییر)</span>}
-            </label>
-            <input
-              type="tel"
-              value={userPhone || ''}
-              disabled={!isBusiness}
-              onChange={(e) => isBusiness && setSettings({ ...settings, phone: e.target.value })}
-              className={`w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg ${
-                isBusiness 
-                  ? 'bg-white dark:bg-gray-900 text-gray-900 dark:text-white' 
-                  : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 cursor-not-allowed'
-              }`}
-              placeholder={isBusiness ? "شماره تلفن برای اطلاع‌رسانی" : "شماره تلفن ثبت نشده"}
-            />
-            {isBusiness && (
-              <p className="text-xs text-gray-500 mt-1">این شماره فقط برای اطلاع‌رسانی استفاده می‌شود</p>
-            )}
-          </div>
+    <div className="bg-gray-50 dark:bg-gray-800 rounded-xl p-5">
+      <div className="space-y-5">
+        {/* نام */}
+        <div className="flex items-center justify-between">
+          <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+            {isBusiness ? 'نام شرکت/سازمان' : 'نام و نام خانوادگی'}
+          </span>
+          <input
+            type="text"
+            value={isBusiness ? settings.company_name : settings.full_name}
+            onChange={(e) => setSettings({ 
+              ...settings, 
+              [isBusiness ? 'company_name' : 'full_name']: e.target.value 
+            })}
+            className="w-64 px-3 py-1.5 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-sm"
+          />
+        </div>
+
+        <div className="border-t border-gray-200 dark:border-gray-700" />
+
+        {/* ایمیل */}
+        <div className="flex items-center justify-between">
+          <span className="text-sm font-medium text-gray-700 dark:text-gray-300">ایمیل</span>
+          <input
+            type="email"
+            value={settings.email}
+            onChange={(e) => setSettings({ ...settings, email: e.target.value })}
+            className="w-64 px-3 py-1.5 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-sm"
+          />
+        </div>
+
+        <div className="border-t border-gray-200 dark:border-gray-700" />
+
+        {/* شماره تلفن */}
+        <div className="flex items-center justify-between">
+          <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+            شماره تلفن
+            {!isBusiness && <span className="text-xs text-gray-500 mr-1">(غیرقابل تغییر)</span>}
+          </span>
+          <input
+            type="tel"
+            value={userPhone || ''}
+            disabled={!isBusiness}
+            onChange={(e) => isBusiness && setSettings({ ...settings, phone: e.target.value })}
+            className={`w-64 px-3 py-1.5 border border-gray-300 dark:border-gray-600 rounded-lg text-sm ${
+              isBusiness 
+                ? 'bg-white dark:bg-gray-900 text-gray-900 dark:text-white' 
+                : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 cursor-not-allowed'
+            }`}
+          />
         </div>
       </div>
     </div>
