@@ -285,10 +285,10 @@ class UsageStatsView(APIView):
         if subscription and subscription.plan:
             features = subscription.plan.features or {}
             daily_limit = features.get('max_queries_per_day', subscription.plan.max_queries_per_day or 10)
-            monthly_limit = features.get('max_queries_per_month', subscription.plan.max_queries_per_month or 300)
+            monthly_limit = features.get('max_queries_per_month', subscription.plan.max_queries_per_month or 200)
         else:
             daily_limit = 10
-            monthly_limit = 300
+            monthly_limit = 200
         
         return Response({
             'today': {

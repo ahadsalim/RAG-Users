@@ -132,7 +132,7 @@ class SubscriptionNotificationService:
             limit = features.get('max_queries_per_day', 10)
             limit_text = f'{limit} سوال در روز'
         else:
-            limit = features.get('max_queries_per_month', 300)
+            limit = features.get('max_queries_per_month', subscription.plan.max_queries_per_month or 200)
             limit_text = f'{limit} سوال در ماه'
         
         context = {

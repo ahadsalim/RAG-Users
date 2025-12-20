@@ -162,7 +162,7 @@ class UsageReportService:
         # محدودیت‌های پلن
         features = subscription.plan.features or {}
         max_daily = features.get('max_queries_per_day', 10)
-        max_monthly = features.get('max_queries_per_month', 300)
+        max_monthly = features.get('max_queries_per_month', subscription.plan.max_queries_per_month or 200)
         
         # درصد مصرف
         from .usage import UsageService

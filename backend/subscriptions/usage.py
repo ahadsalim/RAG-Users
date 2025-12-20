@@ -295,8 +295,8 @@ class UsageService:
         
         # دریافت محدودیت‌ها از پلن
         features = subscription.plan.features or {}
-        max_daily = features.get('max_queries_per_day', 10)
-        max_monthly = features.get('max_queries_per_month', 300)
+        max_daily = features.get('max_queries_per_day', subscription.plan.max_queries_per_day or 10)
+        max_monthly = features.get('max_queries_per_month', subscription.plan.max_queries_per_month or 200)
         
         # مصرف فعلی - فقط برای اشتراک فعلی
         daily_used = UsageService.get_daily_usage(user, subscription)
@@ -334,8 +334,8 @@ class UsageService:
             return {'daily': 0, 'monthly': 0}
         
         features = subscription.plan.features or {}
-        max_daily = features.get('max_queries_per_day', 10)
-        max_monthly = features.get('max_queries_per_month', 300)
+        max_daily = features.get('max_queries_per_day', subscription.plan.max_queries_per_day or 10)
+        max_monthly = features.get('max_queries_per_month', subscription.plan.max_queries_per_month or 200)
         
         daily_used = UsageService.get_daily_usage(user, subscription)
         monthly_used = UsageService.get_monthly_usage(user, subscription)

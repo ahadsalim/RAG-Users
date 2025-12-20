@@ -234,7 +234,7 @@ class UserUsageReportAdmin(admin.ModelAdmin):
             return '-'
         from .usage import UsageService
         monthly_used = UsageService.get_monthly_usage(obj.user, obj)
-        max_monthly = obj.plan.max_queries_per_month or 300
+        max_monthly = obj.plan.max_queries_per_month or 200
         remaining = max(0, max_monthly - monthly_used)
         return f'{remaining} از {max_monthly}'
     remaining_queries.short_description = 'مانده سوال'
