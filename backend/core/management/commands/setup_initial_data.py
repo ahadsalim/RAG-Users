@@ -34,8 +34,8 @@ class Command(BaseCommand):
         # 1. ایجاد ارز پایه (ریال)
         self.create_currencies()
         
-        # 2. ایجاد پلن رایگان
-        self.create_free_plan()
+        # 2. ایجاد پلن‌ها
+        self.create_plans()
         
         # 3. ایجاد درگاه پرداخت زرین‌پال
         self.create_payment_gateway()
@@ -78,10 +78,11 @@ class Command(BaseCommand):
         else:
             self.stdout.write(self.style.WARNING('  - ارز ریال از قبل وجود دارد'))
 
-    def create_free_plan(self):
-        """ایجاد پلن رایگان"""
+    def create_plans(self):
+        """ایجاد پلن‌های پایه"""
         from subscriptions.models import Plan
         
+        # پلن رایگان
         plan, created = Plan.objects.get_or_create(
             name='رایگان',
             defaults={
@@ -98,11 +99,33 @@ class Command(BaseCommand):
                 },
             }
         )
-        
         if created:
             self.stdout.write(self.style.SUCCESS('  ✓ پلن رایگان ایجاد شد'))
         else:
             self.stdout.write(self.style.WARNING('  - پلن رایگان از قبل وجود دارد'))
+        
+        # پلن نامحدود (برای سوپر ادمین)
+        unlimited_plan, created = Plan.objects.get_or_create(
+            name='نامحدود',
+            defaults={
+                'description': 'پلن نامحدود برای مدیران سیستم',
+                'price': Decimal('0'),
+                'duration_days': 36500,  # 100 سال
+                'max_queries_per_day': 999999,
+                'max_queries_per_month': 999999,
+                'is_active': True,
+                'features': {
+                    'web_search': True,
+                    'priority_support': True,
+                    'advanced_analytics': True,
+                    'unlimited': True,
+                },
+            }
+        )
+        if created:
+            self.stdout.write(self.style.SUCCESS('  ✓ پلن نامحدود ایجاد شد'))
+        else:
+            self.stdout.write(self.style.WARNING('  - پلن نامحدود از قبل وجود دارد'))
 
     def create_payment_gateway(self):
         """ایجاد درگاه پرداخت زرین‌پال"""
@@ -183,16 +206,16 @@ class Command(BaseCommand):
             )
             self.stdout.write(self.style.SUCCESS(f'  ✓ کاربر سوپر ادمین ایجاد شد: {user.phone_number}'))
         
-        # ایجاد اشتراک رایگان برای ادمین
+        # ایجاد اشتراک نامحدود برای سوپر ادمین
         if not Subscription.objects.filter(user=user).exists():
-            free_plan = Plan.objects.filter(name='رایگان').first()
-            if free_plan:
+            unlimited_plan = Plan.objects.filter(name='نامحدود').first()
+            if unlimited_plan:
                 Subscription.objects.create(
                     user=user,
-                    plan=free_plan,
+                    plan=unlimited_plan,
                     status='active',
                     start_date=timezone.now(),
-                    end_date=timezone.now() + timedelta(days=365*10),  # 10 سال
-                    auto_renew=True
+                    end_date=timezone.now() + timedelta(days=36500),  # 100 سال
+                    auto_renew=False
                 )
-                self.stdout.write(self.style.SUCCESS('  ✓ اشتراک رایگان برای ادمین ایجاد شد'))
+                self.stdout.write(self.style.SUCCESS('  ✓ اشتراک نامحدود برای سوپر ادمین ایجاد شد'))
