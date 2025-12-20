@@ -596,90 +596,111 @@ const SubscriptionTab: React.FC<{ subscription: SubscriptionInfo | null; loading
 // Preferences Tab
 const PreferencesTab: React.FC<{ settings: UserSettings; setSettings: React.Dispatch<React.SetStateAction<UserSettings>> }> = ({ settings, setSettings }) => {
   const { theme, setTheme } = useTheme();
+  const { activeCurrency, setUserPreferredCurrency } = useCurrency();
+  const [currencies, setCurrencies] = React.useState<any[]>([]);
+  
+  React.useEffect(() => {
+    const loadCurrencies = async () => {
+      try {
+        const { getCurrencies } = await import('@/services/settingsService');
+        const data = await getCurrencies();
+        setCurrencies(data);
+      } catch (error) {
+        console.error('Failed to load currencies:', error);
+      }
+    };
+    loadCurrencies();
+  }, []);
   
   const handleThemeChange = (newTheme: 'light' | 'dark') => {
     setTheme(newTheme);
     setSettings({ ...settings, theme: newTheme });
   };
+
+  const handleCurrencyChange = (currencyCode: string) => {
+    const selected = currencies.find((c: any) => c.code === currencyCode);
+    if (selected) {
+      setUserPreferredCurrency(selected);
+    }
+  };
   
   return (
-    <div className="space-y-6">
-      {/* تم تاریک/روشن */}
-      <div className="bg-gray-50 dark:bg-gray-800 rounded-xl p-6">
-        <h4 className="text-lg font-semibold mb-4 text-gray-900 dark:text-white">ظاهر برنامه</h4>
-        <div className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">تم</label>
-            <div className="grid grid-cols-2 gap-3">
-              <button
-                onClick={() => handleThemeChange('light')}
-                className={`p-3 rounded-lg border-2 transition-all flex items-center justify-center gap-2 ${
-                  theme === 'light'
-                    ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300'
-                    : 'border-gray-300 dark:border-gray-600 hover:border-gray-400 dark:hover:border-gray-500 text-gray-700 dark:text-gray-300'
-                }`}
-              >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
-                </svg>
-                <span className="font-medium">روشن</span>
-              </button>
-              <button
-                onClick={() => handleThemeChange('dark')}
-                className={`p-3 rounded-lg border-2 transition-all flex items-center justify-center gap-2 ${
-                  theme === 'dark'
-                    ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300'
-                    : 'border-gray-300 dark:border-gray-600 hover:border-gray-400 dark:hover:border-gray-500 text-gray-700 dark:text-gray-300'
-                }`}
-              >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
-                </svg>
-                <span className="font-medium">تاریک</span>
-              </button>
-            </div>
+    <div className="bg-gray-50 dark:bg-gray-800 rounded-xl p-5">
+      {/* همه تنظیمات در یک کارت */}
+      <div className="space-y-5">
+        {/* تم */}
+        <div className="flex items-center justify-between">
+          <span className="text-sm font-medium text-gray-700 dark:text-gray-300">تم برنامه</span>
+          <div className="flex gap-2">
+            <button
+              onClick={() => handleThemeChange('light')}
+              className={`px-3 py-1.5 rounded-lg text-sm transition-all flex items-center gap-1.5 ${
+                theme === 'light'
+                  ? 'bg-blue-500 text-white'
+                  : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600'
+              }`}
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+              </svg>
+              روشن
+            </button>
+            <button
+              onClick={() => handleThemeChange('dark')}
+              className={`px-3 py-1.5 rounded-lg text-sm transition-all flex items-center gap-1.5 ${
+                theme === 'dark'
+                  ? 'bg-blue-500 text-white'
+                  : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600'
+              }`}
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+              </svg>
+              تاریک
+            </button>
           </div>
         </div>
-      </div>
 
-      {/* تنظیمات مالی و پاسخ در دو ستون */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {/* انتخاب واحد پولی */}
-        <div className="bg-gray-50 dark:bg-gray-800 rounded-xl p-6">
-          <h4 className="text-lg font-semibold mb-4 text-gray-900 dark:text-white">تنظیمات مالی</h4>
-          <CurrencySelector />
+        <div className="border-t border-gray-200 dark:border-gray-700" />
+
+        {/* واحد پولی */}
+        <div className="flex items-center justify-between">
+          <span className="text-sm font-medium text-gray-700 dark:text-gray-300">واحد پولی</span>
+          <select
+            value={activeCurrency?.code || 'IRT'}
+            onChange={(e) => handleCurrencyChange(e.target.value)}
+            className="px-3 py-1.5 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-sm text-right"
+            dir="rtl"
+          >
+            {currencies.map((currency: any) => (
+              <option key={currency.id} value={currency.code}>
+                {currency.name} ({currency.symbol})
+              </option>
+            ))}
+          </select>
         </div>
 
-        {/* تنظیمات پاسخ */}
-        <div className="bg-gray-50 dark:bg-gray-800 rounded-xl p-6">
-          <h4 className="text-lg font-semibold mb-4 text-gray-900 dark:text-white">تنظیمات پاسخ</h4>
-          <div className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                جستجوی وب (جستجوی اینترنت برای پاسخ بهتر)
-              </label>
-              <select
-                value={settings.enable_web_search === null ? 'default' : settings.enable_web_search ? 'enabled' : 'disabled'}
-                onChange={(e) => {
-                  const value = e.target.value;
-                  setSettings({ 
-                    ...settings, 
-                    enable_web_search: value === 'default' ? null : value === 'enabled' 
-                  });
-                }}
-                className="w-full px-4 py-2 pr-10 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-right appearance-none"
-                dir="rtl"
-                style={{ backgroundImage: "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%236b7280'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E\")", backgroundRepeat: "no-repeat", backgroundPosition: "left 0.75rem center", backgroundSize: "1.25rem" }}
-              >
-                <option value="default">پیش‌فرض سرور</option>
-                <option value="enabled">فعال (کندتر)</option>
-                <option value="disabled">غیرفعال (سریع‌تر)</option>
-              </select>
-              <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-                تمام پاسخ‌ها با تنظیم انتخابی شما پردازش می‌شوند
-              </p>
-            </div>
-          </div>
+        <div className="border-t border-gray-200 dark:border-gray-700" />
+
+        {/* جستجوی وب */}
+        <div className="flex items-center justify-between">
+          <span className="text-sm font-medium text-gray-700 dark:text-gray-300">جستجوی وب</span>
+          <select
+            value={settings.enable_web_search === null ? 'default' : settings.enable_web_search ? 'enabled' : 'disabled'}
+            onChange={(e) => {
+              const value = e.target.value;
+              setSettings({ 
+                ...settings, 
+                enable_web_search: value === 'default' ? null : value === 'enabled' 
+              });
+            }}
+            className="px-3 py-1.5 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-sm text-right"
+            dir="rtl"
+          >
+            <option value="default">پیش‌فرض</option>
+            <option value="enabled">فعال</option>
+            <option value="disabled">غیرفعال</option>
+          </select>
         </div>
       </div>
     </div>
