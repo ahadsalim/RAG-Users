@@ -576,42 +576,19 @@ else
     print_warning "Static file collection failed - you can run it later"
 fi
 
-# Create superuser
-print_info "Creating superadmin user..."
-DOMAIN_NAME=$(grep '^DOMAIN=' "$ENV_FILE" | cut -d'=' -f2)
-if docker-compose exec -T backend python manage.py shell << 'PYEOF' 2>&1; then
-from accounts.models import User
-
-# ایجاد کاربر superadmin با موبایل و ایمیل
-user, created = User.objects.get_or_create(
-    phone_number='09121082690',
-    defaults={
-        'email': 'superadmin@tejarat.chat',
-        'first_name': 'Super',
-        'last_name': 'Admin',
-        'is_staff': True,
-        'is_superuser': True,
-        'is_active': True,
-        'phone_verified': True,
-        'email_verified': True,
-    }
-)
-
-if created:
-    user.set_password('admin123')
-    user.save()
-    print('✓ Superadmin created: 09121082690 | superadmin@tejarat.chat')
-else:
-    print('✓ Superadmin already exists: 09121082690 | superadmin@tejarat.chat')
-
-print(f'  Login credentials:')
-print(f'  - Frontend (mobile): 09121082690 + OTP/Password')
-print(f'  - Backend (email): superadmin@tejarat.chat / admin123')
-PYEOF
-    print_success "Superadmin user configured"
+# Setup initial data (currencies, plans, settings, superuser)
+print_info "Setting up initial data (currencies, plans, payment gateways, settings, superuser)..."
+DJANGO_ADMIN_PASSWORD=$(grep '^DJANGO_ADMIN_PASSWORD=' "$ENV_FILE" | cut -d'=' -f2)
+if [ -z "$DJANGO_ADMIN_PASSWORD" ]; then
+    DJANGO_ADMIN_PASSWORD="admin123"
+fi
+if docker-compose exec -T backend python manage.py setup_initial_data --admin-password="$DJANGO_ADMIN_PASSWORD" 2>&1; then
+    print_success "Initial data setup completed"
+    print_info "  Superadmin: 09121082690 / admin@tejarat.chat"
+    print_info "  Password: $DJANGO_ADMIN_PASSWORD"
 else
-    print_warning "Could not create superadmin automatically. You can create it later with:"
-    print_info "  cd $DEPLOYMENT_DIR && docker-compose exec backend python manage.py createsuperuser"
+    print_warning "Initial data setup failed - you can run it later with:"
+    print_info "  cd $DEPLOYMENT_DIR && docker-compose exec backend python manage.py setup_initial_data --admin-password=YOUR_PASSWORD"
 fi
 
 # Start remaining services
