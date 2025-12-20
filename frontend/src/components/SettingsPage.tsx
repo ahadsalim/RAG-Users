@@ -170,7 +170,7 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ isOpen, onClose }) => {
         <div className="w-64 bg-gray-50 dark:bg-gray-800 border-l border-gray-200 dark:border-gray-700 flex flex-col">
           {/* Header */}
           <div className="p-6 border-b border-gray-200 dark:border-gray-700">
-            <h2 className="text-xl font-bold text-gray-900 dark:text-white">تنظیمات</h2>
+            <h2 className="text-xl font-bold text-gray-900 dark:text-white">اطلاعات کاربری</h2>
           </div>
 
           {/* Navigation */}
