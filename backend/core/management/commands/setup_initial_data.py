@@ -318,7 +318,7 @@ class Command(BaseCommand):
                 'category': 'system',
                 'title_template': 'کاربر جدید ثبت‌نام کرد',
                 'body_template': 'کاربر جدید با شماره {{user_phone}} در سایت ثبت‌نام کرد.',
-                'sms_template': 'کاربر جدید: {{user_phone}}',
+                'sms_template': 'کاربر جدید با شماره {{user_phone}} در سایت ثبت‌نام کرد.',
                 'channels': ['sms'],
                 'default_priority': 'low',
             },
