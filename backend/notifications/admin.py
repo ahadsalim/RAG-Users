@@ -123,24 +123,12 @@ class NotificationPreferenceAdmin(admin.ModelAdmin):
     search_fields = ['user__phone_number', 'user__email']
     readonly_fields = ['created_at', 'updated_at']
     
-    fieldsets = (
-        ('کاربر', {
-            'fields': ('user',)
-        }),
-        ('کانال‌ها', {
-            'fields': ('email_enabled', 'sms_enabled', 'push_enabled', 'in_app_enabled')
-        }),
-        ('دسته‌بندی‌ها', {
-            'fields': (
-                'system_notifications', 'payment_notifications', 'subscription_notifications',
-                'chat_notifications', 'account_notifications', 'security_notifications',
-                'marketing_notifications', 'support_notifications'
-            )
-        }),
-        ('تاریخ‌ها', {
-            'fields': ('created_at', 'updated_at'),
-            'classes': ('collapse',)
-        }),
+    fields = (
+        'user',
+        ('email_enabled', 'sms_enabled', 'push_enabled', 'in_app_enabled'),
+        ('system_notifications', 'payment_notifications', 'subscription_notifications', 'chat_notifications'),
+        ('account_notifications', 'security_notifications', 'marketing_notifications', 'support_notifications'),
+        ('created_at', 'updated_at'),
     )
 
 
