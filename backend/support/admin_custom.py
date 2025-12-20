@@ -47,8 +47,6 @@ class TicketReplyForm(forms.ModelForm):
 class CustomTicketAdmin(admin.ModelAdmin):
     """Admin سفارشی برای نمایش بهتر تیکت"""
     
-    change_form_template = 'admin/support/ticket_change_form.html'
-    
     list_display = [
         'ticket_number', 'subject', 'user', 'status_badge', 'priority_badge',
         'department', 'assigned_to', 'sla_indicator', 'created_at'
@@ -56,7 +54,7 @@ class CustomTicketAdmin(admin.ModelAdmin):
     list_filter = ['status', 'priority', 'department', 'category', 'created_at']
     search_fields = ['ticket_number', 'subject', 'description', 'user__phone_number', 'user__email']
     readonly_fields = [
-        'ticket_info_display', 'time_info_display', 'messages_display',
+        'ticket_info_display', 'time_info_display', 'messages_display', 'reply_form_display',
         'ticket_number', 'user', 'organization', 'subject', 'description',
         'category', 'department', 'priority', 'source',
         'first_response_at', 'resolved_at', 'closed_at',
@@ -65,13 +63,14 @@ class CustomTicketAdmin(admin.ModelAdmin):
     
     fieldsets = (
         (None, {
-            'fields': ('ticket_info_display', 'time_info_display', 'messages_display')
+            'fields': ('ticket_info_display', 'time_info_display', 'messages_display', 'reply_form_display')
         }),
     )
     
+    class Media:
+        js = ('admin/js/ticket_reply.js',)
+    
     def get_form(self, request, obj=None, **kwargs):
-        if obj:
-            kwargs['form'] = TicketReplyForm
         return super().get_form(request, obj, **kwargs)
     
     def save_model(self, request, obj, form, change):
@@ -332,3 +331,148 @@ class CustomTicketAdmin(admin.ModelAdmin):
             return format_html('<span style="color: #ef4444; font-weight: bold;">⚠ نقض SLA</span>')
         return format_html('<span style="color: #22c55e;">✓ عادی</span>')
     sla_indicator.short_description = 'SLA'
+    
+    def reply_form_display(self, obj):
+        """نمایش فرم پاسخ"""
+        if not obj:
+            return ''
+        
+        # لیست کارشناسان برای dropdown
+        staff_users = User.objects.filter(is_staff=True, is_active=True).order_by('first_name', 'last_name')
+        staff_options = ''.join([
+            f'<option value="{user.id}">{user.get_full_name() if hasattr(user, "get_full_name") else user}</option>'
+            for user in staff_users
+        ])
+        
+        html = f'''
+        <div style="background: #ffffff; padding: 25px; border-radius: 8px; border: 2px solid #e5e7eb; margin-top: 20px;">
+            <h2 style="margin-top: 0; color: #2c3e50; border-bottom: 2px solid #3b82f6; padding-bottom: 10px;">✍️ ارسال پاسخ / پیام جدید</h2>
+            
+            <form method="post" action="" id="ticket-reply-form">
+                <input type="hidden" name="action" value="send_reply">
+                <input type="hidden" name="ticket_id" value="{obj.id}">
+                
+                <div style="margin-bottom: 20px;">
+                    <label style="display: block; font-weight: bold; margin-bottom: 8px; color: #374151;">
+                        نوع پیام: <span style="color: #ef4444;">*</span>
+                    </label>
+                    <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px;">
+                        <label style="display: flex; align-items: center; padding: 12px; border: 2px solid #e5e7eb; border-radius: 6px; cursor: pointer;">
+                            <input type="radio" name="message_type" value="reply" checked style="margin-left: 8px;" onchange="toggleForwardedTo()">
+                            <span style="font-weight: 500;">پاسخ</span>
+                        </label>
+                        <label style="display: flex; align-items: center; padding: 12px; border: 2px solid #e5e7eb; border-radius: 6px; cursor: pointer;">
+                            <input type="radio" name="message_type" value="note" style="margin-left: 8px;" onchange="toggleForwardedTo()">
+                            <span style="font-weight: 500;">یادداشت داخلی</span>
+                        </label>
+                        <label style="display: flex; align-items: center; padding: 12px; border: 2px solid #e5e7eb; border-radius: 6px; cursor: pointer;">
+                            <input type="radio" name="message_type" value="question" style="margin-left: 8px;" onchange="toggleForwardedTo()">
+                            <span style="font-weight: 500;">سوال از کاربر</span>
+                        </label>
+                        <label style="display: flex; align-items: center; padding: 12px; border: 2px solid #e5e7eb; border-radius: 6px; cursor: pointer;">
+                            <input type="radio" name="message_type" value="send_to" style="margin-left: 8px;" onchange="toggleForwardedTo()">
+                            <span style="font-weight: 500;">ارسال به</span>
+                        </label>
+                    </div>
+                    <div style="margin-top: 8px; font-size: 13px; color: #6b7280;">
+                        <strong>راهنما:</strong><br>
+                        • <strong>پاسخ:</strong> پاسخ به کاربر - وضعیت به "پاسخ داده شده" تغییر می‌کند<br>
+                        • <strong>یادداشت داخلی:</strong> فقط برای کارشناسان - وضعیت به "در حال بررسی" تغییر می‌کند<br>
+                        • <strong>سوال از کاربر:</strong> سوال از کاربر - وضعیت به "در انتظار پاسخ کاربر" تغییر می‌کند<br>
+                        • <strong>ارسال به:</strong> ارسال تیکت به کارشناس دیگر - وضعیت به "در حال بررسی" تغییر می‌کند
+                    </div>
+                </div>
+                
+                <div style="margin-bottom: 20px; display: none;" id="forwarded_to_field">
+                    <label style="display: block; font-weight: bold; margin-bottom: 8px; color: #374151;">
+                        ارسال به کارشناس: <span style="color: #ef4444;">*</span>
+                    </label>
+                    <select name="forwarded_to" style="width: 100%; padding: 10px; border: 1px solid #d1d5db; border-radius: 6px;">
+                        <option value="">انتخاب کارشناس...</option>
+                        {staff_options}
+                    </select>
+                </div>
+                
+                <div style="margin-bottom: 20px;">
+                    <label style="display: block; font-weight: bold; margin-bottom: 8px; color: #374151;">
+                        محتوای پیام: <span style="color: #ef4444;">*</span>
+                    </label>
+                    <textarea name="content" rows="6" required style="width: 100%; padding: 10px; border: 1px solid #d1d5db; border-radius: 6px; font-family: Tahoma, Arial, sans-serif;"></textarea>
+                </div>
+                
+                <div style="display: flex; gap: 10px;">
+                    <button type="submit" style="background: #3b82f6; color: white; padding: 12px 24px; border: none; border-radius: 6px; font-weight: 600; cursor: pointer; font-size: 15px;">
+                        ✉️ ارسال پیام
+                    </button>
+                </div>
+            </form>
+            
+            <script>
+            function toggleForwardedTo() {{
+                var messageType = document.querySelector('input[name="message_type"]:checked').value;
+                var field = document.getElementById('forwarded_to_field');
+                if (messageType === 'send_to') {{
+                    field.style.display = 'block';
+                }} else {{
+                    field.style.display = 'none';
+                }}
+            }}
+            </script>
+        </div>
+        '''
+        return format_html(html)
+    reply_form_display.short_description = ''
+    
+    def change_view(self, request, object_id, form_url='', extra_context=None):
+        """Override change_view برای handle کردن فرم پاسخ"""
+        if request.method == 'POST' and request.POST.get('action') == 'send_reply':
+            try:
+                ticket = Ticket.objects.get(pk=object_id)
+                content = request.POST.get('content', '').strip()
+                message_type = request.POST.get('message_type', 'reply')
+                forwarded_to_id = request.POST.get('forwarded_to')
+                
+                if not content:
+                    self.message_user(request, 'محتوای پیام نمی‌تواند خالی باشد.', level='error')
+                    return super().change_view(request, object_id, form_url, extra_context)
+                
+                if message_type == 'send_to' and not forwarded_to_id:
+                    self.message_user(request, 'برای نوع پیام "ارسال به" باید کارشناس مقصد را انتخاب کنید.', level='error')
+                    return super().change_view(request, object_id, form_url, extra_context)
+                
+                # ایجاد پیام جدید
+                forwarded_to = User.objects.get(pk=forwarded_to_id) if forwarded_to_id else None
+                message = TicketMessage.objects.create(
+                    ticket=ticket,
+                    sender=request.user,
+                    content=content,
+                    message_type=message_type,
+                    is_staff_reply=True,
+                    forwarded_to=forwarded_to
+                )
+                
+                # تغییر وضعیت بر اساس نوع پیام
+                if message_type == 'reply':
+                    ticket.status = 'answered'
+                    if not ticket.first_response_at:
+                        ticket.first_response_at = timezone.now()
+                elif message_type == 'note':
+                    ticket.status = 'in_progress'
+                elif message_type == 'question':
+                    ticket.status = 'waiting'
+                elif message_type == 'send_to' and forwarded_to:
+                    ticket.assigned_to = forwarded_to
+                    ticket.status = 'in_progress'
+                
+                ticket.staff_read = True
+                ticket.save()
+                
+                # ارسال نوتیفیکیشن
+                self._send_notification(ticket, message, message_type)
+                
+                self.message_user(request, 'پیام با موفقیت ارسال شد.', level='success')
+                
+            except Exception as e:
+                self.message_user(request, f'خطا در ارسال پیام: {str(e)}', level='error')
+        
+        return super().change_view(request, object_id, form_url, extra_context)
