@@ -118,18 +118,65 @@ class NotificationAdmin(admin.ModelAdmin):
 
 @admin.register(NotificationPreference)
 class NotificationPreferenceAdmin(admin.ModelAdmin):
-    list_display = ['user', 'email_enabled', 'sms_enabled', 'push_enabled', 'in_app_enabled', 'updated_at']
+    list_display = ['get_user_display', 'email_enabled', 'sms_enabled', 'push_enabled', 'in_app_enabled', 'get_updated_at_jalali']
     list_filter = ['email_enabled', 'sms_enabled', 'push_enabled', 'in_app_enabled']
     search_fields = ['user__phone_number', 'user__email']
-    readonly_fields = ['created_at', 'updated_at']
+    readonly_fields = ['user_display', 'get_created_at_jalali', 'get_updated_at_jalali']
     
-    fields = (
-        'user',
-        ('email_enabled', 'sms_enabled', 'push_enabled', 'in_app_enabled'),
-        ('system_notifications', 'payment_notifications', 'subscription_notifications', 'chat_notifications'),
-        ('account_notifications', 'security_notifications', 'marketing_notifications', 'support_notifications'),
-        ('created_at', 'updated_at'),
+    fieldsets = (
+        ('کاربر', {
+            'fields': ('user_display',),
+        }),
+        ('کانال‌های اطلاع‌رسانی', {
+            'fields': (
+                ('email_enabled', 'sms_enabled'),
+                ('push_enabled', 'in_app_enabled'),
+            ),
+        }),
+        ('دسته‌بندی اعلان‌ها', {
+            'fields': (
+                ('system_notifications', 'payment_notifications'),
+                ('subscription_notifications', 'chat_notifications'),
+                ('account_notifications', 'security_notifications'),
+                ('marketing_notifications', 'support_notifications'),
+            ),
+        }),
+        ('تاریخچه', {
+            'fields': (
+                ('get_created_at_jalali', 'get_updated_at_jalali'),
+            ),
+        }),
     )
+    
+    def get_user_display(self, obj):
+        """نمایش نام کاربر در لیست"""
+        return obj.user.get_full_name() or obj.user.phone_number
+    get_user_display.short_description = 'کاربر'
+    
+    def user_display(self, obj):
+        """نمایش نام کاربر در فرم"""
+        return obj.user.get_full_name() or obj.user.phone_number
+    user_display.short_description = 'کاربر'
+    
+    def get_created_at_jalali(self, obj):
+        """تبدیل تاریخ ایجاد به شمسی"""
+        from datetime import datetime
+        import jdatetime
+        if obj.created_at:
+            jalali = jdatetime.datetime.fromgregorian(datetime=obj.created_at)
+            return jalali.strftime('%Y/%m/%d - %H:%M')
+        return '-'
+    get_created_at_jalali.short_description = 'تاریخ ایجاد'
+    
+    def get_updated_at_jalali(self, obj):
+        """تبدیل تاریخ به‌روزرسانی به شمسی"""
+        from datetime import datetime
+        import jdatetime
+        if obj.updated_at:
+            jalali = jdatetime.datetime.fromgregorian(datetime=obj.updated_at)
+            return jalali.strftime('%Y/%m/%d - %H:%M')
+        return '-'
+    get_updated_at_jalali.short_description = 'آخرین به‌روزرسانی'
 
 
 @admin.register(DeviceToken)
