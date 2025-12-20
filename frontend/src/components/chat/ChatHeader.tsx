@@ -263,7 +263,7 @@ export function ChatHeader({ onToggleSidebar, conversation, isConnected }: ChatH
                       className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-gray-100 dark:hover:bg-gray-700 text-right text-sm text-gray-700 dark:text-gray-300"
                     >
                       <span>⚙️</span>
-                      <span>تنظیمات</span>
+                      <span>اطلاعات کاربری</span>
                     </button>
                     <button 
                       onClick={() => { logout(); setShowUserMenu(false); }}
