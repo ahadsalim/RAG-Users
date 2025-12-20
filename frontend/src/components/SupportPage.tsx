@@ -213,12 +213,12 @@ export default function SupportPage({ isOpen, onClose }: SupportPageProps) {
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700">
           <div className="flex items-center gap-3">
-            <span className="text-2xl">🎧</span>
-            <h2 className="text-2xl font-bold text-gray-900 dark:text-white">پشتیبانی</h2>
+            <span className="text-xl">🎧</span>
+            <h2 className="text-xl font-bold text-gray-900 dark:text-white">پشتیبانی</h2>
           </div>
           <button
             onClick={onClose}
-            className="text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 text-2xl"
+            className="text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 text-xl"
           >
             ×
           </button>
@@ -229,7 +229,7 @@ export default function SupportPage({ isOpen, onClose }: SupportPageProps) {
           <button
             onClick={() => setView('list')}
             className={clsx(
-              'px-4 py-2 rounded-t-lg font-medium transition-colors',
+              'px-4 py-2 rounded-t-lg text-xs font-medium transition-colors',
               view === 'list'
                 ? 'bg-blue-500 text-white'
                 : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
@@ -240,7 +240,7 @@ export default function SupportPage({ isOpen, onClose }: SupportPageProps) {
           <button
             onClick={() => setView('create')}
             className={clsx(
-              'px-4 py-2 rounded-t-lg font-medium transition-colors',
+              'px-4 py-2 rounded-t-lg text-xs font-medium transition-colors',
               view === 'create'
                 ? 'bg-blue-500 text-white'
                 : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
@@ -256,14 +256,14 @@ export default function SupportPage({ isOpen, onClose }: SupportPageProps) {
           {view === 'list' && (
             <div className="space-y-3">
               {loading ? (
-                <div className="text-center py-12 text-gray-500">در حال بارگذاری...</div>
+                <div className="text-center py-12 text-gray-500 text-xs">در حال بارگذاری...</div>
               ) : tickets.length === 0 ? (
                 <div className="text-center py-12 text-gray-500">
                   <p className="text-4xl mb-4">📭</p>
-                  <p>هیچ تیکتی وجود ندارد</p>
+                  <p className="text-xs">هیچ تیکتی وجود ندارد</p>
                   <button
                     onClick={() => setView('create')}
-                    className="mt-4 px-6 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
+                    className="mt-4 px-6 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 text-xs"
                   >
                     ایجاد تیکت جدید
                   </button>
@@ -283,7 +283,7 @@ export default function SupportPage({ isOpen, onClose }: SupportPageProps) {
                     <div className="flex items-start justify-between gap-4">
                       <div className="flex-1">
                         <div className="flex items-center gap-2 mb-2">
-                          <span className="font-mono text-sm text-gray-500">#{ticket.ticket_number}</span>
+                          <span className="font-mono text-xs text-gray-500">#{ticket.ticket_number}</span>
                           <span className={clsx('px-2 py-0.5 rounded-full text-xs font-medium', getStatusColor(ticket.status))}>
                             {ticket.status_display}
                           </span>
@@ -296,8 +296,8 @@ export default function SupportPage({ isOpen, onClose }: SupportPageProps) {
                             </span>
                           )}
                         </div>
-                        <h3 className="font-semibold text-gray-900 dark:text-white mb-1">{ticket.subject}</h3>
-                        <p className="text-sm text-gray-600 dark:text-gray-400 line-clamp-2">{ticket.description}</p>
+                        <h3 className="font-semibold text-gray-900 dark:text-white mb-1 text-xs">{ticket.subject}</h3>
+                        <p className="text-xs text-gray-600 dark:text-gray-400 line-clamp-2">{ticket.description}</p>
                         <div className="flex items-center gap-4 mt-2 text-xs text-gray-500">
                           {ticket.category_name && <span>📁 {ticket.category_name}</span>}
                           {ticket.department_name && <span>🏢 {ticket.department_name}</span>}
@@ -316,7 +316,7 @@ export default function SupportPage({ isOpen, onClose }: SupportPageProps) {
           {view === 'create' && (
             <form onSubmit={createTicket} className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-2">
                   موضوع تیکت *
                 </label>
                 <input
@@ -324,13 +324,13 @@ export default function SupportPage({ isOpen, onClose }: SupportPageProps) {
                   value={subject}
                   onChange={(e) => setSubject(e.target.value)}
                   required
-                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-xs"
                   placeholder="موضوع تیکت خود را وارد کنید"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-2">
                   توضیحات *
                 </label>
                 <textarea
@@ -338,20 +338,23 @@ export default function SupportPage({ isOpen, onClose }: SupportPageProps) {
                   onChange={(e) => setDescription(e.target.value)}
                   required
                   rows={6}
-                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white resize-none"
+                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white resize-none text-xs"
                   placeholder="توضیحات کامل مشکل یا سوال خود را بنویسید..."
                 />
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-2">
                     دسته‌بندی
                   </label>
                   <select
                     value={categoryId}
                     onChange={(e) => setCategoryId(e.target.value)}
-                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                    className="w-full px-4 py-2 pr-10 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-xs appearance-none bg-no-repeat bg-[length:16px] bg-[center_left_0.75rem] cursor-pointer"
+                    style={{
+                      backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3E%3Cpath stroke='%236B7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3E%3C/svg%3E")`
+                    }}
                   >
                     <option value="">انتخاب کنید</option>
                     {categories.map((cat) => (
@@ -361,13 +364,16 @@ export default function SupportPage({ isOpen, onClose }: SupportPageProps) {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-2">
                     دپارتمان
                   </label>
                   <select
                     value={departmentId}
                     onChange={(e) => setDepartmentId(e.target.value)}
-                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                    className="w-full px-4 py-2 pr-10 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-xs appearance-none bg-no-repeat bg-[length:16px] bg-[center_left_0.75rem] cursor-pointer"
+                    style={{
+                      backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3E%3Cpath stroke='%236B7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3E%3C/svg%3E")`
+                    }}
                   >
                     <option value="">انتخاب کنید</option>
                     {departments.map((dept) => (
@@ -377,13 +383,16 @@ export default function SupportPage({ isOpen, onClose }: SupportPageProps) {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-2">
                     اولویت
                   </label>
                   <select
                     value={priority}
                     onChange={(e) => setPriority(e.target.value)}
-                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                    className="w-full px-4 py-2 pr-10 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-xs appearance-none bg-no-repeat bg-[length:16px] bg-[center_left_0.75rem] cursor-pointer"
+                    style={{
+                      backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3E%3Cpath stroke='%236B7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3E%3C/svg%3E")`
+                    }}
                   >
                     <option value="low">کم</option>
                     <option value="medium">متوسط</option>
@@ -397,14 +406,14 @@ export default function SupportPage({ isOpen, onClose }: SupportPageProps) {
                 <button
                   type="submit"
                   disabled={sending}
-                  className="flex-1 px-6 py-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:opacity-50 font-medium"
+                  className="flex-1 px-6 py-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:opacity-50 font-medium text-xs"
                 >
                   {sending ? 'در حال ارسال...' : 'ایجاد تیکت'}
                 </button>
                 <button
                   type="button"
                   onClick={() => setView('list')}
-                  className="px-6 py-3 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600"
+                  className="px-6 py-3 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 text-xs"
                 >
                   انصراف
                 </button>
@@ -421,11 +430,11 @@ export default function SupportPage({ isOpen, onClose }: SupportPageProps) {
                   <div className="flex items-center gap-2">
                     <button
                       onClick={() => { setView('list'); setSelectedTicket(null); }}
-                      className="text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"
+                      className="text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 text-xs"
                     >
                       ← بازگشت
                     </button>
-                    <span className="font-mono text-sm text-gray-500">#{selectedTicket.ticket_number}</span>
+                    <span className="font-mono text-xs text-gray-500">#{selectedTicket.ticket_number}</span>
                   </div>
                   <div className="flex gap-2">
                     <span className={clsx('px-3 py-1 rounded-full text-xs font-medium', getStatusColor(selectedTicket.status))}>
@@ -436,8 +445,8 @@ export default function SupportPage({ isOpen, onClose }: SupportPageProps) {
                     </span>
                   </div>
                 </div>
-                <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-2">{selectedTicket.subject}</h2>
-                <p className="text-gray-600 dark:text-gray-400">{selectedTicket.description}</p>
+                <h2 className="text-sm font-bold text-gray-900 dark:text-white mb-2">{selectedTicket.subject}</h2>
+                <p className="text-gray-600 dark:text-gray-400 text-xs">{selectedTicket.description}</p>
               </div>
 
               {/* Messages */}
@@ -453,7 +462,7 @@ export default function SupportPage({ isOpen, onClose }: SupportPageProps) {
                     )}
                   >
                     <div className="flex items-center gap-2 mb-2">
-                      <span className="font-semibold text-gray-900 dark:text-white">
+                      <span className="font-semibold text-gray-900 dark:text-white text-xs">
                         {message.sender_info.full_name}
                       </span>
                       {message.is_staff_reply && (
@@ -465,7 +474,7 @@ export default function SupportPage({ isOpen, onClose }: SupportPageProps) {
                         {formatDate(message.created_at)}
                       </span>
                     </div>
-                    <p className="text-gray-700 dark:text-gray-300 whitespace-pre-wrap">{message.content}</p>
+                    <p className="text-gray-700 dark:text-gray-300 whitespace-pre-wrap text-xs">{message.content}</p>
                   </div>
                 ))}
               </div>
@@ -473,7 +482,7 @@ export default function SupportPage({ isOpen, onClose }: SupportPageProps) {
               {/* Reply Form */}
               {selectedTicket.status !== 'closed' && (
                 <form onSubmit={sendReply} className="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-4">
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-2">
                     پاسخ شما
                   </label>
                   <textarea
@@ -481,13 +490,13 @@ export default function SupportPage({ isOpen, onClose }: SupportPageProps) {
                     onChange={(e) => setReplyContent(e.target.value)}
                     required
                     rows={4}
-                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white resize-none mb-3"
+                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white resize-none mb-3 text-xs"
                     placeholder="پاسخ خود را بنویسید..."
                   />
                   <button
                     type="submit"
                     disabled={sending || !replyContent.trim()}
-                    className="px-6 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:opacity-50 font-medium"
+                    className="px-6 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:opacity-50 font-medium text-xs"
                   >
                     {sending ? 'در حال ارسال...' : 'ارسال پاسخ'}
                   </button>
