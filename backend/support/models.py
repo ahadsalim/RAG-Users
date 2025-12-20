@@ -151,8 +151,7 @@ class Ticket(models.Model):
         ('open', _('باز')),
         ('in_progress', _('در حال بررسی')),
         ('waiting', _('در انتظار پاسخ کاربر')),
-        ('on_hold', _('معلق')),
-        ('resolved', _('حل شده')),
+        ('answered', _('پاسخ داده شده')),
         ('closed', _('بسته شده')),
     ]
     
@@ -381,8 +380,8 @@ class TicketMessage(models.Model):
     MESSAGE_TYPE_CHOICES = [
         ('reply', _('پاسخ')),
         ('note', _('یادداشت داخلی')),
-        ('system', _('سیستمی')),
-        ('forward', _('فوروارد')),
+        ('question', _('سوال از کاربر')),
+        ('send_to', _('ارسال به')),
     ]
     
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
@@ -415,6 +414,17 @@ class TicketMessage(models.Model):
     
     # آیا پیام از طرف کارشناس است؟
     is_staff_reply = models.BooleanField(default=False, verbose_name=_('پاسخ کارشناس'))
+    
+    # کارشناس مقصد (برای نوع send_to)
+    forwarded_to = models.ForeignKey(
+        User,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='forwarded_ticket_messages',
+        verbose_name=_('ارسال شده به'),
+        limit_choices_to={'is_staff': True}
+    )
     
     # متادیتا
     metadata = models.JSONField(default=dict, blank=True, verbose_name=_('متادیتا'))

@@ -2,75 +2,16 @@ from django.contrib import admin
 from django.utils.html import format_html
 from django.utils.translation import gettext_lazy as _
 from django.db.models import Count
+from django.utils import timezone
 from .models import (
     TicketDepartment, TicketCategory, Ticket, TicketMessage,
     TicketAttachment, TicketForward, TicketHistory, CannedResponse,
     TicketTag, SLAPolicy
 )
+from .admin_custom import CustomTicketAdmin
 
 
-class TicketMessageReadOnlyInline(admin.TabularInline):
-    """نمایش پیام‌های قبلی (فقط خواندنی)"""
-    model = TicketMessage
-    extra = 0
-    can_delete = False
-    fields = ['sender', 'content', 'is_staff_reply', 'created_at']
-    readonly_fields = ['sender', 'content', 'message_type', 'is_staff_reply', 'created_at']
-    verbose_name = 'پیام قبلی'
-    verbose_name_plural = '💬 تاریخچه مکالمات'
-    ordering = ['created_at']
-    
-    def has_add_permission(self, request, obj=None):
-        return False
-    
-    def has_delete_permission(self, request, obj=None):
-        return False
-
-
-class TicketMessageInline(admin.StackedInline):
-    """افزودن پاسخ جدید"""
-    model = TicketMessage
-    extra = 1
-    max_num = 1
-    can_delete = False
-    fields = ['content', 'message_type']
-    verbose_name = 'پاسخ جدید'
-    verbose_name_plural = '✍️ ارسال پاسخ به کاربر'
-    
-    def get_queryset(self, request):
-        # فقط پیام‌های جدید (که هنوز ذخیره نشده‌اند) را نشان بده
-        return super().get_queryset(request).none()
-    
-    def save_formset(self, request, form, formset, change):
-        instances = formset.save(commit=False)
-        for instance in instances:
-            if not instance.pk:
-                instance.sender = request.user
-                instance.is_staff_reply = True
-                instance.ticket = form.instance
-                instance.save()
-        formset.save_m2m()
-
-
-class TicketAttachmentInline(admin.TabularInline):
-    model = TicketAttachment
-    extra = 0
-    readonly_fields = ['uploaded_by', 'file_name', 'file_size', 'mime_type', 'created_at']
-    fields = ['file', 'file_name', 'file_size', 'mime_type', 'uploaded_by', 'created_at']
-
-
-class TicketHistoryInline(admin.TabularInline):
-    model = TicketHistory
-    extra = 0
-    readonly_fields = ['user', 'action', 'old_value', 'new_value', 'description', 'created_at']
-    fields = ['action', 'user', 'description', 'old_value', 'new_value', 'created_at']
-    ordering = ['-created_at']
-    
-    def has_add_permission(self, request, obj=None):
-        return False
-    
-    def has_delete_permission(self, request, obj=None):
-        return False
+# Inline classes حذف شدند - از template سفارشی استفاده می‌شود
 
 
 @admin.register(TicketDepartment)
@@ -136,118 +77,9 @@ class TicketCategoryAdmin(admin.ModelAdmin):
 
 
 @admin.register(Ticket)
-class TicketAdmin(admin.ModelAdmin):
-    list_display = [
-        'ticket_number', 'subject', 'user', 'status_display', 'priority_display',
-        'department', 'assigned_to', 'sla_status', 'created_at'
-    ]
-    list_filter = ['status', 'priority', 'department', 'category', 'source', 'created_at']
-    search_fields = ['ticket_number', 'subject', 'description', 'user__phone_number', 'user__email']
-    readonly_fields = [
-        'ticket_number', 'user', 'organization', 'subject', 'description', 'source',
-        'first_response_at', 'resolved_at', 'closed_at',
-        'created_at', 'updated_at', 'user_read', 'staff_read'
-    ]
-    raw_id_fields = ['user', 'assigned_to']
-    date_hierarchy = 'created_at'
-    ordering = ['-created_at']
-    
-    inlines = [TicketMessageReadOnlyInline, TicketMessageInline, TicketAttachmentInline, TicketHistoryInline]
-    
-    fieldsets = (
-        (_('🎫 اطلاعات تیکت (فقط خواندنی)'), {
-            'fields': ('ticket_number', 'user', 'organization', 'subject', 'description'),
-            'description': '⚠️ موضوع و توضیحات تیکت توسط کاربر ثبت شده و قابل ویرایش نیست.'
-        }),
-        (_('📋 مدیریت تیکت'), {
-            'fields': ('status', 'priority', 'assigned_to'),
-            'description': 'وضعیت و اولویت تیکت را مدیریت کنید و به کارشناس مناسب تخصیص دهید.'
-        }),
-        (_('📁 دسته‌بندی'), {
-            'fields': ('category', 'department', 'tags')
-        }),
-        (_('⏱️ SLA و زمان‌بندی'), {
-            'fields': ('response_due', 'resolution_due', 'first_response_at', 'resolved_at'),
-            'classes': ('collapse',)
-        }),
-        (_('⭐ رضایت کاربر'), {
-            'fields': ('satisfaction_rating', 'satisfaction_feedback'),
-            'classes': ('collapse',)
-        }),
-        (_('📊 اطلاعات سیستمی'), {
-            'fields': ('source', 'user_read', 'staff_read', 'created_at', 'updated_at', 'closed_at'),
-            'classes': ('collapse',)
-        }),
-    )
-    
-    def status_display(self, obj):
-        colors = {
-            'open': '#22C55E',
-            'in_progress': '#3B82F6',
-            'waiting': '#F59E0B',
-            'on_hold': '#6B7280',
-            'resolved': '#8B5CF6',
-            'closed': '#EF4444',
-        }
-        color = colors.get(obj.status, '#6B7280')
-        return format_html(
-            '<span style="background-color: {}; color: white; padding: 2px 8px; border-radius: 3px;">{}</span>',
-            color, obj.get_status_display()
-        )
-    status_display.short_description = _('وضعیت')
-    
-    def priority_display(self, obj):
-        colors = {
-            'low': '#6B7280',
-            'medium': '#3B82F6',
-            'high': '#F59E0B',
-            'urgent': '#EF4444',
-        }
-        color = colors.get(obj.priority, '#6B7280')
-        return format_html(
-            '<span style="background-color: {}; color: white; padding: 2px 8px; border-radius: 3px;">{}</span>',
-            color, obj.get_priority_display()
-        )
-    priority_display.short_description = _('اولویت')
-    
-    def sla_status(self, obj):
-        if obj.is_sla_breached():
-            return format_html(
-                '<span style="color: #EF4444; font-weight: bold;">⚠ نقض SLA</span>'
-            )
-        return format_html('<span style="color: #22C55E;">✓ عادی</span>')
-    sla_status.short_description = _('وضعیت SLA')
-    
-    def save_model(self, request, obj, form, change):
-        super().save_model(request, obj, form, change)
-        
-        # ثبت تغییرات در تاریخچه
-        if change:
-            TicketHistory.objects.create(
-                ticket=obj,
-                user=request.user,
-                action='status_changed' if 'status' in form.changed_data else 'admin_action',
-                description=f'تغییر از پنل مدیریت: {", ".join(form.changed_data)}'
-            )
-    
-    actions = ['mark_as_resolved', 'mark_as_closed', 'assign_to_me']
-    
-    @admin.action(description=_('علامت‌گذاری به عنوان حل شده'))
-    def mark_as_resolved(self, request, queryset):
-        from django.utils import timezone
-        count = queryset.update(status='resolved', resolved_at=timezone.now())
-        self.message_user(request, f'{count} تیکت به عنوان حل شده علامت‌گذاری شد.')
-    
-    @admin.action(description=_('بستن تیکت‌ها'))
-    def mark_as_closed(self, request, queryset):
-        from django.utils import timezone
-        count = queryset.update(status='closed', closed_at=timezone.now())
-        self.message_user(request, f'{count} تیکت بسته شد.')
-    
-    @admin.action(description=_('تخصیص به من'))
-    def assign_to_me(self, request, queryset):
-        count = queryset.update(assigned_to=request.user)
-        self.message_user(request, f'{count} تیکت به شما تخصیص داده شد.')
+class TicketAdmin(CustomTicketAdmin):
+    """Admin برای مدل Ticket - از CustomTicketAdmin ارث‌بری می‌کند"""
+    pass
 
 
 @admin.register(TicketMessage)
