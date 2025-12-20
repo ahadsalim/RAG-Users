@@ -61,13 +61,13 @@ class QueryView(APIView):
         user = request.user
         
         # بررسی اشتراک کاربر
+        from subscriptions.models import Subscription
+        active_subscription = user.subscriptions.filter(
+            status__in=['active', 'trial'],
+            end_date__gt=timezone.now()
+        ).first()
+        
         if not user.is_superuser:
-            from subscriptions.models import Subscription
-            active_subscription = user.subscriptions.filter(
-                status__in=['active', 'trial'],
-                end_date__gt=timezone.now()
-            ).first()
-            
             if not active_subscription:
                 return Response(
                     {
