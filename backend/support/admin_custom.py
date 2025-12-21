@@ -68,9 +68,6 @@ class CustomTicketAdmin(admin.ModelAdmin):
         }),
     )
     
-    class Media:
-        js = ('admin/js/ticket_reply.js',)
-    
     def get_form(self, request, obj=None, **kwargs):
         return super().get_form(request, obj, **kwargs)
     
