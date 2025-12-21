@@ -120,25 +120,67 @@ class CustomTicketAdmin(admin.ModelAdmin):
             
             # فقط برای reply و question به کاربر نوتیف می‌فرستیم
             if message_type in ['reply', 'question']:
-                Notification.objects.create(
+                title = 'پاسخ جدید در تیکت' if message_type == 'reply' else 'سوال جدید در تیکت'
+                body = f'پیام جدیدی در تیکت #{ticket.ticket_number} دریافت شد.'
+                
+                # ایجاد نوتیفیکیشن با کانال‌های مختلف
+                notification = Notification.objects.create(
                     user=ticket.user,
-                    title='پاسخ جدید در تیکت' if message_type == 'reply' else 'سوال جدید در تیکت',
-                    message=f'پیام جدیدی در تیکت #{ticket.ticket_number} دریافت شد.',
-                    notification_type='ticket',
-                    data={'ticket_id': str(ticket.id), 'ticket_number': ticket.ticket_number}
+                    title=title,
+                    body=body,
+                    category='support',
+                    priority='high' if message_type == 'question' else 'normal',
+                    channels=['in_app', 'sms', 'email'],  # ارسال به همه کانال‌ها
+                    metadata={'ticket_id': str(ticket.id), 'ticket_number': ticket.ticket_number}
                 )
+                
+                # ارسال به کانال‌های مختلف
+                self._send_to_all_channels(notification, ticket.user)
             
             # برای send_to به کارشناس مقصد نوتیف می‌فرستیم
             if message_type == 'send_to' and message.forwarded_to:
-                Notification.objects.create(
+                notification = Notification.objects.create(
                     user=message.forwarded_to,
                     title='تیکت جدید ارسال شده',
-                    message=f'تیکت #{ticket.ticket_number} به شما ارسال شد.',
-                    notification_type='ticket',
-                    data={'ticket_id': str(ticket.id), 'ticket_number': ticket.ticket_number}
+                    body=f'تیکت #{ticket.ticket_number} به شما ارسال شد.',
+                    category='support',
+                    priority='normal',
+                    channels=['in_app', 'email'],
+                    metadata={'ticket_id': str(ticket.id), 'ticket_number': ticket.ticket_number}
                 )
-        except Exception:
-            pass
+                
+                self._send_to_all_channels(notification, message.forwarded_to)
+        except Exception as e:
+            import logging
+            logging.error(f'Error sending notification: {e}')
+    
+    def _send_to_all_channels(self, notification, user):
+        """ارسال نوتیفیکیشن به تمام کانال‌ها"""
+        try:
+            from notifications.services import SMSService, EmailService
+            from notifications.models import NotificationPreference
+            
+            # دریافت تنظیمات کاربر
+            try:
+                prefs = user.notification_preferences
+            except NotificationPreference.DoesNotExist:
+                prefs = NotificationPreference.objects.create(user=user)
+            
+            # ارسال SMS
+            if 'sms' in notification.channels and prefs.sms_enabled and user.phone_number:
+                rendered_content = {'sms_text': notification.body}
+                SMSService.send(notification, rendered_content)
+            
+            # ارسال Email
+            if 'email' in notification.channels and prefs.email_enabled and user.email:
+                rendered_content = {
+                    'email_subject': notification.title,
+                    'email_html': f'<p>{notification.body}</p>'
+                }
+                EmailService.send(notification, rendered_content)
+        except Exception as e:
+            import logging
+            logging.error(f'Error in _send_to_all_channels: {e}')
     
     def ticket_info_display(self, obj):
         """نمایش اطلاعات تیکت"""
