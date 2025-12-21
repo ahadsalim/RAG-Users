@@ -105,15 +105,26 @@ class Command(BaseCommand):
         import pytz
         from datetime import datetime
         
+        def offset_to_minutes(offset_str):
+            """تبدیل UTC offset به دقیقه برای مرتب‌سازی"""
+            if offset_str == '+00:00':
+                return 0
+            
+            sign = 1 if offset_str[0] == '+' else -1
+            parts = offset_str[1:].split(':')
+            hours = int(parts[0])
+            minutes = int(parts[1]) if len(parts) > 1 else 0
+            
+            return sign * (hours * 60 + minutes)
+        
         # دریافت تمام مناطق زمانی از pytz
         all_zones = pytz.all_timezones
         
         self.stdout.write(self.style.NOTICE(f'  در حال ایجاد {len(all_zones)} منطقه زمانی...'))
         
-        created_count = 0
-        existing_count = 0
-        
-        for idx, tz_name in enumerate(all_zones, 1):
+        # ایجاد لیست با offset محاسبه شده
+        zones_with_offset = []
+        for tz_name in all_zones:
             try:
                 tz = pytz.timezone(tz_name)
                 now = datetime.now(tz)
@@ -128,31 +139,50 @@ class Command(BaseCommand):
                 # نام نمایشی
                 display_name = f"{tz_name.replace('_', ' ')} (UTC{offset_formatted})"
                 
-                tz_data = {
+                zones_with_offset.append({
+                    'code': tz_name,
                     'name': tz_name.split('/')[-1].replace('_', ' '),
                     'utc_offset': offset_formatted,
                     'display_name': display_name,
                     'is_default': tz_name == 'Asia/Tehran',
                     'is_active': True,
-                    'order': 0 if tz_name == 'Asia/Tehran' else idx
-                }
+                    'offset_minutes': offset_to_minutes(offset_formatted)
+                })
+            except Exception as e:
+                self.stdout.write(self.style.ERROR(f'  ✗ خطا در پردازش {tz_name}: {e}'))
+        
+        # مرتب‌سازی بر اساس UTC offset (از منفی‌ترین به مثبت‌ترین)
+        zones_with_offset.sort(key=lambda x: x['offset_minutes'])
+        
+        # ایجاد مناطق زمانی با order صحیح
+        created_count = 0
+        existing_count = 0
+        
+        for idx, tz_data in enumerate(zones_with_offset, 1):
+            try:
+                # حذف فیلد offset_minutes قبل از ذخیره
+                offset_minutes = tz_data.pop('offset_minutes')
+                tz_data['order'] = idx
                 
                 tz_obj, created = Timezone.objects.get_or_create(
-                    code=tz_name,
+                    code=tz_data['code'],
                     defaults=tz_data
                 )
                 
-                if created:
-                    created_count += 1
-                else:
+                # اگر از قبل موجود بود، order را به‌روزرسانی کن
+                if not created:
+                    tz_obj.order = idx
+                    tz_obj.save(update_fields=['order'])
                     existing_count += 1
+                else:
+                    created_count += 1
                     
             except Exception as e:
-                self.stdout.write(self.style.ERROR(f'  ✗ خطا در ایجاد {tz_name}: {e}'))
+                self.stdout.write(self.style.ERROR(f'  ✗ خطا در ایجاد {tz_data["code"]}: {e}'))
         
         self.stdout.write(self.style.SUCCESS(f'  ✓ {created_count} منطقه زمانی جدید ایجاد شد'))
         if existing_count > 0:
-            self.stdout.write(self.style.WARNING(f'  - {existing_count} منطقه زمانی از قبل موجود بود'))
+            self.stdout.write(self.style.WARNING(f'  - {existing_count} منطقه زمانی از قبل موجود بود (order به‌روزرسانی شد)'))
     
     def create_currencies(self):
         """ایجاد ارز پایه (ریال)"""
