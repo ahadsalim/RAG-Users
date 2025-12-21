@@ -185,10 +185,11 @@ class Command(BaseCommand):
             self.stdout.write(self.style.WARNING(f'  - {existing_count} منطقه زمانی از قبل موجود بود (order به‌روزرسانی شد)'))
     
     def create_currencies(self):
-        """ایجاد ارز پایه (ریال)"""
+        """ایجاد ارزهای پایه"""
         from finance.models import Currency
         
-        currency, created = Currency.objects.get_or_create(
+        # ایجاد ریال (ارز پایه)
+        rial, created = Currency.objects.get_or_create(
             code='IRR',
             defaults={
                 'name': 'ریال',
@@ -196,6 +197,7 @@ class Command(BaseCommand):
                 'exchange_rate': Decimal('1'),
                 'is_base': True,
                 'is_active': True,
+                'is_default': False,
                 'has_decimals': False,
                 'decimal_places': 0,
                 'display_order': 1,
@@ -206,6 +208,27 @@ class Command(BaseCommand):
             self.stdout.write(self.style.SUCCESS('  ✓ ارز ریال ایجاد شد'))
         else:
             self.stdout.write(self.style.WARNING('  - ارز ریال از قبل وجود دارد'))
+        
+        # ایجاد تومان (ارز پیش‌فرض برای کاربران جدید)
+        toman, created = Currency.objects.get_or_create(
+            code='TMN',
+            defaults={
+                'name': 'تومان',
+                'symbol': 'تومان',
+                'exchange_rate': Decimal('10'),
+                'is_base': False,
+                'is_active': True,
+                'is_default': True,
+                'has_decimals': False,
+                'decimal_places': 0,
+                'display_order': 2,
+            }
+        )
+        
+        if created:
+            self.stdout.write(self.style.SUCCESS('  ✓ ارز تومان ایجاد شد (پیش‌فرض)'))
+        else:
+            self.stdout.write(self.style.WARNING('  - ارز تومان از قبل وجود دارد'))
 
     def create_plans(self):
         """ایجاد پلن‌های پایه"""

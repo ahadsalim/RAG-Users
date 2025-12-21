@@ -37,6 +37,11 @@ class Currency(models.Model):
         verbose_name=_('ارز پایه'),
         help_text=_('فقط یک ارز می‌تواند ارز پایه باشد. قیمت‌ها به این ارز ذخیره می‌شوند.')
     )
+    is_default = models.BooleanField(
+        default=False,
+        verbose_name=_('ارز پیش‌فرض'),
+        help_text=_('ارز پیش‌فرضی که برای کاربران جدید تنظیم می‌شود')
+    )
     display_order = models.PositiveSmallIntegerField(default=0, verbose_name=_('ترتیب نمایش'))
     
     created_at = models.DateTimeField(auto_now_add=True)
@@ -50,8 +55,11 @@ class Currency(models.Model):
     def save(self, *args, **kwargs):
         if self.is_base:
             Currency.objects.filter(is_base=True).exclude(pk=self.pk).update(is_base=False)
+        if self.is_default:
+            Currency.objects.filter(is_default=True).exclude(pk=self.pk).update(is_default=False)
         super().save(*args, **kwargs)
         cache.delete('base_currency')
+        cache.delete('default_currency')
     
     @classmethod
     def get_base_currency(cls):
@@ -62,6 +70,16 @@ class Currency(models.Model):
             if base:
                 cache.set('base_currency', base, 3600)
         return base
+    
+    @classmethod
+    def get_default_currency(cls):
+        """دریافت ارز پیش‌فرض برای کاربران جدید (کش شده)"""
+        default = cache.get('default_currency')
+        if not default:
+            default = cls.objects.filter(is_default=True, is_active=True).first()
+            if default:
+                cache.set('default_currency', default, 3600)
+        return default
     
     def __str__(self):
         return f"{self.name} ({self.code})"

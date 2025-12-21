@@ -8,6 +8,9 @@ class AccountsConfig(AppConfig):
     verbose_name = _('کاربران و حساب‌ها')
     
     def ready(self):
-        """Setup Persian names for third-party apps"""
+        """Setup Persian names for third-party apps and import signals"""
         from core.admin import setup_token_blacklist_persian
         setup_token_blacklist_persian()
+        
+        # Import signals
+        import accounts.signals
