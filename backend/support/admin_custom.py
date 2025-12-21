@@ -200,31 +200,43 @@ class CustomTicketAdmin(admin.ModelAdmin):
         # CSS برای تغییر عرض به 100%
         style_override = '''
         <style>
-            .field-ticket_info_display .form-row,
-            .field-time_info_display .form-row,
-            .field-messages_display .form-row,
-            .field-reply_form_display .form-row {
-                display: block !important;
-            }
-            .field-ticket_info_display .form-row > div,
-            .field-time_info_display .form-row > div,
-            .field-messages_display .form-row > div,
-            .field-reply_form_display .form-row > div {
-                width: 100% !important;
-                max-width: 100% !important;
+            /* حذف محدودیت عرض Bootstrap */
+            .field-ticket_info_display .row,
+            .field-time_info_display .row,
+            .field-messages_display .row,
+            .field-reply_form_display .row {
                 margin: 0 !important;
+            }
+            
+            .field-ticket_info_display .row > div,
+            .field-time_info_display .row > div,
+            .field-messages_display .row > div,
+            .field-reply_form_display .row > div {
+                flex: 0 0 100% !important;
+                max-width: 100% !important;
+                width: 100% !important;
                 padding: 0 !important;
             }
+            
             .field-ticket_info_display label,
             .field-time_info_display label,
             .field-messages_display label,
             .field-reply_form_display label {
                 display: none !important;
             }
+            
             .field-ticket_info_display .readonly,
             .field-time_info_display .readonly,
             .field-messages_display .readonly,
             .field-reply_form_display .readonly {
+                width: 100% !important;
+                max-width: 100% !important;
+            }
+            
+            .field-ticket_info_display .readonly > div,
+            .field-time_info_display .readonly > div,
+            .field-messages_display .readonly > div,
+            .field-reply_form_display .readonly > div {
                 width: 100% !important;
                 max-width: 100% !important;
             }
