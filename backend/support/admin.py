@@ -23,20 +23,14 @@ class TicketDepartmentAdmin(admin.ModelAdmin):
     filter_horizontal = ['agents']
     ordering = ['-priority', 'name']
     
-    fieldsets = (
-        (_('عمومی'), {
-            'fields': ('name', 'description', 'email', 'is_active', 'is_public', 'auto_assign', 'priority')
-        }),
-        (_('مدیریت'), {
-            'fields': ('manager', 'agents')
-        }),
-    )
+    # حذف تب‌ها - همه فیلدها در یک صفحه
+    fields = ('name', 'description', 'email', 'manager', 'agents', 'is_active', 'is_public', 'auto_assign', 'priority')
     
     def get_form(self, request, obj=None, **kwargs):
         form = super().get_form(request, obj, **kwargs)
-        # تغییر ویجت description به 2 سطری
+        # تغییر ویجت description به 2 سطری با عرض مناسب
         if 'description' in form.base_fields:
-            form.base_fields['description'].widget = forms.Textarea(attrs={'rows': 2, 'cols': 80})
+            form.base_fields['description'].widget = forms.Textarea(attrs={'rows': 2, 'style': 'width: 100%; max-width: 600px;'})
         return form
     
     def agents_count(self, obj):
