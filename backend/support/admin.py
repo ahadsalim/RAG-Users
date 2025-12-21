@@ -190,8 +190,9 @@ class SLAPolicyAdmin(admin.ModelAdmin):
     search_fields = ['name', 'description']
     ordering = ['name']
     
-    # حذف fieldsets - همه فیلدها در یک صفحه (بدون category و business_hours_only)
-    fields = ('name', 'description', 'priority', 'department', 'response_time', 'resolution_time', 'is_active')
+    # حذف fieldsets - همه فیلدها در یک صفحه
+    # نکته: category و business_hours_only را نگه می‌داریم تا خطای database نگیریم
+    exclude = ('category', 'business_hours_only')
     
     # تغییر ویجت برای فیلدها
     def get_form(self, request, obj=None, **kwargs):
