@@ -49,6 +49,8 @@ class TicketReplyForm(forms.ModelForm):
 class CustomTicketAdmin(admin.ModelAdmin):
     """Admin سفارشی برای نمایش بهتر تیکت"""
     
+    change_form_template = 'admin/support/ticket_change_form.html'
+    
     list_display = [
         'ticket_number', 'subject', 'user', 'status_badge', 'priority_badge',
         'department', 'assigned_to', 'sla_indicator', 'created_at_jalali'
@@ -69,6 +71,12 @@ class CustomTicketAdmin(admin.ModelAdmin):
             'classes': ('wide',)
         }),
     )
+    
+    def has_add_permission(self, request):
+        return False
+    
+    def has_delete_permission(self, request, obj=None):
+        return False
     
     class Media:
         css = {
