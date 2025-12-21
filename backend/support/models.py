@@ -299,15 +299,8 @@ class Ticket(models.Model):
         if not self.ticket_number:
             self.ticket_number = self.generate_ticket_number()
         
-        # تنظیم SLA در صورت عدم وجود
-        if not self.response_due and self.department:
-            self.response_due = timezone.now() + timezone.timedelta(
-                hours=self.department.default_response_time
-            )
-        if not self.resolution_due and self.department:
-            self.resolution_due = timezone.now() + timezone.timedelta(
-                hours=self.department.default_resolution_time
-            )
+        # تنظیم SLA از طریق SLAPolicy (در صورت نیاز)
+        # SLA باید از طریق SLAPolicy تنظیم شود نه از دپارتمان
         
         # تنظیم تاریخ بسته شدن
         if self.status == 'closed' and not self.closed_at:
