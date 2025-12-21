@@ -6,7 +6,7 @@ from django.db.models import Count
 from django.utils import timezone
 from .models import (
     TicketDepartment, TicketCategory, Ticket, TicketMessage,
-    TicketAttachment, TicketForward, TicketHistory, CannedResponse,
+    TicketAttachment, TicketHistory, CannedResponse,
     SLAPolicy
 )
 from .admin_custom import CustomTicketAdmin
@@ -110,27 +110,6 @@ class TicketAttachmentAdmin(admin.ModelAdmin):
         else:
             return f'{obj.file_size / (1024 * 1024):.1f} MB'
     file_size_display.short_description = _('حجم')
-
-
-@admin.register(TicketForward)
-class TicketForwardAdmin(admin.ModelAdmin):
-    list_display = ['ticket', 'from_agent', 'to_agent', 'to_department', 'created_at']
-    list_filter = ['to_department', 'created_at']
-    search_fields = ['ticket__ticket_number', 'reason']
-    readonly_fields = ['ticket', 'from_agent', 'to_agent', 'to_department', 'reason', 'created_at']
-    ordering = ['-created_at']
-    
-    def has_add_permission(self, request):
-        # فوروارد باید از صفحه تیکت انجام شود نه فرم جداگانه
-        return False
-    
-    def has_change_permission(self, request, obj=None):
-        # فقط مشاهده تاریخچه فوروارد
-        return False
-    
-    def has_delete_permission(self, request, obj=None):
-        # حذف تاریخچه فوروارد مجاز نیست
-        return False
 
 
 @admin.register(TicketHistory)
