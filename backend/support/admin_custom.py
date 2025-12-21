@@ -184,49 +184,29 @@ class CustomTicketAdmin(admin.ModelAdmin):
             logging.error(f'Error in _send_to_all_channels: {e}')
     
     def ticket_info_display(self, obj):
-        """نمایش اطلاعات تیکت"""
+        """نمایش اطلاعات تیکت - افقی"""
         if not obj:
             return ''
         
         html = f'''
-        <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
-            <h2 style="margin-top: 0; color: #2c3e50;">📋 اطلاعات تیکت</h2>
-            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px;">
-                <div>
-                    <strong>شماره تیکت:</strong><br>
-                    <span style="font-family: monospace; font-size: 16px;">{obj.ticket_number}</span>
+        <div style="max-width: 900px; margin: 0 auto; background: #f8f9fa; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
+            <h2 style="margin-top: 0; color: #2c3e50; border-bottom: 2px solid #3b82f6; padding-bottom: 10px;">📋 اطلاعات تیکت</h2>
+            <div style="background: white; padding: 15px; border-radius: 6px;">
+                <div style="display: flex; justify-content: space-between; margin-bottom: 10px; padding-bottom: 10px; border-bottom: 1px solid #e5e7eb;">
+                    <span><strong>شماره تیکت:</strong> <span style="font-family: monospace; font-size: 14px; color: #3b82f6;">{obj.ticket_number}</span></span>
+                    <span><strong>کاربر:</strong> {obj.user.get_full_name() if hasattr(obj.user, 'get_full_name') else obj.user}</span>
                 </div>
-                <div>
-                    <strong>کاربر:</strong><br>
-                    {obj.user.get_full_name() if hasattr(obj.user, 'get_full_name') else obj.user}
+                <div style="display: flex; justify-content: space-between; margin-bottom: 10px; padding-bottom: 10px; border-bottom: 1px solid #e5e7eb;">
+                    <span><strong>سازمان:</strong> {obj.organization.name if obj.organization else '-'}</span>
+                    <span><strong>دپارتمان:</strong> {obj.department.name if obj.department else '-'}</span>
                 </div>
-                <div>
-                    <strong>سازمان:</strong><br>
-                    {obj.organization.name if obj.organization else '-'}
+                <div style="display: flex; justify-content: space-between; margin-bottom: 10px; padding-bottom: 10px; border-bottom: 1px solid #e5e7eb;">
+                    <span><strong>دسته‌بندی:</strong> {obj.category.name if obj.category else '-'}</span>
+                    <span><strong>اولویت:</strong> {self._get_priority_badge(obj.priority)}</span>
                 </div>
-                <div>
-                    <strong>اولویت:</strong><br>
-                    {self._get_priority_badge(obj.priority)}
-                </div>
-                <div>
-                    <strong>دسته‌بندی:</strong><br>
-                    {obj.category.name if obj.category else '-'}
-                </div>
-                <div>
-                    <strong>وضعیت:</strong><br>
-                    {self._get_status_badge(obj.status)}
-                </div>
-            </div>
-            <div style="margin-top: 15px;">
-                <strong>موضوع:</strong><br>
-                <div style="background: white; padding: 10px; border-radius: 4px; margin-top: 5px;">
-                    {obj.subject}
-                </div>
-            </div>
-            <div style="margin-top: 15px;">
-                <strong>توضیحات:</strong><br>
-                <div style="background: white; padding: 10px; border-radius: 4px; margin-top: 5px; white-space: pre-wrap;">
-                    {obj.description}
+                <div style="display: flex; justify-content: space-between;">
+                    <span><strong>وضعیت:</strong> {self._get_status_badge(obj.status)}</span>
+                    <span><strong>کارشناس مسئول:</strong> {obj.assigned_to.get_full_name() if obj.assigned_to and hasattr(obj.assigned_to, 'get_full_name') else (obj.assigned_to if obj.assigned_to else '-')}</span>
                 </div>
             </div>
         </div>
@@ -235,88 +215,136 @@ class CustomTicketAdmin(admin.ModelAdmin):
     ticket_info_display.short_description = ''
     
     def time_info_display(self, obj):
-        """نمایش اطلاعات زمانی و SLA"""
+        """نمایش اطلاعات زمانی و SLA با تاریخ شمسی"""
         if not obj:
             return ''
         
+        # تبدیل به تاریخ شمسی
+        jalali_created = jdatetime.datetime.fromgregorian(datetime=obj.created_at)
+        jalali_created_str = jalali_created.strftime('%Y/%m/%d %H:%M')
+        
+        jalali_first_response = ''
+        if obj.first_response_at:
+            jalali_first_response_dt = jdatetime.datetime.fromgregorian(datetime=obj.first_response_at)
+            jalali_first_response = jalali_first_response_dt.strftime('%Y/%m/%d %H:%M')
+        
         sla_policy = obj.get_applicable_sla()
-        sla_status = ''
+        sla_html = ''
         
         if sla_policy:
             response_deadline = obj.created_at + timezone.timedelta(minutes=sla_policy.response_time)
-            is_breached = timezone.now() > response_deadline and not obj.first_response_at
+            resolution_deadline = obj.created_at + timezone.timedelta(minutes=sla_policy.resolution_time)
             
-            sla_status = f'''
-            <div style="background: {'#fee2e2' if is_breached else '#dcfce7'}; padding: 10px; border-radius: 4px; border-left: 4px solid {'#ef4444' if is_breached else '#22c55e'};">
-                <strong>⏱️ SLA:</strong> {sla_policy.name}<br>
-                <strong>مهلت پاسخ:</strong> {response_deadline.strftime('%Y-%m-%d %H:%M')}<br>
-                <strong>وضعیت:</strong> <span style="color: {'#ef4444' if is_breached else '#22c55e'}; font-weight: bold;">
-                    {'⚠️ نقض شده' if is_breached else '✓ در زمان مقرر'}
-                </span>
+            # تبدیل مهلت‌ها به شمسی
+            jalali_response_deadline = jdatetime.datetime.fromgregorian(datetime=response_deadline)
+            jalali_resolution_deadline = jdatetime.datetime.fromgregorian(datetime=resolution_deadline)
+            
+            is_response_breached = timezone.now() > response_deadline and not obj.first_response_at
+            is_resolution_breached = timezone.now() > resolution_deadline and obj.status not in ['closed', 'resolved']
+            
+            sla_html = f'''
+            <div style="background: #fee2e2; padding: 15px; border-radius: 6px; border-right: 4px solid #ef4444; margin-top: 15px;">
+                <h3 style="margin: 0 0 10px 0; color: #ef4444;">⚠️ محدودیت‌های زمانی SLA - {sla_policy.name}</h3>
+                <div style="background: white; padding: 10px; border-radius: 4px; margin-bottom: 8px;">
+                    <strong>مهلت پاسخ‌دهی:</strong> <span style="color: {'#ef4444' if is_response_breached else '#22c55e'}; font-weight: bold;">{jalali_response_deadline.strftime('%Y/%m/%d %H:%M')}</span>
+                    {'<span style="color: #ef4444; margin-right: 10px;">⚠️ نقض شده - جریمه خواهد شد!</span>' if is_response_breached else '<span style="color: #22c55e; margin-right: 10px;">✓</span>'}
+                </div>
+                <div style="background: white; padding: 10px; border-radius: 4px;">
+                    <strong>مهلت حل مشکل:</strong> <span style="color: {'#ef4444' if is_resolution_breached else '#22c55e'}; font-weight: bold;">{jalali_resolution_deadline.strftime('%Y/%m/%d %H:%M')}</span>
+                    {'<span style="color: #ef4444; margin-right: 10px;">⚠️ نقض شده - جریمه خواهد شد!</span>' if is_resolution_breached else '<span style="color: #22c55e; margin-right: 10px;">✓</span>'}
+                </div>
             </div>
             '''
         
         html = f'''
-        <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
-            <h2 style="margin-top: 0; color: #2c3e50;">⏰ اطلاعات زمانی</h2>
-            <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px;">
-                <div>
-                    <strong>زمان ایجاد:</strong><br>
-                    {obj.created_at.strftime('%Y-%m-%d %H:%M')}
-                </div>
-                <div>
-                    <strong>زمان اولین پاسخ:</strong><br>
-                    {obj.first_response_at.strftime('%Y-%m-%d %H:%M') if obj.first_response_at else '<span style="color: #ef4444;">هنوز پاسخ داده نشده</span>'}
+        <div style="max-width: 900px; margin: 0 auto; background: #f8f9fa; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
+            <h2 style="margin-top: 0; color: #2c3e50; border-bottom: 2px solid #3b82f6; padding-bottom: 10px;">⏰ اطلاعات زمانی</h2>
+            <div style="background: white; padding: 15px; border-radius: 6px;">
+                <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+                    <span><strong>زمان ایجاد تیکت:</strong> {jalali_created_str}</span>
+                    <span><strong>زمان آخرین پاسخ:</strong> {jalali_first_response if jalali_first_response else '<span style="color: #ef4444;">هنوز پاسخ داده نشده</span>'}</span>
                 </div>
             </div>
-            {sla_status}
+            {sla_html}
         </div>
         '''
         return format_html(html)
     time_info_display.short_description = ''
     
     def messages_display(self, obj):
-        """نمایش تاریخچه مکالمات"""
+        """نمایش موضوع و تاریخچه مکالمات"""
         if not obj:
             return ''
         
+        # موضوع تیکت
+        subject_html = f'''
+        <div style="background: white; padding: 15px; border-radius: 6px; margin-bottom: 15px; border-right: 4px solid #3b82f6;">
+            <h3 style="margin: 0 0 10px 0; color: #3b82f6;">موضوع:</h3>
+            <div style="font-size: 16px; line-height: 1.6;">{obj.subject}</div>
+        </div>
+        '''
+        
+        # محتوای اولیه تیکت
+        jalali_created = jdatetime.datetime.fromgregorian(datetime=obj.created_at)
+        initial_message = f'''
+        <div style="background: #f0fdf4; padding: 15px; border-radius: 8px; margin-bottom: 15px; border-right: 4px solid #16a34a;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                <div>
+                    <strong style="color: #16a34a;">👤 {obj.user.get_full_name() if hasattr(obj.user, 'get_full_name') else obj.user}</strong>
+                    <span style="background: #dcfce7; color: #166534; padding: 2px 8px; border-radius: 4px; font-size: 12px; margin-right: 10px;">ایجاد تیکت</span>
+                </div>
+                <span style="color: #6b7280; font-size: 13px;">{jalali_created.strftime('%Y/%m/%d %H:%M')}</span>
+            </div>
+            <div style="white-space: pre-wrap; line-height: 1.6; font-size: 14px;">
+                {obj.description}
+            </div>
+        </div>
+        '''
+        
+        # پیام‌های بعدی
         messages = obj.messages.all().order_by('created_at')
         messages_html = ''
         
         for msg in messages:
-            # تعیین رنگ بر اساس نوع پیام
-            if msg.is_staff_reply:
-                bg_color = '#e0f2fe'  # آبی روشن برای کارشناس
-                border_color = '#0284c7'
-            else:
-                bg_color = '#f0fdf4'  # سبز روشن برای کاربر
-                border_color = '#16a34a'
+            jalali_msg_time = jdatetime.datetime.fromgregorian(datetime=msg.created_at)
             
-            # نمایش نوع پیام برای غیر کاربر
+            # تعیین رنگ و آیکون بر اساس نوع پیام
+            if msg.is_staff_reply:
+                bg_color = '#e0f2fe'
+                border_color = '#0284c7'
+                icon = '👨‍💼'
+            else:
+                bg_color = '#f0fdf4'
+                border_color = '#16a34a'
+                icon = '👤'
+            
+            # نمایش نوع پیام
             message_type_badge = ''
             if msg.is_staff_reply and msg.message_type != 'reply':
                 type_labels = {
-                    'note': '📝 یادداشت داخلی',
+                    'note': '📝 یادداشت داخلی (محرمانه)',
                     'question': '❓ سوال از کاربر',
-                    'send_to': '➡️ ارسال به'
+                    'send_to': '➡️ ارسال به کارشناس (محرمانه)',
+                    'forward': '↪️ فوروارد شد'
                 }
-                message_type_badge = f'<span style="background: #fbbf24; color: #78350f; padding: 2px 8px; border-radius: 4px; font-size: 12px; margin-left: 10px;">{type_labels.get(msg.message_type, msg.message_type)}</span>'
+                badge_color = '#fbbf24' if msg.message_type in ['note', 'send_to'] else '#8b5cf6'
+                message_type_badge = f'<span style="background: {badge_color}; color: white; padding: 2px 8px; border-radius: 4px; font-size: 12px; margin-right: 10px;">{type_labels.get(msg.message_type, msg.message_type)}</span>'
             
             # نمایش کارشناس مقصد برای send_to
             forwarded_info = ''
             if msg.message_type == 'send_to' and msg.forwarded_to:
-                forwarded_info = f'<div style="margin-top: 5px; font-size: 12px; color: #6b7280;">➡️ ارسال شده به: {msg.forwarded_to.get_full_name() if hasattr(msg.forwarded_to, "get_full_name") else msg.forwarded_to}</div>'
+                forwarded_info = f'<div style="margin-top: 8px; padding: 8px; background: rgba(251, 191, 36, 0.1); border-radius: 4px; font-size: 12px; color: #78350f;">➡️ ارسال شده به: <strong>{msg.forwarded_to.get_full_name() if hasattr(msg.forwarded_to, "get_full_name") else msg.forwarded_to}</strong></div>'
             
             messages_html += f'''
             <div style="background: {bg_color}; padding: 15px; border-radius: 8px; margin-bottom: 15px; border-right: 4px solid {border_color};">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
                     <div>
-                        <strong>{msg.sender.get_full_name() if msg.sender and hasattr(msg.sender, 'get_full_name') else (msg.sender if msg.sender else 'سیستم')}</strong>
+                        <strong style="color: {border_color};">{icon} {msg.sender.get_full_name() if msg.sender and hasattr(msg.sender, 'get_full_name') else (msg.sender if msg.sender else 'سیستم')}</strong>
                         {message_type_badge}
                     </div>
-                    <span style="color: #6b7280; font-size: 14px;">{msg.created_at.strftime('%Y-%m-%d %H:%M')}</span>
+                    <span style="color: #6b7280; font-size: 13px;">{jalali_msg_time.strftime('%Y/%m/%d %H:%M')}</span>
                 </div>
-                <div style="white-space: pre-wrap; line-height: 1.6;">
+                <div style="white-space: pre-wrap; line-height: 1.6; font-size: 14px;">
                     {msg.content}
                 </div>
                 {forwarded_info}
@@ -324,9 +352,11 @@ class CustomTicketAdmin(admin.ModelAdmin):
             '''
         
         html = f'''
-        <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
-            <h2 style="margin-top: 0; color: #2c3e50;">💬 تاریخچه مکالمات</h2>
-            {messages_html if messages_html else '<p style="color: #6b7280;">هنوز پیامی ثبت نشده است.</p>'}
+        <div style="max-width: 900px; margin: 0 auto; background: #f8f9fa; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
+            <h2 style="margin-top: 0; color: #2c3e50; border-bottom: 2px solid #3b82f6; padding-bottom: 10px;">💬 تاریخچه مکالمات</h2>
+            {subject_html}
+            {initial_message}
+            {messages_html if messages_html else '<p style="color: #6b7280; text-align: center; padding: 20px;">هنوز پیامی ثبت نشده است.</p>'}
         </div>
         '''
         return format_html(html)
@@ -411,7 +441,7 @@ class CustomTicketAdmin(admin.ModelAdmin):
         
         # ساخت HTML با استفاده از + به جای f-string برای JavaScript
         html = '''
-        <div style="background: #ffffff; padding: 25px; border-radius: 8px; border: 2px solid #e5e7eb; margin-top: 20px;">
+        <div style="max-width: 900px; margin: 0 auto; background: #ffffff; padding: 25px; border-radius: 8px; border: 2px solid #e5e7eb; margin-top: 20px;">
             <h2 style="margin-top: 0; color: #2c3e50; border-bottom: 2px solid #3b82f6; padding-bottom: 10px;">✍️ ارسال پاسخ / پیام جدید</h2>
             
             <form method="post" action="" id="ticket-reply-form">
@@ -419,55 +449,57 @@ class CustomTicketAdmin(admin.ModelAdmin):
                 <input type="hidden" name="ticket_id" value="''' + str(obj.id) + '''">
                 
                 <div style="margin-bottom: 20px;">
-                    <label style="display: block; font-weight: bold; margin-bottom: 8px; color: #374151;">
+                    <label style="display: block; font-weight: bold; margin-bottom: 8px; color: #374151; font-size: 14px;">
                         نوع پیام: <span style="color: #ef4444;">*</span>
                     </label>
                     <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px;">
-                        <label style="display: flex; align-items: center; padding: 12px; border: 2px solid #e5e7eb; border-radius: 6px; cursor: pointer;">
+                        <label style="display: flex; align-items: center; padding: 12px; border: 2px solid #e5e7eb; border-radius: 6px; cursor: pointer; transition: all 0.2s;">
                             <input type="radio" name="message_type" value="reply" checked style="margin-left: 8px;" onchange="toggleForwardedTo()">
-                            <span style="font-weight: 500;">پاسخ</span>
+                            <span style="font-weight: 500; font-size: 14px;">پاسخ</span>
                         </label>
-                        <label style="display: flex; align-items: center; padding: 12px; border: 2px solid #e5e7eb; border-radius: 6px; cursor: pointer;">
+                        <label style="display: flex; align-items: center; padding: 12px; border: 2px solid #e5e7eb; border-radius: 6px; cursor: pointer; transition: all 0.2s;">
                             <input type="radio" name="message_type" value="note" style="margin-left: 8px;" onchange="toggleForwardedTo()">
-                            <span style="font-weight: 500;">یادداشت داخلی</span>
+                            <span style="font-weight: 500; font-size: 14px;">یادداشت داخلی</span>
                         </label>
-                        <label style="display: flex; align-items: center; padding: 12px; border: 2px solid #e5e7eb; border-radius: 6px; cursor: pointer;">
+                        <label style="display: flex; align-items: center; padding: 12px; border: 2px solid #e5e7eb; border-radius: 6px; cursor: pointer; transition: all 0.2s;">
                             <input type="radio" name="message_type" value="question" style="margin-left: 8px;" onchange="toggleForwardedTo()">
-                            <span style="font-weight: 500;">سوال از کاربر</span>
+                            <span style="font-weight: 500; font-size: 14px;">منتظر پاسخ کاربر</span>
                         </label>
-                        <label style="display: flex; align-items: center; padding: 12px; border: 2px solid #e5e7eb; border-radius: 6px; cursor: pointer;">
+                        <label style="display: flex; align-items: center; padding: 12px; border: 2px solid #e5e7eb; border-radius: 6px; cursor: pointer; transition: all 0.2s;">
                             <input type="radio" name="message_type" value="send_to" style="margin-left: 8px;" onchange="toggleForwardedTo()">
-                            <span style="font-weight: 500;">ارسال به</span>
+                            <span style="font-weight: 500; font-size: 14px;">ارسال به کارشناس</span>
                         </label>
                     </div>
-                    <div style="margin-top: 8px; font-size: 13px; color: #6b7280;">
-                        <strong>راهنما:</strong><br>
-                        • <strong>پاسخ:</strong> پاسخ به کاربر - وضعیت به "پاسخ داده شده" تغییر می‌کند<br>
-                        • <strong>یادداشت داخلی:</strong> فقط برای کارشناسان - وضعیت به "در حال بررسی" تغییر می‌کند<br>
-                        • <strong>سوال از کاربر:</strong> سوال از کاربر - وضعیت به "در انتظار پاسخ کاربر" تغییر می‌کند<br>
-                        • <strong>ارسال به:</strong> ارسال تیکت به کارشناس دیگر - وضعیت به "در حال بررسی" تغییر می‌کند
+                    <div style="margin-top: 10px; padding: 12px; background: #f0f9ff; border-radius: 6px; border-right: 4px solid #3b82f6;">
+                        <div style="font-size: 13px; color: #1e40af; line-height: 1.8;">
+                            <strong>📌 راهنما:</strong><br>
+                            • <strong>پاسخ:</strong> پاسخ به کاربر (قابل رویت برای کاربر) - وضعیت: "پاسخ داده شده"<br>
+                            • <strong>یادداشت داخلی:</strong> محرمانه - فقط برای کارشناسان - وضعیت: "در حال بررسی"<br>
+                            • <strong>منتظر پاسخ کاربر:</strong> سوال از کاربر (قابل رویت) - وضعیت: "منتظر پاسخ کاربر" (بدون محدودیت SLA)<br>
+                            • <strong>ارسال به کارشناس:</strong> محرمانه - تخصیص به کارشناس دیگر - وضعیت: "در حال بررسی"
+                        </div>
                     </div>
                 </div>
                 
                 <div style="margin-bottom: 20px; display: none;" id="forwarded_to_field">
-                    <label style="display: block; font-weight: bold; margin-bottom: 8px; color: #374151;">
+                    <label style="display: block; font-weight: bold; margin-bottom: 8px; color: #374151; font-size: 14px;">
                         ارسال به کارشناس: <span style="color: #ef4444;">*</span>
                     </label>
-                    <select name="forwarded_to" style="width: 100%; padding: 10px; border: 1px solid #d1d5db; border-radius: 6px;">
+                    <select name="forwarded_to" style="width: 100%; padding: 12px; border: 2px solid #d1d5db; border-radius: 6px; font-size: 14px; font-family: Tahoma, Arial, sans-serif;">
                         <option value="">انتخاب کارشناس...</option>
                         ''' + staff_options + '''
                     </select>
                 </div>
                 
                 <div style="margin-bottom: 20px;">
-                    <label style="display: block; font-weight: bold; margin-bottom: 8px; color: #374151;">
+                    <label style="display: block; font-weight: bold; margin-bottom: 8px; color: #374151; font-size: 14px;">
                         محتوای پیام: <span style="color: #ef4444;">*</span>
                     </label>
-                    <textarea name="content" rows="6" required style="width: 100%; padding: 10px; border: 1px solid #d1d5db; border-radius: 6px; font-family: Tahoma, Arial, sans-serif;"></textarea>
+                    <textarea name="content" rows="6" required style="width: 100%; padding: 12px; border: 2px solid #d1d5db; border-radius: 6px; font-family: Tahoma, Arial, sans-serif; font-size: 14px; line-height: 1.6;"></textarea>
                 </div>
                 
                 <div style="display: flex; gap: 10px;">
-                    <button type="submit" style="background: #3b82f6; color: white; padding: 12px 24px; border: none; border-radius: 6px; font-weight: 600; cursor: pointer; font-size: 15px;">
+                    <button type="submit" style="background: #3b82f6; color: white; padding: 14px 28px; border: none; border-radius: 6px; font-weight: 600; cursor: pointer; font-size: 15px; transition: all 0.2s;">
                         ✉️ ارسال پیام
                     </button>
                 </div>
