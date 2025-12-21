@@ -186,8 +186,7 @@ class CustomTicketAdmin(admin.ModelAdmin):
             return ''
         
         html = f'''
-        <div style="width: 100%; background: #f8f9fa; padding: 20px; border-radius: 8px; margin-bottom: 0;">
-            <h2 style="margin-top: 0; color: #2c3e50; border-bottom: 2px solid #3b82f6; padding-bottom: 10px;">📋 اطلاعات تیکت</h2>
+        <div style="width: 100% !important; max-width: none !important; background: #f8f9fa; padding: 20px; border-radius: 8px; margin-bottom: 0;">
             <div style="background: white; padding: 15px; border-radius: 6px;">
                 <div style="display: flex; justify-content: space-between; margin-bottom: 10px; padding-bottom: 10px; border-bottom: 1px solid #e5e7eb;">
                     <span><strong>شماره تیکت:</strong> <span style="font-family: monospace; font-size: 14px; color: #3b82f6;">{obj.ticket_number}</span></span>
@@ -229,11 +228,16 @@ class CustomTicketAdmin(admin.ModelAdmin):
         from support.models import SLAPolicy
         sla_policy = None
         if obj.department:
+            # جستجو در تمام SLA Policyها
             sla_policies = SLAPolicy.objects.filter(
                 department=obj.department,
                 is_active=True
-            ).filter(priority__contains=obj.priority)
-            sla_policy = sla_policies.first()
+            )
+            # پیدا کردن policy که اولویت تیکت در لیست priority آن باشد
+            for policy in sla_policies:
+                if policy.priority and obj.priority in policy.priority:
+                    sla_policy = policy
+                    break
         
         # استفاده مستقیم از فیلدهای response_due و resolution_due
         sla_html = ''
@@ -277,8 +281,7 @@ class CustomTicketAdmin(admin.ModelAdmin):
             '''
         
         html = f'''
-        <div style="width: 100%; background: #f8f9fa; padding: 20px; border-radius: 8px; margin-bottom: 0;">
-            <h2 style="margin-top: 0; color: #2c3e50; border-bottom: 2px solid #3b82f6; padding-bottom: 10px;">⏰ اطلاعات زمانی</h2>
+        <div style="width: 100% !important; max-width: none !important; background: #f8f9fa; padding: 20px; border-radius: 8px; margin-bottom: 0; margin-top: 0;">
             <div style="background: white; padding: 15px; border-radius: 6px;">
                 <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
                     <span><strong>زمان ایجاد تیکت:</strong> {jalali_created_str}</span>
@@ -372,8 +375,7 @@ class CustomTicketAdmin(admin.ModelAdmin):
             '''
         
         html = f'''
-        <div style="width: 100%; background: #f8f9fa; padding: 20px; border-radius: 8px; margin-bottom: 0;">
-            <h2 style="margin-top: 0; color: #2c3e50; border-bottom: 2px solid #3b82f6; padding-bottom: 10px;">💬 تاریخچه مکالمات</h2>
+        <div style="width: 100% !important; max-width: none !important; background: #f8f9fa; padding: 20px; border-radius: 8px; margin-bottom: 0; margin-top: 0;">
             {subject_html}
             {initial_message}
             {messages_html if messages_html else '<p style="color: #6b7280; text-align: center; padding: 20px;">هنوز پیامی ثبت نشده است.</p>'}
@@ -471,7 +473,7 @@ class CustomTicketAdmin(admin.ModelAdmin):
         
         # ساخت HTML با استفاده از + به جای f-string برای JavaScript
         html = '''
-        <div style="width: 100%; background: #ffffff; padding: 25px; border-radius: 8px; border: 2px solid #e5e7eb; margin-top: 0;">
+        <div style="width: 100% !important; max-width: none !important; background: #ffffff; padding: 25px; border-radius: 8px; border: 2px solid #e5e7eb; margin-top: 0;">
             <h2 style="margin-top: 0; color: #2c3e50; border-bottom: 2px solid #3b82f6; padding-bottom: 10px;">✍️ ارسال پاسخ / پیام جدید</h2>
             
             <form method="post" action="" id="ticket-reply-form">
