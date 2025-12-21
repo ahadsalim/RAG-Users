@@ -344,6 +344,18 @@ class CustomTicketAdmin(admin.ModelAdmin):
             for user in staff_users
         ])
         
+        js_code = """
+            function toggleForwardedTo() {
+                var messageType = document.querySelector('input[name="message_type"]:checked').value;
+                var field = document.getElementById('forwarded_to_field');
+                if (messageType === 'send_to') {
+                    field.style.display = 'block';
+                } else {
+                    field.style.display = 'none';
+                }
+            }
+        """
+        
         html = f'''
         <div style="background: #ffffff; padding: 25px; border-radius: 8px; border: 2px solid #e5e7eb; margin-top: 20px;">
             <h2 style="margin-top: 0; color: #2c3e50; border-bottom: 2px solid #3b82f6; padding-bottom: 10px;">✍️ ارسال پاسخ / پیام جدید</h2>
@@ -407,17 +419,7 @@ class CustomTicketAdmin(admin.ModelAdmin):
                 </div>
             </form>
             
-            <script>
-            function toggleForwardedTo() {
-                var messageType = document.querySelector('input[name="message_type"]:checked').value;
-                var field = document.getElementById('forwarded_to_field');
-                if (messageType === 'send_to') {
-                    field.style.display = 'block';
-                } else {
-                    field.style.display = 'none';
-                }
-            }
-            </script>
+            <script>{js_code}</script>
         </div>
         '''
         return format_html(html)
