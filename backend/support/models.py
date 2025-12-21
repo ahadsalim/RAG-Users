@@ -717,7 +717,7 @@ class SLAPolicy(models.Model):
     سیاست‌های SLA
     """
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    name = models.CharField(max_length=100, verbose_name=_('نام'))
+    name = models.CharField(max_length=100, verbose_name=_('نام سیاست'))
     description = models.TextField(blank=True, verbose_name=_('توضیحات'))
     
     # شرایط اعمال

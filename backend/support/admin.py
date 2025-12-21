@@ -1,4 +1,5 @@
 from django.contrib import admin
+from django import forms
 from django.utils.html import format_html
 from django.utils.translation import gettext_lazy as _
 from django.db.models import Count
@@ -184,25 +185,20 @@ class TicketTagAdmin(admin.ModelAdmin):
 
 @admin.register(SLAPolicy)
 class SLAPolicyAdmin(admin.ModelAdmin):
-    list_display = ['name', 'priority', 'department', 'category', 'response_time_display', 'resolution_time_display', 'is_active']
-    list_filter = ['is_active', 'priority', 'department', 'business_hours_only']
+    list_display = ['name', 'priority', 'department', 'response_time_display', 'resolution_time_display', 'is_active']
+    list_filter = ['is_active', 'priority', 'department']
     search_fields = ['name', 'description']
     ordering = ['name']
     
-    fieldsets = (
-        (None, {
-            'fields': ('name', 'description')
-        }),
-        (_('شرایط اعمال'), {
-            'fields': ('priority', 'department', 'category')
-        }),
-        (_('زمان‌ها'), {
-            'fields': ('response_time', 'resolution_time', 'business_hours_only')
-        }),
-        (_('وضعیت'), {
-            'fields': ('is_active',)
-        }),
-    )
+    # حذف fieldsets - همه فیلدها در یک صفحه (بدون category و business_hours_only)
+    fields = ('name', 'description', 'priority', 'department', 'response_time', 'resolution_time', 'is_active')
+    
+    # تغییر ویجت برای فیلدها
+    def get_form(self, request, obj=None, **kwargs):
+        form = super().get_form(request, obj, **kwargs)
+        # تغییر ویجت description به 2 سطری
+        form.base_fields['description'].widget = forms.Textarea(attrs={'rows': 2, 'cols': 80})
+        return form
     
     def response_time_display(self, obj):
         hours = obj.response_time // 60
