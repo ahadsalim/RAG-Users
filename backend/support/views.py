@@ -81,24 +81,24 @@ class TicketDepartmentViewSet(viewsets.ModelViewSet):
         return Response(stats)
 
 
-class TicketCategoryViewSet(viewsets.ModelViewSet):
+class TicketCategoryViewSet(viewsets.ReadOnlyModelViewSet):
     """
     ویوست دسته‌بندی تیکت‌ها
     """
-    queryset = TicketCategory.objects.filter(parent__isnull=True)
+    queryset = TicketCategory.objects.all()
     permission_classes = [permissions.IsAuthenticated]
     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
     search_fields = ['name', 'description']
-    ordering_fields = ['name', 'order', 'created_at']
+    ordering_fields = ['name', 'order']
     ordering = ['order', 'name']
     
     def get_serializer_class(self):
-        if self.action == 'list' and not self.request.user.is_staff:
-            return TicketCategoryListSerializer
+        if self.request.user.is_staff:
+            return TicketCategorySerializer
         return TicketCategorySerializer
     
     def get_queryset(self):
-        queryset = TicketCategory.objects.filter(parent__isnull=True)
+        queryset = TicketCategory.objects.all()
         if not self.request.user.is_staff:
             queryset = queryset.filter(is_active=True)
         return queryset

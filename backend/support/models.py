@@ -106,16 +106,6 @@ class TicketCategory(models.Model):
         verbose_name=_('اولویت پیش‌فرض')
     )
     
-    # سلسله مراتب
-    parent = models.ForeignKey(
-        'self',
-        on_delete=models.CASCADE,
-        null=True,
-        blank=True,
-        related_name='children',
-        verbose_name=_('دسته‌بندی والد')
-    )
-    
     is_active = models.BooleanField(default=True, verbose_name=_('فعال'))
     order = models.IntegerField(default=0, verbose_name=_('ترتیب'))
     
@@ -128,8 +118,6 @@ class TicketCategory(models.Model):
         ordering = ['order', 'name']
     
     def __str__(self):
-        if self.parent:
-            return f"{self.parent.name} > {self.name}"
         return self.name
 
 

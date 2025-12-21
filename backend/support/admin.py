@@ -44,25 +44,20 @@ class TicketDepartmentAdmin(admin.ModelAdmin):
 
 @admin.register(TicketCategory)
 class TicketCategoryAdmin(admin.ModelAdmin):
-    list_display = ['name', 'parent', 'default_department', 'default_priority', 'color_display', 'is_active', 'order']
+    list_display = ['name', 'default_department', 'default_priority', 'color_display', 'is_active', 'order']
     list_filter = ['is_active', 'default_priority', 'default_department']
     search_fields = ['name', 'description']
     ordering = ['order', 'name']
     
-    fieldsets = (
-        (None, {
-            'fields': ('name', 'description', 'parent')
-        }),
-        (_('نمایش'), {
-            'fields': ('icon', 'color', 'order')
-        }),
-        (_('پیش‌فرض‌ها'), {
-            'fields': ('default_department', 'default_priority')
-        }),
-        (_('وضعیت'), {
-            'fields': ('is_active',)
-        }),
-    )
+    # حذف تب‌ها - همه فیلدها در یک صفحه به ترتیب اهمیت
+    fields = ('name', 'description', 'default_department', 'default_priority', 'icon', 'color', 'order', 'is_active')
+    
+    def get_form(self, request, obj=None, **kwargs):
+        form = super().get_form(request, obj, **kwargs)
+        # تغییر ویجت description به 2 سطری با عرض مناسب
+        if 'description' in form.base_fields:
+            form.base_fields['description'].widget = forms.Textarea(attrs={'rows': 2, 'style': 'width: 100%; max-width: 600px;'})
+        return form
     
     def color_display(self, obj):
         return format_html(

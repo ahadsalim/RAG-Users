@@ -60,21 +60,15 @@ class TicketDepartmentListSerializer(serializers.ModelSerializer):
 
 class TicketCategorySerializer(serializers.ModelSerializer):
     """سریالایزر دسته‌بندی"""
-    children = serializers.SerializerMethodField()
-    parent_name = serializers.CharField(source='parent.name', read_only=True)
     
     class Meta:
         model = TicketCategory
         fields = [
             'id', 'name', 'description', 'icon', 'color',
-            'default_department', 'default_priority', 'parent', 'parent_name',
-            'is_active', 'order', 'children', 'created_at', 'updated_at'
+            'default_department', 'default_priority',
+            'is_active', 'order', 'created_at', 'updated_at'
         ]
         read_only_fields = ['id', 'created_at', 'updated_at']
-    
-    def get_children(self, obj):
-        children = obj.children.filter(is_active=True)
-        return TicketCategorySerializer(children, many=True).data
 
 
 class TicketCategoryListSerializer(serializers.ModelSerializer):
