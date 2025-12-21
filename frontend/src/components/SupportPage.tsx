@@ -145,8 +145,8 @@ export default function SupportPage({ isOpen, onClose }: SupportPageProps) {
       await axios.post('/api/v1/support/tickets/', {
         subject,
         description,
-        category: categoryId || null,
-        department: departmentId || null,
+        category: categoryId,
+        department: departmentId,
         priority
       })
       
@@ -360,11 +360,12 @@ export default function SupportPage({ isOpen, onClose }: SupportPageProps) {
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div>
                   <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    دسته‌بندی
+                    دسته‌بندی *
                   </label>
                   <select
                     value={categoryId}
                     onChange={(e) => setCategoryId(e.target.value)}
+                    required
                     className="w-full px-4 py-2 pr-10 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-xs appearance-none bg-no-repeat bg-[length:16px] bg-[center_left_0.75rem] cursor-pointer"
                     style={{
                       backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3E%3Cpath stroke='%236B7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3E%3C/svg%3E")`
@@ -379,11 +380,12 @@ export default function SupportPage({ isOpen, onClose }: SupportPageProps) {
 
                 <div>
                   <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    دپارتمان
+                    دپارتمان *
                   </label>
                   <select
                     value={departmentId}
                     onChange={(e) => setDepartmentId(e.target.value)}
+                    required
                     className="w-full px-4 py-2 pr-10 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-xs appearance-none bg-no-repeat bg-[length:16px] bg-[center_left_0.75rem] cursor-pointer"
                     style={{
                       backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3E%3Cpath stroke='%236B7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3E%3C/svg%3E")`
@@ -419,8 +421,8 @@ export default function SupportPage({ isOpen, onClose }: SupportPageProps) {
               <div className="flex gap-3 pt-4">
                 <button
                   type="submit"
-                  disabled={sending}
-                  className="flex-1 px-6 py-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:opacity-50 font-medium text-xs"
+                  disabled={sending || !categoryId || !departmentId}
+                  className="flex-1 px-6 py-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed font-medium text-xs"
                 >
                   {sending ? 'در حال ارسال...' : 'ایجاد تیکت'}
                 </button>

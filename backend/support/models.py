@@ -183,18 +183,14 @@ class Ticket(models.Model):
     # دسته‌بندی و دپارتمان
     category = models.ForeignKey(
         TicketCategory,
-        on_delete=models.SET_NULL,
-        null=True,
-        blank=True,
+        on_delete=models.PROTECT,
         related_name='tickets',
         verbose_name=_('دسته‌بندی'),
         help_text=_('انتخاب دسته‌بندی الزامی است')
     )
     department = models.ForeignKey(
         TicketDepartment,
-        on_delete=models.SET_NULL,
-        null=True,
-        blank=True,
+        on_delete=models.PROTECT,
         related_name='tickets',
         verbose_name=_('دپارتمان'),
         help_text=_('انتخاب دپارتمان الزامی است')
