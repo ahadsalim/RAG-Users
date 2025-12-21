@@ -5,6 +5,7 @@ from django.utils.translation import gettext_lazy as _
 from django.utils import timezone
 from django.contrib.auth import get_user_model
 from .models import Ticket, TicketMessage
+import jdatetime
 
 User = get_user_model()
 
@@ -49,7 +50,7 @@ class CustomTicketAdmin(admin.ModelAdmin):
     
     list_display = [
         'ticket_number', 'subject', 'user', 'status_badge', 'priority_badge',
-        'department', 'assigned_to', 'sla_indicator', 'created_at'
+        'department', 'assigned_to', 'sla_indicator', 'created_at_jalali'
     ]
     list_filter = ['status', 'priority', 'department', 'category', 'created_at']
     search_fields = ['ticket_number', 'subject', 'description', 'user__phone_number', 'user__email']
@@ -373,6 +374,15 @@ class CustomTicketAdmin(admin.ModelAdmin):
             return format_html('<span style="color: #ef4444; font-weight: bold;">⚠ نقض SLA</span>')
         return format_html('<span style="color: #22c55e;">✓ عادی</span>')
     sla_indicator.short_description = 'SLA'
+    
+    def created_at_jalali(self, obj):
+        """نمایش تاریخ ایجاد به شمسی"""
+        if obj.created_at:
+            jalali_date = jdatetime.datetime.fromgregorian(datetime=obj.created_at)
+            return jalali_date.strftime('%Y/%m/%d %H:%M')
+        return '-'
+    created_at_jalali.short_description = 'تاریخ ایجاد'
+    created_at_jalali.admin_order_field = 'created_at'
     
     def reply_form_display(self, obj):
         """نمایش فرم پاسخ"""
