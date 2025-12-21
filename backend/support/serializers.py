@@ -3,7 +3,7 @@ from django.contrib.auth import get_user_model
 from django.utils import timezone
 from .models import (
     TicketDepartment, TicketCategory, Ticket, TicketMessage,
-    TicketAttachment, TicketHistory, CannedResponse,
+    TicketHistory, CannedResponse,
     SLAPolicy
 )
 
@@ -78,36 +78,15 @@ class TicketCategoryListSerializer(serializers.ModelSerializer):
         fields = ['id', 'name', 'description', 'icon', 'color', 'default_priority']
 
 
-class TicketAttachmentSerializer(serializers.ModelSerializer):
-    """سریالایزر پیوست"""
-    uploaded_by_info = UserMinimalSerializer(source='uploaded_by', read_only=True)
-    file_url = serializers.SerializerMethodField()
-    
-    class Meta:
-        model = TicketAttachment
-        fields = [
-            'id', 'ticket', 'message', 'uploaded_by', 'uploaded_by_info',
-            'file', 'file_url', 'file_name', 'file_size', 'mime_type', 'created_at'
-        ]
-        read_only_fields = ['id', 'uploaded_by', 'file_name', 'file_size', 'mime_type', 'created_at']
-    
-    def get_file_url(self, obj):
-        request = self.context.get('request')
-        if obj.file and request:
-            return request.build_absolute_uri(obj.file.url)
-        return None
-
-
 class TicketMessageSerializer(serializers.ModelSerializer):
     """سریالایزر پیام تیکت"""
     sender_info = UserMinimalSerializer(source='sender', read_only=True)
-    attachments = TicketAttachmentSerializer(many=True, read_only=True)
     
     class Meta:
         model = TicketMessage
         fields = [
             'id', 'ticket', 'sender', 'sender_info', 'content',
-            'message_type', 'is_staff_reply', 'attachments',
+            'message_type', 'is_staff_reply',
             'metadata', 'created_at', 'updated_at'
         ]
         read_only_fields = ['id', 'sender', 'is_staff_reply', 'created_at', 'updated_at']
@@ -115,32 +94,10 @@ class TicketMessageSerializer(serializers.ModelSerializer):
 
 class TicketMessageCreateSerializer(serializers.ModelSerializer):
     """سریالایزر ایجاد پیام"""
-    attachments = serializers.ListField(
-        child=serializers.FileField(),
-        required=False,
-        write_only=True
-    )
     
     class Meta:
         model = TicketMessage
-        fields = ['content', 'message_type', 'attachments']
-    
-    def create(self, validated_data):
-        attachments_data = validated_data.pop('attachments', [])
-        message = TicketMessage.objects.create(**validated_data)
-        
-        for file in attachments_data:
-            TicketAttachment.objects.create(
-                message=message,
-                ticket=message.ticket,
-                uploaded_by=message.sender,
-                file=file,
-                file_name=file.name,
-                file_size=file.size,
-                mime_type=file.content_type or 'application/octet-stream'
-            )
-        
-        return message
+        fields = ['content', 'message_type']
 
 
 class TicketHistorySerializer(serializers.ModelSerializer):
@@ -164,7 +121,6 @@ class TicketSerializer(serializers.ModelSerializer):
     category_info = TicketCategoryListSerializer(source='category', read_only=True)
     department_info = TicketDepartmentListSerializer(source='department', read_only=True)
     messages = TicketMessageSerializer(many=True, read_only=True)
-    attachments = TicketAttachmentSerializer(many=True, read_only=True)
     status_display = serializers.CharField(source='get_status_display', read_only=True)
     priority_display = serializers.CharField(source='get_priority_display', read_only=True)
     source_display = serializers.CharField(source='get_source_display', read_only=True)
@@ -182,7 +138,7 @@ class TicketSerializer(serializers.ModelSerializer):
             'response_due', 'resolution_due', 'first_response_at', 'resolved_at',
             'satisfaction_rating', 'satisfaction_feedback',
             'user_read', 'staff_read', 'is_sla_breached', 'messages_count',
-            'messages', 'attachments',
+            'messages',
             'created_at', 'updated_at', 'closed_at'
         ]
         read_only_fields = [
@@ -235,21 +191,15 @@ class TicketListSerializer(serializers.ModelSerializer):
 
 class TicketCreateSerializer(serializers.ModelSerializer):
     """سریالایزر ایجاد تیکت"""
-    attachments = serializers.ListField(
-        child=serializers.FileField(),
-        required=False,
-        write_only=True
-    )
     
     class Meta:
         model = Ticket
         fields = [
             'subject', 'description', 'category', 'department',
-            'priority', 'attachments'
+            'priority'
         ]
     
     def create(self, validated_data):
-        attachments_data = validated_data.pop('attachments', [])
         user = self.context['request'].user
         
         # تنظیم دپارتمان از دسته‌بندی اگر مشخص نشده
@@ -273,17 +223,6 @@ class TicketCreateSerializer(serializers.ModelSerializer):
             if agent:
                 ticket.assigned_to = agent
                 ticket.save(update_fields=['assigned_to'])
-        
-        # ذخیره پیوست‌ها
-        for file in attachments_data:
-            TicketAttachment.objects.create(
-                ticket=ticket,
-                uploaded_by=user,
-                file=file,
-                file_name=file.name,
-                file_size=file.size,
-                mime_type=file.content_type or 'application/octet-stream'
-            )
         
         # ثبت در تاریخچه
         TicketHistory.objects.create(

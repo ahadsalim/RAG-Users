@@ -435,59 +435,6 @@ class TicketMessage(models.Model):
         self.ticket.save(update_fields=['updated_at', 'first_response_at', 'user_read', 'staff_read'])
 
 
-class TicketAttachment(models.Model):
-    """
-    فایل‌های پیوست تیکت
-    """
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    
-    # می‌تواند به تیکت یا پیام متصل باشد
-    ticket = models.ForeignKey(
-        Ticket,
-        on_delete=models.CASCADE,
-        null=True,
-        blank=True,
-        related_name='attachments',
-        verbose_name=_('تیکت')
-    )
-    message = models.ForeignKey(
-        TicketMessage,
-        on_delete=models.CASCADE,
-        null=True,
-        blank=True,
-        related_name='attachments',
-        verbose_name=_('پیام')
-    )
-    
-    # آپلودکننده
-    uploaded_by = models.ForeignKey(
-        User,
-        on_delete=models.SET_NULL,
-        null=True,
-        related_name='ticket_attachments',
-        verbose_name=_('آپلودکننده')
-    )
-    
-    # اطلاعات فایل
-    file = models.FileField(
-        upload_to='support/attachments/%Y/%m/',
-        verbose_name=_('فایل')
-    )
-    file_name = models.CharField(max_length=255, verbose_name=_('نام فایل'))
-    file_size = models.IntegerField(verbose_name=_('حجم فایل'))
-    mime_type = models.CharField(max_length=100, verbose_name=_('نوع فایل'))
-    
-    created_at = models.DateTimeField(auto_now_add=True, verbose_name=_('تاریخ آپلود'))
-    
-    class Meta:
-        verbose_name = _('پیوست تیکت')
-        verbose_name_plural = _('پیوست‌های تیکت')
-        ordering = ['-created_at']
-    
-    def __str__(self):
-        return self.file_name
-
-
 class TicketHistory(models.Model):
     """
     تاریخچه تغییرات تیکت

@@ -6,7 +6,7 @@ from django.db.models import Count
 from django.utils import timezone
 from .models import (
     TicketDepartment, TicketCategory, Ticket, TicketMessage,
-    TicketAttachment, TicketHistory, CannedResponse,
+    TicketHistory, CannedResponse,
     SLAPolicy
 )
 from .admin_custom import CustomTicketAdmin
@@ -81,25 +81,6 @@ class TicketCategoryAdmin(admin.ModelAdmin):
 class TicketAdmin(CustomTicketAdmin):
     """Admin برای مدل Ticket - از CustomTicketAdmin ارث‌بری می‌کند"""
     pass
-
-
-@admin.register(TicketAttachment)
-class TicketAttachmentAdmin(admin.ModelAdmin):
-    list_display = ['file_name', 'ticket', 'message', 'uploaded_by', 'file_size_display', 'mime_type', 'created_at']
-    list_filter = ['mime_type', 'created_at']
-    search_fields = ['file_name', 'ticket__ticket_number']
-    readonly_fields = ['uploaded_by', 'file_size', 'mime_type', 'created_at']
-    raw_id_fields = ['ticket', 'message', 'uploaded_by']
-    ordering = ['-created_at']
-    
-    def file_size_display(self, obj):
-        if obj.file_size < 1024:
-            return f'{obj.file_size} B'
-        elif obj.file_size < 1024 * 1024:
-            return f'{obj.file_size / 1024:.1f} KB'
-        else:
-            return f'{obj.file_size / (1024 * 1024):.1f} MB'
-    file_size_display.short_description = _('حجم')
 
 
 @admin.register(TicketHistory)

@@ -10,7 +10,7 @@ from rest_framework.filters import SearchFilter, OrderingFilter
 
 from .models import (
     TicketDepartment, TicketCategory, Ticket, TicketMessage,
-    TicketAttachment, TicketHistory, CannedResponse,
+    TicketHistory, CannedResponse,
     SLAPolicy
 )
 from .serializers import (
@@ -19,7 +19,7 @@ from .serializers import (
     TicketSerializer, TicketListSerializer, TicketCreateSerializer,
     TicketUpdateSerializer, TicketRatingSerializer,
     TicketMessageSerializer, TicketMessageCreateSerializer,
-    TicketAttachmentSerializer, TicketHistorySerializer,
+    TicketHistorySerializer,
     CannedResponseSerializer,
     SLAPolicySerializer, TicketStatsSerializer,
     ForwardTicketSerializer
