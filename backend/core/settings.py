@@ -62,6 +62,7 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'subscriptions.middleware.SubscriptionMiddleware',  # Check subscription limits
     'core.middleware.DynamicAdminTitleMiddleware',  # Dynamic admin title from SiteSettings
+    'core.middleware.TimezoneMiddleware',  # Activate user's timezone
 ]
 
 ROOT_URLCONF = 'core.urls'

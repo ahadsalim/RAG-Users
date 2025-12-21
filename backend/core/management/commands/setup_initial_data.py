@@ -209,11 +209,11 @@ class Command(BaseCommand):
         else:
             self.stdout.write(self.style.WARNING('  - ارز ریال از قبل وجود دارد'))
         
-        # ایجاد تومان (ارز پیش‌فرض برای کاربران جدید)
+        # ایجاد تومان ایرانی (ارز پیش‌فرض برای کاربران جدید)
         toman, created = Currency.objects.get_or_create(
-            code='TMN',
+            code='IRT',
             defaults={
-                'name': 'تومان',
+                'name': 'تومان ایرانی',
                 'symbol': 'تومان',
                 'exchange_rate': Decimal('10'),
                 'is_base': False,
@@ -226,9 +226,9 @@ class Command(BaseCommand):
         )
         
         if created:
-            self.stdout.write(self.style.SUCCESS('  ✓ ارز تومان ایجاد شد (پیش‌فرض)'))
+            self.stdout.write(self.style.SUCCESS('  ✓ ارز تومان ایرانی (IRT) ایجاد شد (پیش‌فرض)'))
         else:
-            self.stdout.write(self.style.WARNING('  - ارز تومان از قبل وجود دارد'))
+            self.stdout.write(self.style.WARNING('  - ارز تومان ایرانی (IRT) از قبل وجود دارد'))
 
     def create_plans(self):
         """ایجاد پلن‌های پایه"""
