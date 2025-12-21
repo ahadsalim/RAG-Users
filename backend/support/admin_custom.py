@@ -408,15 +408,15 @@ class CustomTicketAdmin(admin.ModelAdmin):
             </form>
             
             <script>
-            function toggleForwardedTo() {{
+            function toggleForwardedTo() {
                 var messageType = document.querySelector('input[name="message_type"]:checked').value;
                 var field = document.getElementById('forwarded_to_field');
-                if (messageType === 'send_to') {{
+                if (messageType === 'send_to') {
                     field.style.display = 'block';
-                }} else {{
+                } else {
                     field.style.display = 'none';
-                }}
-            }}
+                }
+            }
             </script>
         </div>
         '''
