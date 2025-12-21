@@ -100,48 +100,59 @@ class Command(BaseCommand):
                 self.stdout.write(self.style.WARNING(f'  - زبان {lang_data["native_name"]} از قبل موجود است'))
     
     def create_timezones(self):
-        """ایجاد مناطق زمانی پرکاربرد"""
+        """ایجاد تمام مناطق زمانی رسمی از pytz"""
         from core.models import Timezone
+        import pytz
+        from datetime import datetime
         
-        timezones = [
-            # ایران
-            {'code': 'Asia/Tehran', 'name': 'Tehran', 'utc_offset': '+03:30', 'display_name': 'تهران (UTC+03:30)', 'is_default': True, 'order': 1},
-            
-            # خاورمیانه
-            {'code': 'Asia/Dubai', 'name': 'Dubai', 'utc_offset': '+04:00', 'display_name': 'دبی (UTC+04:00)', 'is_default': False, 'order': 2},
-            {'code': 'Asia/Riyadh', 'name': 'Riyadh', 'utc_offset': '+03:00', 'display_name': 'ریاض (UTC+03:00)', 'is_default': False, 'order': 3},
-            {'code': 'Asia/Kuwait', 'name': 'Kuwait', 'utc_offset': '+03:00', 'display_name': 'کویت (UTC+03:00)', 'is_default': False, 'order': 4},
-            
-            # اروپا
-            {'code': 'Europe/London', 'name': 'London', 'utc_offset': '+00:00', 'display_name': 'لندن (UTC+00:00)', 'is_default': False, 'order': 5},
-            {'code': 'Europe/Paris', 'name': 'Paris', 'utc_offset': '+01:00', 'display_name': 'پاریس (UTC+01:00)', 'is_default': False, 'order': 6},
-            {'code': 'Europe/Berlin', 'name': 'Berlin', 'utc_offset': '+01:00', 'display_name': 'برلین (UTC+01:00)', 'is_default': False, 'order': 7},
-            {'code': 'Europe/Istanbul', 'name': 'Istanbul', 'utc_offset': '+03:00', 'display_name': 'استانبول (UTC+03:00)', 'is_default': False, 'order': 8},
-            
-            # آمریکا
-            {'code': 'America/New_York', 'name': 'New York', 'utc_offset': '-05:00', 'display_name': 'نیویورک (UTC-05:00)', 'is_default': False, 'order': 9},
-            {'code': 'America/Los_Angeles', 'name': 'Los Angeles', 'utc_offset': '-08:00', 'display_name': 'لس‌آنجلس (UTC-08:00)', 'is_default': False, 'order': 10},
-            {'code': 'America/Chicago', 'name': 'Chicago', 'utc_offset': '-06:00', 'display_name': 'شیکاگو (UTC-06:00)', 'is_default': False, 'order': 11},
-            
-            # آسیا
-            {'code': 'Asia/Tokyo', 'name': 'Tokyo', 'utc_offset': '+09:00', 'display_name': 'توکیو (UTC+09:00)', 'is_default': False, 'order': 12},
-            {'code': 'Asia/Shanghai', 'name': 'Shanghai', 'utc_offset': '+08:00', 'display_name': 'شانگهای (UTC+08:00)', 'is_default': False, 'order': 13},
-            {'code': 'Asia/Singapore', 'name': 'Singapore', 'utc_offset': '+08:00', 'display_name': 'سنگاپور (UTC+08:00)', 'is_default': False, 'order': 14},
-            {'code': 'Asia/Kolkata', 'name': 'Kolkata', 'utc_offset': '+05:30', 'display_name': 'کلکته (UTC+05:30)', 'is_default': False, 'order': 15},
-            
-            # استرالیا
-            {'code': 'Australia/Sydney', 'name': 'Sydney', 'utc_offset': '+11:00', 'display_name': 'سیدنی (UTC+11:00)', 'is_default': False, 'order': 16},
-        ]
+        # دریافت تمام مناطق زمانی از pytz
+        all_zones = pytz.all_timezones
         
-        for tz_data in timezones:
-            tz, created = Timezone.objects.get_or_create(
-                code=tz_data['code'],
-                defaults=tz_data
-            )
-            if created:
-                self.stdout.write(self.style.SUCCESS(f'  ✓ منطقه زمانی {tz_data["display_name"]} ایجاد شد'))
-            else:
-                self.stdout.write(self.style.WARNING(f'  - منطقه زمانی {tz_data["display_name"]} از قبل موجود است'))
+        self.stdout.write(self.style.NOTICE(f'  در حال ایجاد {len(all_zones)} منطقه زمانی...'))
+        
+        created_count = 0
+        existing_count = 0
+        
+        for idx, tz_name in enumerate(all_zones, 1):
+            try:
+                tz = pytz.timezone(tz_name)
+                now = datetime.now(tz)
+                offset = now.strftime('%z')
+                
+                # تبدیل +0330 به +03:30
+                if len(offset) == 5:
+                    offset_formatted = f'{offset[:3]}:{offset[3:]}'
+                else:
+                    offset_formatted = '+00:00'
+                
+                # نام نمایشی
+                display_name = f"{tz_name.replace('_', ' ')} (UTC{offset_formatted})"
+                
+                tz_data = {
+                    'name': tz_name.split('/')[-1].replace('_', ' '),
+                    'utc_offset': offset_formatted,
+                    'display_name': display_name,
+                    'is_default': tz_name == 'Asia/Tehran',
+                    'is_active': True,
+                    'order': 0 if tz_name == 'Asia/Tehran' else idx
+                }
+                
+                tz_obj, created = Timezone.objects.get_or_create(
+                    code=tz_name,
+                    defaults=tz_data
+                )
+                
+                if created:
+                    created_count += 1
+                else:
+                    existing_count += 1
+                    
+            except Exception as e:
+                self.stdout.write(self.style.ERROR(f'  ✗ خطا در ایجاد {tz_name}: {e}'))
+        
+        self.stdout.write(self.style.SUCCESS(f'  ✓ {created_count} منطقه زمانی جدید ایجاد شد'))
+        if existing_count > 0:
+            self.stdout.write(self.style.WARNING(f'  - {existing_count} منطقه زمانی از قبل موجود بود'))
     
     def create_currencies(self):
         """ایجاد ارز پایه (ریال)"""
