@@ -3,7 +3,7 @@ from django.contrib.auth import get_user_model
 from django.utils import timezone
 from .models import (
     TicketDepartment, TicketCategory, Ticket, TicketMessage,
-    TicketAttachment, TicketForward, TicketHistory, CannedResponse,
+    TicketAttachment, TicketHistory, CannedResponse,
     SLAPolicy
 )
 
@@ -155,22 +155,6 @@ class TicketHistorySerializer(serializers.ModelSerializer):
             'old_value', 'new_value', 'description', 'created_at'
         ]
         read_only_fields = ['id', 'created_at']
-
-
-class TicketForwardSerializer(serializers.ModelSerializer):
-    """سریالایزر فوروارد"""
-    from_agent_info = UserMinimalSerializer(source='from_agent', read_only=True)
-    to_agent_info = UserMinimalSerializer(source='to_agent', read_only=True)
-    to_department_info = TicketDepartmentListSerializer(source='to_department', read_only=True)
-    
-    class Meta:
-        model = TicketForward
-        fields = [
-            'id', 'ticket', 'from_agent', 'from_agent_info',
-            'to_agent', 'to_agent_info', 'to_department', 'to_department_info',
-            'reason', 'created_at'
-        ]
-        read_only_fields = ['id', 'from_agent', 'created_at']
 
 
 class TicketSerializer(serializers.ModelSerializer):

@@ -1,7 +1,7 @@
 from django.db.models.signals import post_save, pre_save
 from django.dispatch import receiver
 from django.utils import timezone
-from .models import Ticket, TicketMessage, TicketForward, TicketHistory
+from .models import Ticket, TicketMessage, TicketHistory
 
 
 @receiver(pre_save, sender=Ticket)
@@ -108,29 +108,3 @@ def ticket_message_post_save(sender, instance, created, **kwargs):
         pass
 
 
-@receiver(post_save, sender=TicketForward)
-def ticket_forward_post_save(sender, instance, created, **kwargs):
-    """ارسال نوتیفیکیشن بعد از فوروارد"""
-    if not created:
-        return
-    
-    try:
-        from notifications.models import Notification
-        
-        ticket = instance.ticket
-        
-        # نوتیفیکیشن برای کارشناس جدید
-        if instance.to_agent:
-            Notification.objects.create(
-                user=instance.to_agent,
-                title='تیکت فوروارد شده',
-                message=f'تیکت #{ticket.ticket_number} به شما فوروارد شد.',
-                notification_type='ticket',
-                data={
-                    'ticket_id': str(ticket.id),
-                    'ticket_number': ticket.ticket_number,
-                    'from_agent': str(instance.from_agent.id) if instance.from_agent else None
-                }
-            )
-    except Exception:
-        pass

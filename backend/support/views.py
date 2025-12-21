@@ -10,7 +10,7 @@ from rest_framework.filters import SearchFilter, OrderingFilter
 
 from .models import (
     TicketDepartment, TicketCategory, Ticket, TicketMessage,
-    TicketAttachment, TicketForward, TicketHistory, CannedResponse,
+    TicketAttachment, TicketHistory, CannedResponse,
     SLAPolicy
 )
 from .serializers import (
@@ -20,7 +20,7 @@ from .serializers import (
     TicketUpdateSerializer, TicketRatingSerializer,
     TicketMessageSerializer, TicketMessageCreateSerializer,
     TicketAttachmentSerializer, TicketHistorySerializer,
-    TicketForwardSerializer, CannedResponseSerializer,
+    CannedResponseSerializer,
     SLAPolicySerializer, TicketStatsSerializer,
     ForwardTicketSerializer
 )
@@ -241,6 +241,8 @@ class TicketViewSet(viewsets.ModelViewSet):
         
         to_agent = None
         to_department = None
+        old_agent = ticket.assigned_to
+        old_department = ticket.department
         
         if serializer.validated_data.get('to_agent'):
             to_agent = get_object_or_404(
@@ -251,15 +253,6 @@ class TicketViewSet(viewsets.ModelViewSet):
             to_department = get_object_or_404(
                 TicketDepartment, id=serializer.validated_data['to_department']
             )
-        
-        # ایجاد رکورد فوروارد
-        forward = TicketForward.objects.create(
-            ticket=ticket,
-            from_agent=request.user,
-            to_agent=to_agent,
-            to_department=to_department,
-            reason=serializer.validated_data.get('reason', '')
-        )
         
         # به‌روزرسانی تیکت
         if to_agent:
@@ -279,6 +272,10 @@ class TicketViewSet(viewsets.ModelViewSet):
             ticket=ticket,
             user=request.user,
             action='forwarded',
+            old_value={
+                'from_agent': str(old_agent.id) if old_agent else None,
+                'from_department': str(old_department.id) if old_department else None
+            },
             new_value={
                 'to_agent': str(to_agent.id) if to_agent else None,
                 'to_department': str(to_department.id) if to_department else None
@@ -287,19 +284,27 @@ class TicketViewSet(viewsets.ModelViewSet):
         )
         
         # ایجاد یادداشت داخلی
-        if serializer.validated_data.get('reason'):
-            TicketMessage.objects.create(
-                ticket=ticket,
-                sender=request.user,
-                content=f"فوروارد شد: {serializer.validated_data['reason']}",
-                message_type='forward',
-                is_staff_reply=True
-            )
+        reason = serializer.validated_data.get('reason', '')
+        forward_message = f"تیکت فوروارد شد"
+        if to_agent:
+            forward_message += f" به {to_agent.get_full_name() or to_agent.username}"
+        if to_department:
+            forward_message += f" به دپارتمان {to_department.name}"
+        if reason:
+            forward_message += f"\nدلیل: {reason}"
         
-        return Response(
-            TicketForwardSerializer(forward).data,
-            status=status.HTTP_201_CREATED
+        TicketMessage.objects.create(
+            ticket=ticket,
+            sender=request.user,
+            content=forward_message,
+            message_type='forward',
+            is_staff_reply=True
         )
+        
+        return Response({
+            'message': 'تیکت با موفقیت فوروارد شد',
+            'ticket': TicketSerializer(ticket, context={'request': request}).data
+        }, status=status.HTTP_200_OK)
     
     @action(detail=True, methods=['post'])
     def close(self, request, pk=None):

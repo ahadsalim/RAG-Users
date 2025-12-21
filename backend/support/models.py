@@ -488,56 +488,6 @@ class TicketAttachment(models.Model):
         return self.file_name
 
 
-class TicketForward(models.Model):
-    """
-    فوروارد تیکت به کارشناس دیگر
-    """
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    ticket = models.ForeignKey(
-        Ticket,
-        on_delete=models.CASCADE,
-        related_name='forwards',
-        verbose_name=_('تیکت')
-    )
-    
-    # از کی به کی
-    from_agent = models.ForeignKey(
-        User,
-        on_delete=models.SET_NULL,
-        null=True,
-        related_name='forwarded_tickets',
-        verbose_name=_('از کارشناس')
-    )
-    to_agent = models.ForeignKey(
-        User,
-        on_delete=models.SET_NULL,
-        null=True,
-        related_name='received_forwards',
-        verbose_name=_('به کارشناس')
-    )
-    to_department = models.ForeignKey(
-        TicketDepartment,
-        on_delete=models.SET_NULL,
-        null=True,
-        blank=True,
-        related_name='received_forwards',
-        verbose_name=_('به دپارتمان')
-    )
-    
-    # دلیل فوروارد
-    reason = models.TextField(blank=True, verbose_name=_('دلیل'))
-    
-    created_at = models.DateTimeField(auto_now_add=True, verbose_name=_('تاریخ فوروارد'))
-    
-    class Meta:
-        verbose_name = _('فوروارد تیکت')
-        verbose_name_plural = _('فوروارد‌های تیکت')
-        ordering = ['-created_at']
-    
-    def __str__(self):
-        return f"فوروارد {self.ticket.ticket_number}"
-
-
 class TicketHistory(models.Model):
     """
     تاریخچه تغییرات تیکت
