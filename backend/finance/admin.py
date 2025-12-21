@@ -12,11 +12,11 @@ from .models import Currency, PaymentGateway, FinancialSettings, Invoice, Invoic
 class CurrencyAdmin(admin.ModelAdmin):
     """مدیریت ارزها"""
     list_display = [
-        'code', 'name', 'symbol', 'is_base_display', 'has_decimals', 'decimal_places', 
-        'exchange_rate_display', 'is_active', 'display_order'
+        'code', 'name', 'symbol', 'is_base_display', 'is_default_display', 'has_decimals', 
+        'decimal_places', 'exchange_rate_display', 'is_active', 'display_order'
     ]
     list_editable = ['is_active', 'display_order']
-    list_filter = ['is_active', 'has_decimals', 'is_base']
+    list_filter = ['is_active', 'has_decimals', 'is_base', 'is_default']
     search_fields = ['code', 'name']
     ordering = ['display_order', 'code']
     
@@ -26,28 +26,24 @@ class CurrencyAdmin(admin.ModelAdmin):
         return ''
     is_base_display.short_description = _('پایه')
     
+    def is_default_display(self, obj):
+        if obj.is_default:
+            return format_html('<span style="color: blue; font-weight: bold;">✓</span>')
+        return ''
+    is_default_display.short_description = _('پیش‌فرض')
+    
     def exchange_rate_display(self, obj):
         if obj.exchange_rate == int(obj.exchange_rate):
             return f"{int(obj.exchange_rate):,}"
         return f"{float(obj.exchange_rate):,.2f}"
     exchange_rate_display.short_description = _('نرخ تبدیل')
     
-    fieldsets = (
-        (_('اطلاعات پایه'), {
-            'fields': ('code', 'name', 'symbol', 'display_order')
-        }),
-        (_('تنظیمات اعشار'), {
-            'fields': ('has_decimals', 'decimal_places'),
-            'description': _('برای تومان و ریال، "دارای اعشار" را خاموش کنید')
-        }),
-        (_('نرخ تبدیل'), {
-            'fields': ('exchange_rate',),
-            'description': _('نرخ تبدیل این ارز به واحد پایه سایت (1 = واحد پایه)')
-        }),
-        (_('وضعیت'), {
-            'fields': ('is_active', 'is_base'),
-            'description': _('فقط یک ارز می‌تواند ارز پایه باشد')
-        }),
+    # نمایش همه فیلدها در یک صفحه بدون لبه
+    fields = (
+        'code', 'name', 'symbol', 'display_order',
+        'has_decimals', 'decimal_places',
+        'exchange_rate',
+        'is_active', 'is_base', 'is_default'
     )
 
 
