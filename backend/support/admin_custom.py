@@ -64,9 +64,20 @@ class CustomTicketAdmin(admin.ModelAdmin):
     
     fieldsets = (
         (None, {
-            'fields': ('ticket_info_display', 'time_info_display', 'messages_display', 'reply_form_display')
+            'fields': ('ticket_info_display', 'time_info_display', 'messages_display', 'reply_form_display'),
+            'classes': ('wide',)
         }),
     )
+    
+    class Media:
+        css = {
+            'all': (
+                'https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css',
+            )
+        }
+        js = (
+            'https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js',
+        )
     
     def get_form(self, request, obj=None, **kwargs):
         return super().get_form(request, obj, **kwargs)
@@ -185,6 +196,40 @@ class CustomTicketAdmin(admin.ModelAdmin):
         if not obj:
             return ''
         
+        # CSS برای تغییر عرض به 100%
+        style_override = '''
+        <style>
+            .field-ticket_info_display .form-row,
+            .field-time_info_display .form-row,
+            .field-messages_display .form-row,
+            .field-reply_form_display .form-row {
+                display: block !important;
+            }
+            .field-ticket_info_display .form-row > div,
+            .field-time_info_display .form-row > div,
+            .field-messages_display .form-row > div,
+            .field-reply_form_display .form-row > div {
+                width: 100% !important;
+                max-width: 100% !important;
+                margin: 0 !important;
+                padding: 0 !important;
+            }
+            .field-ticket_info_display label,
+            .field-time_info_display label,
+            .field-messages_display label,
+            .field-reply_form_display label {
+                display: none !important;
+            }
+            .field-ticket_info_display .readonly,
+            .field-time_info_display .readonly,
+            .field-messages_display .readonly,
+            .field-reply_form_display .readonly {
+                width: 100% !important;
+                max-width: 100% !important;
+            }
+        </style>
+        '''
+        
         # تبدیل به تاریخ شمسی
         jalali_created = jdatetime.datetime.fromgregorian(datetime=obj.created_at)
         jalali_created_str = jalali_created.strftime('%Y/%m/%d %H:%M')
@@ -222,7 +267,7 @@ class CustomTicketAdmin(admin.ModelAdmin):
                 </div>
                 '''
         
-        html = f'''
+        html = style_override + f'''
         <div style="width: 100% !important; max-width: none !important; background: white; padding: 20px; border-radius: 8px; margin-bottom: 0; border: 1px solid #e5e7eb;">
             <div style="display: flex; justify-content: space-between; margin-bottom: 10px; padding-bottom: 10px; border-bottom: 1px solid #e5e7eb;">
                 <span><strong>شماره تیکت:</strong> <span style="font-family: monospace; font-size: 14px; color: #3b82f6;">{obj.ticket_number}</span></span>
