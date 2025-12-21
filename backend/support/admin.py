@@ -117,9 +117,20 @@ class TicketForwardAdmin(admin.ModelAdmin):
     list_display = ['ticket', 'from_agent', 'to_agent', 'to_department', 'created_at']
     list_filter = ['to_department', 'created_at']
     search_fields = ['ticket__ticket_number', 'reason']
-    readonly_fields = ['ticket', 'from_agent', 'created_at']
-    raw_id_fields = ['ticket', 'from_agent', 'to_agent']
+    readonly_fields = ['ticket', 'from_agent', 'to_agent', 'to_department', 'reason', 'created_at']
     ordering = ['-created_at']
+    
+    def has_add_permission(self, request):
+        # فوروارد باید از صفحه تیکت انجام شود نه فرم جداگانه
+        return False
+    
+    def has_change_permission(self, request, obj=None):
+        # فقط مشاهده تاریخچه فوروارد
+        return False
+    
+    def has_delete_permission(self, request, obj=None):
+        # حذف تاریخچه فوروارد مجاز نیست
+        return False
 
 
 @admin.register(TicketHistory)
