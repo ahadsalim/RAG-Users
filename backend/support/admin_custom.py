@@ -1,6 +1,7 @@
 from django import forms
 from django.contrib import admin
 from django.utils.html import format_html
+from django.utils.safestring import mark_safe
 from django.utils.translation import gettext_lazy as _
 from django.utils import timezone
 from django.contrib.auth import get_user_model
@@ -292,7 +293,7 @@ class CustomTicketAdmin(admin.ModelAdmin):
             {sla_rows}
         </div>
         '''
-        return format_html(html)
+        return mark_safe(html)
     ticket_info_display.short_description = ''
     
     def time_info_display(self, obj):
@@ -387,7 +388,7 @@ class CustomTicketAdmin(admin.ModelAdmin):
             {messages_html if messages_html else '<p style="color: #6b7280; text-align: center; padding: 20px;">هنوز پیامی ثبت نشده است.</p>'}
         </div>
         '''
-        return format_html(html)
+        return mark_safe(html)
     messages_display.short_description = ''
     
     def _get_status_badge(self, status):
