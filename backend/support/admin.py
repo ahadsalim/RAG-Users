@@ -24,19 +24,20 @@ class TicketDepartmentAdmin(admin.ModelAdmin):
     ordering = ['-priority', 'name']
     
     fieldsets = (
-        (None, {
-            'fields': ('name', 'description', 'email')
+        (_('عمومی'), {
+            'fields': ('name', 'description', 'email', 'is_active', 'is_public', 'auto_assign', 'priority')
         }),
         (_('مدیریت'), {
             'fields': ('manager', 'agents')
         }),
-        (_('تنظیمات'), {
-            'fields': ('is_active', 'is_public', 'auto_assign', 'priority')
-        }),
-        (_('SLA پیش‌فرض'), {
-            'fields': ('default_response_time', 'default_resolution_time')
-        }),
     )
+    
+    def get_form(self, request, obj=None, **kwargs):
+        form = super().get_form(request, obj, **kwargs)
+        # تغییر ویجت description به 2 سطری
+        if 'description' in form.base_fields:
+            form.base_fields['description'].widget = forms.Textarea(attrs={'rows': 2, 'cols': 80})
+        return form
     
     def agents_count(self, obj):
         return obj.agents.count()

@@ -44,16 +44,6 @@ class TicketDepartment(models.Model):
     auto_assign = models.BooleanField(default=True, verbose_name=_('تخصیص خودکار'))
     priority = models.IntegerField(default=0, verbose_name=_('اولویت نمایش'))
     
-    # SLA پیش‌فرض (به ساعت)
-    default_response_time = models.IntegerField(
-        default=24,
-        verbose_name=_('زمان پاسخ‌دهی پیش‌فرض (ساعت)')
-    )
-    default_resolution_time = models.IntegerField(
-        default=72,
-        verbose_name=_('زمان حل مشکل پیش‌فرض (ساعت)')
-    )
-    
     # تاریخ‌ها
     created_at = models.DateTimeField(auto_now_add=True, verbose_name=_('تاریخ ایجاد'))
     updated_at = models.DateTimeField(auto_now=True, verbose_name=_('تاریخ به‌روزرسانی'))

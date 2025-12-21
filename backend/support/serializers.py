@@ -39,7 +39,6 @@ class TicketDepartmentSerializer(serializers.ModelSerializer):
         fields = [
             'id', 'name', 'description', 'email', 'manager', 'manager_info',
             'is_active', 'is_public', 'auto_assign', 'priority',
-            'default_response_time', 'default_resolution_time',
             'agents_count', 'open_tickets_count',
             'created_at', 'updated_at'
         ]
