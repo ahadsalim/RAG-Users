@@ -225,31 +225,40 @@ class CustomTicketAdmin(admin.ModelAdmin):
             jalali_first_response_dt = jdatetime.datetime.fromgregorian(datetime=obj.first_response_at)
             jalali_first_response = jalali_first_response_dt.strftime('%Y/%m/%d %H:%M')
         
-        sla_policy = obj.get_applicable_sla()
+        # استفاده مستقیم از فیلدهای response_due و resolution_due
         sla_html = ''
         
-        if sla_policy:
-            response_deadline = obj.created_at + timezone.timedelta(minutes=sla_policy.response_time)
-            resolution_deadline = obj.created_at + timezone.timedelta(minutes=sla_policy.resolution_time)
+        if obj.response_due or obj.resolution_due:
+            is_response_breached = obj.response_due and timezone.now() > obj.response_due and not obj.first_response_at
+            is_resolution_breached = obj.resolution_due and timezone.now() > obj.resolution_due and obj.status not in ['closed', 'resolved']
             
-            # تبدیل مهلت‌ها به شمسی
-            jalali_response_deadline = jdatetime.datetime.fromgregorian(datetime=response_deadline)
-            jalali_resolution_deadline = jdatetime.datetime.fromgregorian(datetime=resolution_deadline)
+            sla_parts = []
             
-            is_response_breached = timezone.now() > response_deadline and not obj.first_response_at
-            is_resolution_breached = timezone.now() > resolution_deadline and obj.status not in ['closed', 'resolved']
-            
-            sla_html = f'''
-            <div style="background: #fee2e2; padding: 15px; border-radius: 6px; border-right: 4px solid #ef4444; margin-top: 15px;">
-                <h3 style="margin: 0 0 10px 0; color: #ef4444;">⚠️ محدودیت‌های زمانی SLA - {sla_policy.name}</h3>
+            if obj.response_due:
+                jalali_response_deadline = jdatetime.datetime.fromgregorian(datetime=obj.response_due)
+                sla_parts.append(f'''
                 <div style="background: white; padding: 10px; border-radius: 4px; margin-bottom: 8px;">
                     <strong>مهلت پاسخ‌دهی:</strong> <span style="color: {'#ef4444' if is_response_breached else '#22c55e'}; font-weight: bold;">{jalali_response_deadline.strftime('%Y/%m/%d %H:%M')}</span>
                     {'<span style="color: #ef4444; margin-right: 10px;">⚠️ نقض شده - جریمه خواهد شد!</span>' if is_response_breached else '<span style="color: #22c55e; margin-right: 10px;">✓</span>'}
                 </div>
+                ''')
+            
+            if obj.resolution_due:
+                jalali_resolution_deadline = jdatetime.datetime.fromgregorian(datetime=obj.resolution_due)
+                sla_parts.append(f'''
                 <div style="background: white; padding: 10px; border-radius: 4px;">
                     <strong>مهلت حل مشکل:</strong> <span style="color: {'#ef4444' if is_resolution_breached else '#22c55e'}; font-weight: bold;">{jalali_resolution_deadline.strftime('%Y/%m/%d %H:%M')}</span>
                     {'<span style="color: #ef4444; margin-right: 10px;">⚠️ نقض شده - جریمه خواهد شد!</span>' if is_resolution_breached else '<span style="color: #22c55e; margin-right: 10px;">✓</span>'}
                 </div>
+                ''')
+            
+            bg_color = '#fee2e2' if (is_response_breached or is_resolution_breached) else '#dcfce7'
+            border_color = '#ef4444' if (is_response_breached or is_resolution_breached) else '#22c55e'
+            
+            sla_html = f'''
+            <div style="background: {bg_color}; padding: 15px; border-radius: 6px; border-right: 4px solid {border_color}; margin-top: 15px;">
+                <h3 style="margin: 0 0 10px 0; color: {border_color};">⏱️ محدودیت‌های زمانی SLA</h3>
+                {''.join(sla_parts)}
             </div>
             '''
         

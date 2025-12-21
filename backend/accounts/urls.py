@@ -53,9 +53,6 @@ urlpatterns = [
     
     # Profile
     path('profile/', UserProfileView.as_view(), name='profile'),
-    path('profile/update/', update_profile, name='profile-update'),
-    path('profile/avatar/upload/', upload_profile_image, name='avatar-upload'),
-    path('profile/avatar/delete/', delete_profile_image, name='avatar-delete'),
     path('password/change/', PasswordChangeView.as_view(), name='password-change'),
     path('forgot-password/', PasswordResetRequestView.as_view(), name='password-reset-request'),
     path('reset-password/', PasswordResetConfirmView.as_view(), name='password-reset-confirm'),
