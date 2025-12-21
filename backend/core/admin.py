@@ -89,14 +89,7 @@ class LanguageAdmin(admin.ModelAdmin):
     search_fields = ['name', 'code', 'native_name']
     ordering = ['order', 'name']
     
-    fieldsets = (
-        (_('اطلاعات زبان'), {
-            'fields': ('name', 'code', 'native_name', 'is_rtl')
-        }),
-        (_('تنظیمات'), {
-            'fields': ('is_active', 'is_default', 'order')
-        }),
-    )
+    fields = ('name', 'code', 'native_name', 'is_rtl', 'is_active', 'is_default', 'order')
     
     class Media:
         css = {
@@ -113,14 +106,7 @@ class TimezoneAdmin(admin.ModelAdmin):
     search_fields = ['name', 'code', 'display_name']
     ordering = ['order', 'utc_offset']
     
-    fieldsets = (
-        (_('اطلاعات منطقه زمانی'), {
-            'fields': ('name', 'code', 'utc_offset', 'display_name')
-        }),
-        (_('تنظیمات'), {
-            'fields': ('is_active', 'is_default', 'order')
-        }),
-    )
+    fields = ('name', 'code', 'utc_offset', 'display_name', 'is_active', 'is_default', 'order')
     
     class Media:
         css = {
