@@ -11,7 +11,7 @@ from rest_framework.filters import SearchFilter, OrderingFilter
 from .models import (
     TicketDepartment, TicketCategory, Ticket, TicketMessage,
     TicketAttachment, TicketForward, TicketHistory, CannedResponse,
-    TicketTag, SLAPolicy
+    SLAPolicy
 )
 from .serializers import (
     TicketDepartmentSerializer, TicketDepartmentListSerializer,
@@ -21,7 +21,7 @@ from .serializers import (
     TicketMessageSerializer, TicketMessageCreateSerializer,
     TicketAttachmentSerializer, TicketHistorySerializer,
     TicketForwardSerializer, CannedResponseSerializer,
-    TicketTagSerializer, SLAPolicySerializer, TicketStatsSerializer,
+    SLAPolicySerializer, TicketStatsSerializer,
     ForwardTicketSerializer
 )
 from .permissions import IsStaffOrReadOnly, IsTicketOwnerOrStaff
@@ -576,23 +576,6 @@ class CannedResponseViewSet(viewsets.ModelViewSet):
         canned_response.usage_count += 1
         canned_response.save(update_fields=['usage_count'])
         return Response({'message': 'ثبت شد'})
-
-
-class TicketTagViewSet(viewsets.ModelViewSet):
-    """
-    ویوست تگ‌های تیکت
-    """
-    queryset = TicketTag.objects.filter(is_active=True)
-    serializer_class = TicketTagSerializer
-    permission_classes = [permissions.IsAuthenticated, IsStaffOrReadOnly]
-    filter_backends = [SearchFilter, OrderingFilter]
-    search_fields = ['name', 'description']
-    ordering = ['name']
-    
-    def get_permissions(self):
-        if self.action in ['create', 'update', 'partial_update', 'destroy']:
-            return [permissions.IsAdminUser()]
-        return super().get_permissions()
 
 
 class SLAPolicyViewSet(viewsets.ModelViewSet):

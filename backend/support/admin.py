@@ -7,7 +7,7 @@ from django.utils import timezone
 from .models import (
     TicketDepartment, TicketCategory, Ticket, TicketMessage,
     TicketAttachment, TicketForward, TicketHistory, CannedResponse,
-    TicketTag, SLAPolicy
+    SLAPolicy
 )
 from .admin_custom import CustomTicketAdmin
 
@@ -166,21 +166,6 @@ class CannedResponseAdmin(admin.ModelAdmin):
         if not change:
             obj.created_by = request.user
         super().save_model(request, obj, form, change)
-
-
-@admin.register(TicketTag)
-class TicketTagAdmin(admin.ModelAdmin):
-    list_display = ['name', 'color_display', 'is_active', 'created_at']
-    list_filter = ['is_active']
-    search_fields = ['name', 'description']
-    ordering = ['name']
-    
-    def color_display(self, obj):
-        return format_html(
-            '<span style="background-color: {}; color: white; padding: 2px 10px; border-radius: 3px;">{}</span>',
-            obj.color, obj.name
-        )
-    color_display.short_description = _('تگ')
 
 
 class SLAPolicyAdminForm(forms.ModelForm):

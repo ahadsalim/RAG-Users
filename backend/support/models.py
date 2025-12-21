@@ -231,9 +231,6 @@ class Ticket(models.Model):
         limit_choices_to={'is_staff': True}
     )
     
-    # تگ‌ها
-    tags = models.JSONField(default=list, blank=True, verbose_name=_('تگ‌ها'))
-    
     # SLA
     response_due = models.DateTimeField(
         null=True,
@@ -659,28 +656,6 @@ class CannedResponse(models.Model):
     
     def __str__(self):
         return self.title
-
-
-class TicketTag(models.Model):
-    """
-    تگ‌های تیکت
-    """
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    name = models.CharField(max_length=50, unique=True, verbose_name=_('نام تگ'))
-    color = models.CharField(max_length=7, default='#6B7280', verbose_name=_('رنگ'))
-    description = models.TextField(blank=True, verbose_name=_('توضیحات'))
-    
-    is_active = models.BooleanField(default=True, verbose_name=_('فعال'))
-    
-    created_at = models.DateTimeField(auto_now_add=True, verbose_name=_('تاریخ ایجاد'))
-    
-    class Meta:
-        verbose_name = _('تگ تیکت')
-        verbose_name_plural = _('تگ‌های تیکت')
-        ordering = ['name']
-    
-    def __str__(self):
-        return self.name
 
 
 class SLAPolicy(models.Model):

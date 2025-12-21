@@ -4,7 +4,7 @@ from django.utils import timezone
 from .models import (
     TicketDepartment, TicketCategory, Ticket, TicketMessage,
     TicketAttachment, TicketForward, TicketHistory, CannedResponse,
-    TicketTag, SLAPolicy
+    SLAPolicy
 )
 
 User = get_user_model()
@@ -194,7 +194,7 @@ class TicketSerializer(serializers.ModelSerializer):
             'subject', 'description', 'category', 'category_info',
             'department', 'department_info', 'status', 'status_display',
             'priority', 'priority_display', 'source', 'source_display',
-            'assigned_to', 'assigned_to_info', 'tags',
+            'assigned_to', 'assigned_to_info',
             'response_due', 'resolution_due', 'first_response_at', 'resolved_at',
             'satisfaction_rating', 'satisfaction_feedback',
             'user_read', 'staff_read', 'is_sla_breached', 'messages_count',
@@ -319,7 +319,7 @@ class TicketUpdateSerializer(serializers.ModelSerializer):
         model = Ticket
         fields = [
             'status', 'priority', 'category', 'department',
-            'assigned_to', 'tags', 'response_due', 'resolution_due'
+            'assigned_to', 'response_due', 'resolution_due'
         ]
     
     def update(self, instance, validated_data):
@@ -380,15 +380,6 @@ class CannedResponseSerializer(serializers.ModelSerializer):
             'created_at', 'updated_at'
         ]
         read_only_fields = ['id', 'created_by', 'usage_count', 'created_at', 'updated_at']
-
-
-class TicketTagSerializer(serializers.ModelSerializer):
-    """سریالایزر تگ"""
-    
-    class Meta:
-        model = TicketTag
-        fields = ['id', 'name', 'color', 'description', 'is_active', 'created_at']
-        read_only_fields = ['id', 'created_at']
 
 
 class SLAPolicySerializer(serializers.ModelSerializer):
