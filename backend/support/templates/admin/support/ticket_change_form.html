@@ -1,24 +1,10 @@
 {% extends "admin/change_form.html" %}
 {% load i18n admin_urls static %}
 
-{% block field_sets %}
+{% block extrahead %}
+{{ block.super }}
 <style>
     /* حذف ستون سوم و تمام عرض برای محتوا */
-    #content-main {
-        width: 100% !important;
-        max-width: 100% !important;
-    }
-    
-    .submit-row,
-    #jazzy-actions {
-        display: none !important;
-    }
-    
-    .form-row {
-        width: 100% !important;
-        max-width: 100% !important;
-    }
-    
     .col-12.col-lg-9 {
         flex: 0 0 100% !important;
         max-width: 100% !important;
@@ -27,47 +13,34 @@
     .col-12.col-lg-3 {
         display: none !important;
     }
+    
+    .submit-row,
+    #jazzy-actions {
+        display: none !important;
+    }
 </style>
+{% endblock %}
 
-{% if original %}
-    {# نمایش اطلاعات تیکت #}
-    <div style="margin-bottom: 20px; width: 100%;">
-        {% for fieldset in adminform %}
+{% block field_sets %}
+{% if adminform %}
+    {% for fieldset in adminform %}
+        <fieldset class="module aligned">
             {% for line in fieldset %}
-                {% for field in line %}
-                    {% if field.field.name == 'ticket_info_display' %}
-                        {{ field.field }}
-                    {% endif %}
-                {% endfor %}
+                <div class="form-row{% if line.fields|length_is:'1' and line.errors %} errors{% endif %}">
+                    {% for field in line %}
+                        <div style="width: 100%;">
+                            {% if field.is_readonly %}
+                                <div class="readonly">{{ field.contents }}</div>
+                            {% else %}
+                                {{ field.field }}
+                            {% endif %}
+                        </div>
+                    {% endfor %}
+                </div>
             {% endfor %}
-        {% endfor %}
-    </div>
-    
-    {# نمایش تاریخچه مکالمات #}
-    <div style="margin-bottom: 20px; width: 100%;">
-        {% for fieldset in adminform %}
-            {% for line in fieldset %}
-                {% for field in line %}
-                    {% if field.field.name == 'messages_display' %}
-                        {{ field.field }}
-                    {% endif %}
-                {% endfor %}
-            {% endfor %}
-        {% endfor %}
-    </div>
-    
-    {# فرم پاسخ جدید #}
-    <div style="margin-bottom: 20px; width: 100%;">
-        {% for fieldset in adminform %}
-            {% for line in fieldset %}
-                {% for field in line %}
-                    {% if field.field.name == 'reply_form_display' %}
-                        {{ field.field }}
-                    {% endif %}
-                {% endfor %}
-            {% endfor %}
-        {% endfor %}
-    </div>
+        </fieldset>
+    {% endfor %}
+{% endif %}
         
         <script>
         function toggleForwardedTo(messageType) {
