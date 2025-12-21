@@ -721,12 +721,11 @@ class SLAPolicy(models.Model):
     description = models.TextField(blank=True, verbose_name=_('توضیحات'))
     
     # شرایط اعمال
-    priority = models.CharField(
-        max_length=10,
-        choices=Ticket.PRIORITY_CHOICES,
-        null=True,
+    priority = models.JSONField(
+        default=list,
         blank=True,
-        verbose_name=_('اولویت')
+        verbose_name=_('اولویت'),
+        help_text=_('می‌توانید چند اولویت انتخاب کنید')
     )
     department = models.ForeignKey(
         TicketDepartment,
@@ -736,14 +735,6 @@ class SLAPolicy(models.Model):
         related_name='sla_policies',
         verbose_name=_('دپارتمان')
     )
-    category = models.ForeignKey(
-        TicketCategory,
-        on_delete=models.CASCADE,
-        null=True,
-        blank=True,
-        related_name='sla_policies',
-        verbose_name=_('دسته‌بندی')
-    )
     
     # زمان‌ها (به دقیقه)
     response_time = models.IntegerField(
@@ -751,12 +742,6 @@ class SLAPolicy(models.Model):
     )
     resolution_time = models.IntegerField(
         verbose_name=_('زمان حل مشکل (دقیقه)')
-    )
-    
-    # فقط ساعات کاری
-    business_hours_only = models.BooleanField(
-        default=True,
-        verbose_name=_('فقط ساعات کاری')
     )
     
     is_active = models.BooleanField(default=True, verbose_name=_('فعال'))

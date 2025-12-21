@@ -183,23 +183,57 @@ class TicketTagAdmin(admin.ModelAdmin):
     color_display.short_description = _('تگ')
 
 
+class SLAPolicyAdminForm(forms.ModelForm):
+    """فرم سفارشی برای SLA Policy با اولویت چندانتخابی"""
+    priority = forms.MultipleChoiceField(
+        choices=Ticket.PRIORITY_CHOICES,
+        widget=forms.CheckboxSelectMultiple,
+        required=False,
+        label=_('اولویت'),
+        help_text=_('می‌توانید چند اولویت انتخاب کنید')
+    )
+    
+    class Meta:
+        model = SLAPolicy
+        fields = '__all__'
+        widgets = {
+            'description': forms.Textarea(attrs={'rows': 2, 'cols': 80}),
+        }
+    
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        if self.instance and self.instance.pk:
+            # بارگذاری مقادیر اولویت از JSONField
+            if isinstance(self.instance.priority, list):
+                self.initial['priority'] = self.instance.priority
+    
+    def save(self, commit=True):
+        instance = super().save(commit=False)
+        # ذخیره اولویت‌های انتخاب شده به صورت لیست
+        instance.priority = list(self.cleaned_data.get('priority', []))
+        if commit:
+            instance.save()
+        return instance
+
+
 @admin.register(SLAPolicy)
 class SLAPolicyAdmin(admin.ModelAdmin):
-    list_display = ['name', 'priority', 'department', 'response_time_display', 'resolution_time_display', 'is_active']
-    list_filter = ['is_active', 'priority', 'department']
+    form = SLAPolicyAdminForm
+    list_display = ['name', 'priority_display', 'department', 'response_time_display', 'resolution_time_display', 'is_active']
+    list_filter = ['is_active', 'department']
     search_fields = ['name', 'description']
     ordering = ['name']
     
-    # حذف fieldsets - همه فیلدها در یک صفحه
-    # نکته: category و business_hours_only را نگه می‌داریم تا خطای database نگیریم
-    exclude = ('category', 'business_hours_only')
+    # همه فیلدها در یک صفحه - بدون تب
+    fields = ('name', 'description', 'priority', 'department', 'response_time', 'resolution_time', 'is_active')
     
-    # تغییر ویجت برای فیلدها
-    def get_form(self, request, obj=None, **kwargs):
-        form = super().get_form(request, obj, **kwargs)
-        # تغییر ویجت description به 2 سطری
-        form.base_fields['description'].widget = forms.Textarea(attrs={'rows': 2, 'cols': 80})
-        return form
+    def priority_display(self, obj):
+        if obj.priority and isinstance(obj.priority, list) and len(obj.priority) > 0:
+            priority_dict = dict(Ticket.PRIORITY_CHOICES)
+            priorities = [priority_dict.get(p, p) for p in obj.priority]
+            return ', '.join(priorities)
+        return '-'
+    priority_display.short_description = _('اولویت')
     
     def response_time_display(self, obj):
         hours = obj.response_time // 60
