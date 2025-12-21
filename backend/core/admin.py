@@ -8,6 +8,15 @@ from django.apps import apps
 from django.utils.translation import gettext_lazy as _
 from .models import SiteSettings
 
+
+class BaseAdminWithCustomCSS(admin.ModelAdmin):
+    """Base admin class with custom CSS for font size"""
+    
+    class Media:
+        css = {
+            'all': ('admin/css/custom_admin.css',)
+        }
+
 # Unregister Django's default Group model (we use custom StaffGroup in accounts)
 admin.site.unregister(Group)
 
@@ -35,6 +44,11 @@ def setup_token_blacklist_persian():
 @admin.register(SiteSettings)
 class SiteSettingsAdmin(admin.ModelAdmin):
     """Admin for SiteSettings model (Singleton)"""
+    
+    class Media:
+        css = {
+            'all': ('admin/css/custom_admin.css',)
+        }
     
     def has_add_permission(self, request):
         # Prevent adding more than one instance

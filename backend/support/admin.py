@@ -23,6 +23,11 @@ class TicketDepartmentAdmin(admin.ModelAdmin):
     filter_horizontal = ['agents']
     ordering = ['-priority', 'name']
     
+    class Media:
+        css = {
+            'all': ('admin/css/custom_admin.css',)
+        }
+    
     # حذف تب‌ها - همه فیلدها در یک صفحه
     fields = ('name', 'description', 'email', 'manager', 'agents', 'is_active', 'is_public', 'auto_assign', 'priority')
     
@@ -48,6 +53,11 @@ class TicketCategoryAdmin(admin.ModelAdmin):
     list_filter = ['is_active', 'default_priority', 'default_department']
     search_fields = ['name', 'description']
     ordering = ['order', 'name']
+    
+    class Media:
+        css = {
+            'all': ('admin/css/custom_admin.css',)
+        }
     
     # حذف تب‌ها - همه فیلدها در یک صفحه به ترتیب اهمیت
     fields = ('name', 'description', 'default_department', 'default_priority', 'icon', 'color', 'order', 'is_active')
@@ -213,6 +223,11 @@ class SLAPolicyAdmin(admin.ModelAdmin):
     list_filter = ['is_active', 'department']
     search_fields = ['name', 'description']
     ordering = ['name']
+    
+    class Media:
+        css = {
+            'all': ('admin/css/custom_admin.css',)
+        }
     
     # همه فیلدها در یک صفحه - بدون تب
     fields = ('name', 'description', 'priority', 'department', 'response_time', 'resolution_time', 'is_active')

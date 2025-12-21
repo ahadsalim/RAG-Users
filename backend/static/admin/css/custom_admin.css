@@ -1,0 +1,48 @@
+/* تنظیم سایز فونت برای تمام فیلدهای فرم در admin */
+
+/* فیلدهای input */
+.form-row input[type="text"],
+.form-row input[type="number"],
+.form-row input[type="email"],
+.form-row input[type="url"],
+.form-row input[type="password"],
+.form-row input[type="tel"],
+.form-row input[type="date"],
+.form-row input[type="time"],
+.form-row input[type="datetime-local"],
+.form-row select,
+.form-row textarea {
+    font-size: 12px !important;
+}
+
+/* فیلدهای textarea */
+textarea {
+    font-size: 12px !important;
+}
+
+/* فیلدهای select */
+select {
+    font-size: 12px !important;
+}
+
+/* فیلدهای checkbox و radio labels */
+.form-row label {
+    font-size: 12px !important;
+}
+
+/* Django admin specific */
+.django-ckeditor-widget,
+.vTextField,
+.vURLField,
+.vIntegerField,
+.vDateField,
+.vTimeField {
+    font-size: 12px !important;
+}
+
+/* برای فیلدهای inline */
+.inline-group .form-row input,
+.inline-group .form-row select,
+.inline-group .form-row textarea {
+    font-size: 12px !important;
+}
