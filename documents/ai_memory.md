@@ -1,7 +1,7 @@
 # 🧠 حافظه هوش مصنوعی - پروژه تجارت چت
 
 > **این فایل را قبل از هر اقدام بخوانید!**
-> آخرین به‌روزرسانی: 2025-12-20
+> آخرین به‌روزرسانی: 2025-12-21
 
 ---
 
@@ -99,6 +99,7 @@ if user.has_staff_permission('view_financial'):
 │   ├── admin.py           # UserAdmin, StaffGroupAdmin
 │   ├── admin_views.py     # AdminLoginView (OTP login)
 │   ├── permissions.py     # CanViewFinancial, CanManageSupport, ...
+│   ├── signals.py         # تنظیم ارز و timezone پیش‌فرض برای کاربران جدید
 │   └── views/             # Auth views
 ├── chat/                  # سیستم چت
 │   ├── core_service.py    # ارتباط با RAG Core
@@ -106,9 +107,16 @@ if user.has_staff_permission('view_financial'):
 ├── core/                  # تنظیمات اصلی
 │   ├── settings.py        # تنظیمات Django + Jazzmin
 │   ├── urls.py            # URL routing
-│   ├── models.py          # Currency, PaymentGateway, SiteSettings
-│   ├── middleware.py      # DynamicAdminTitleMiddleware
-│   └── admin.py           # unregister auth.Group
+│   ├── models.py          # Language, Timezone, SiteSettings
+│   ├── middleware/        # Middleware ها
+│   │   ├── timezone_middleware.py      # فعال‌سازی timezone کاربر
+│   │   └── admin_title_middleware.py   # عنوان داینامیک admin
+│   ├── utils/             # توابع کمکی
+│   │   └── timezone_utils.py           # تبدیل UTC به timezone کاربر
+│   └── admin.py           # unregister auth.Group, Language, Timezone
+├── finance/               # سیستم مالی
+│   ├── models.py          # Currency, PaymentGateway, FinancialSettings, Invoice
+│   └── admin.py           # CurrencyAdmin (با is_default)
 ├── subscriptions/         # سیستم اشتراک
 │   ├── models.py          # Plan, Subscription, UserUsageReport
 │   ├── usage.py           # ModelUsageLog, UsageService
@@ -179,6 +187,34 @@ docker exec app_backend python manage.py migrate
 
 ## 🔧 تغییرات اخیر
 
+### 2025-12-21: سیستم Timezone و مدیریت ارز
+- ✅ **حذف ارز TMN و تنظیم IRT به عنوان ارز پیش‌فرض**
+  - ارز TMN (تومان) حذف شد
+  - ارز IRT (تومان ایرانی) به عنوان ارز پیش‌فرض تنظیم شد
+  - کاربران جدید به صورت خودکار IRT را دریافت می‌کنند
+  
+- ✅ **پیاده‌سازی کامل سیستم Timezone**
+  - ایجاد `core/utils/timezone_utils.py` با توابع تبدیل UTC به timezone کاربر
+  - ایجاد `core/middleware/TimezoneMiddleware` برای فعال‌سازی خودکار timezone کاربر
+  - همه زمان‌ها در دیتابیس به UTC ذخیره می‌شوند (`USE_TZ=True`)
+  - نمایش زمان به کاربر بر اساس timezone انتخابی او
+  - پشتیبانی از تقویم شمسی با `format_datetime_jalali()`
+  - تنظیم تهران به عنوان timezone پیش‌فرض برای همه کاربران
+  - کاربران جدید به صورت خودکار timezone تهران را دریافت می‌کنند
+  
+- ✅ **فیلدهای اجباری تیکت پشتیبانی**
+  - فیلدهای `category` و `department` در مدل Ticket اجباری شدند
+  - حذف `null=True, blank=True` از این فیلدها
+  - تغییر `on_delete` به `PROTECT` برای جلوگیری از حذف تصادفی
+  - دکمه "ایجاد تیکت" در frontend تا انتخاب هر دو فیلد غیرفعال است
+  - اضافه کردن `required` attribute به select ها
+  
+- ✅ **بهبود Admin Panel برای Currency**
+  - اضافه کردن فیلد `is_default` به list_display با نشانگر آبی
+  - اضافه کردن `is_default` به list_filter
+  - حذف fieldsets و نمایش همه فیلدها در یک صفحه
+  - فیلد "ارز پیش‌فرض" حالا قابل مشاهده و ویرایش است
+
 ### 2025-12-18: سیستم گزارش مصرف
 - ✅ تغییر نام `UsageLog` به `ModelUsageLog`
 - ✅ تفکیک `tokens_used` به `input_tokens` و `output_tokens`
@@ -240,6 +276,42 @@ docker exec app_backend python manage.py migrate
 2. **احراز هویت ادمین**: OTP-based در `/admin/login/`
 3. **MinIO**: برای ذخیره فایل‌های موقت آپلود
 4. **RAG Core**: سیستم مرکزی در `core.tejarat.chat`
+5. **Timezone**: همه زمان‌ها به UTC در دیتابیس، نمایش بر اساس timezone کاربر
+6. **Currency**: IRR (ریال) برای محاسبات، IRT (تومان) برای کاربران جدید
+
+---
+
+## 🌍 سیستم Timezone
+
+### نحوه کار
+- **ذخیره**: همه datetime ها به UTC در دیتابیس (`USE_TZ=True`)
+- **نمایش**: تبدیل به timezone انتخابی کاربر
+- **پیش‌فرض**: Asia/Tehran برای همه کاربران
+
+### فایل‌های کلیدی
+```python
+# Utilities
+from core.utils import convert_to_user_timezone, format_datetime_jalali
+
+# تبدیل UTC به timezone کاربر
+user_dt = convert_to_user_timezone(utc_datetime, user.timezone.code)
+
+# نمایش تاریخ شمسی
+jalali = format_datetime_jalali(datetime_obj, user)
+```
+
+### Middleware
+- `TimezoneMiddleware` به صورت خودکار timezone کاربر را فعال می‌کند
+- برای کاربران لاگین شده: timezone انتخابی
+- برای کاربران مهمان: تهران (پیش‌فرض)
+
+### Signal
+```python
+# در accounts/signals.py
+# کاربران جدید به صورت خودکار timezone تهران و ارز IRT را دریافت می‌کنند
+@receiver(post_save, sender=User)
+def set_default_currency_and_timezone_for_new_user(...)
+```
 
 ---
 
@@ -303,22 +375,28 @@ stats = UsageService.get_usage_stats(user, days=30)
 
 ## 💵 سیستم ارز و پرداخت
 
-### مدل‌های اصلی (در `core/models.py`)
+### مدل‌های اصلی (در `finance/models.py`)
 
 #### Currency (ارز)
 ```python
 # فیلدهای کلیدی:
-- code: کد ارز (IRR, USD, EUR)
+- code: کد ارز (IRR, IRT, USD, EUR)
 - name: نام ارز
-- symbol: نماد (﷼, $, €)
-- is_base: آیا ارز پایه است؟ (فقط یکی می‌تواند باشد)
+- symbol: نماد (﷼, تومان, $, €)
+- is_base: آیا ارز پایه است؟ (فقط یکی می‌تواند باشد) - برای محاسبات
+- is_default: آیا ارز پیش‌فرض است؟ (فقط یکی می‌تواند باشد) - برای کاربران جدید
 - exchange_rate: نرخ تبدیل به ارز پایه
 - has_decimals, decimal_places: تنظیمات اعشار
 
 # متدها:
-Currency.get_base_currency()  # دریافت ارز پایه
-currency.format_price(amount)  # فرمت قیمت
+Currency.get_base_currency()     # دریافت ارز پایه (IRR)
+Currency.get_default_currency()  # دریافت ارز پیش‌فرض (IRT)
+currency.format_price(amount)    # فرمت قیمت
 currency.convert_from_base(amount)  # تبدیل از ارز پایه
+
+# ارزهای پیش‌فرض:
+- IRR (ریال): is_base=True, exchange_rate=1 - برای ذخیره قیمت‌ها
+- IRT (تومان ایرانی): is_default=True, exchange_rate=10 - برای کاربران جدید
 ```
 
 #### PaymentGateway (درگاه پرداخت)
@@ -548,8 +626,44 @@ def notify_admins_new_user(sender, instance, created, **kwargs):
 - [x] مدیریت جلسات فعال ✅
 - [x] تسک‌های زمان‌بندی شده ✅
 - [x] سیستم اعلان‌ها (SMS, Email, Push, In-App) ✅
+- [x] سیستم Timezone (UTC storage + user timezone display) ✅
+- [x] مدیریت ارز (IRR base + IRT default) ✅
+- [x] فیلدهای اجباری تیکت پشتیبانی ✅
 - [ ] بازارچه مشاوران
 - [ ] اپلیکیشن موبایل
+
+---
+
+## 🎫 سیستم پشتیبانی (Support)
+
+### مدل‌های اصلی (در `support/`)
+
+#### Ticket (تیکت)
+```python
+# فیلدهای کلیدی:
+- ticket_number: شماره تیکت (خودکار)
+- user: کاربر ایجادکننده
+- subject: موضوع (required)
+- description: توضیحات (required)
+- category: دسته‌بندی (required, PROTECT)
+- department: دپارتمان (required, PROTECT)
+- status: وضعیت (open, in_progress, waiting, answered, closed)
+- priority: اولویت (low, medium, high, urgent)
+- assigned_to: کارمند مسئول
+```
+
+#### TicketCategory (دسته‌بندی)
+- نمونه: مشکل فنی، سوال، پیشنهاد، شکایت
+- فیلد `category` در Ticket اجباری است
+
+#### TicketDepartment (دپارتمان)
+- نمونه: فنی، مالی، فروش، عمومی
+- فیلد `department` در Ticket اجباری است
+
+### نکات مهم
+1. **فیلدهای اجباری**: category و department باید حتماً انتخاب شوند
+2. **Frontend validation**: دکمه "ایجاد تیکت" تا انتخاب هر دو فیلد غیرفعال است
+3. **PROTECT**: حذف category یا department با تیکت‌های مرتبط امکان‌پذیر نیست
 
 ---
 

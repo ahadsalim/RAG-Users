@@ -1,91 +1,60 @@
 {% extends "admin/change_form.html" %}
-{% load i18n admin_urls static %}
+{% load i18n admin_urls static ticket_tags %}
 
 {% block extrahead %}
 {{ block.super }}
 <style>
-    /* حذف کامل ستون سوم و استفاده از تمام عرض */
-    #content-main {
-        width: 100% !important;
-        max-width: 100% !important;
-        flex: 0 0 100% !important;
+    /* حذف ستون سوم */
+    .col-12.col-lg-3,
+    #jazzy-actions,
+    .submit-row {
+        display: none !important;
     }
     
+    /* تمام عرض برای ستون وسط */
     .col-12.col-lg-9 {
         flex: 0 0 100% !important;
         max-width: 100% !important;
-        width: 100% !important;
     }
     
-    .col-12.col-lg-3,
-    .submit-row,
-    #jazzy-actions {
+    /* حذف label و تمام عرض برای محتوا */
+    .form-group .row > label {
         display: none !important;
     }
     
-    /* حذف label و استفاده از تمام عرض برای فیلدها */
-    .form-row .col-sm-3 {
-        display: none !important;
-    }
-    
-    .form-row .col-sm-7 {
+    .form-group .row > div {
         flex: 0 0 100% !important;
         max-width: 100% !important;
-        width: 100% !important;
-        padding: 0 !important;
-    }
-    
-    .form-row {
-        margin: 0 !important;
     }
     
     .readonly {
         width: 100% !important;
-        max-width: 100% !important;
     }
 </style>
 {% endblock %}
 
 {% block field_sets %}
-{% if adminform %}
-    {% for fieldset in adminform %}
-        <fieldset class="module aligned" style="width: 100%;">
-            {% for line in fieldset %}
-                <div class="form-row" style="width: 100%;">
-                    {% for field in line %}
-                        <div style="width: 100%;">
-                            {% if field.is_readonly %}
-                                {{ field.contents }}
-                            {% else %}
-                                {{ field.field }}
-                            {% endif %}
-                        </div>
-                    {% endfor %}
-                </div>
-            {% endfor %}
-        </fieldset>
-    {% endfor %}
-    
-    <script>
-    function toggleForwardedTo(messageType) {
-        var field = document.getElementById('forwarded_to_field');
-        if (messageType === 'send_to') {
-            field.style.display = 'block';
-        } else {
-            field.style.display = 'none';
-        }
+<div class="col-12">
+    {% render_ticket_info %}
+    {% render_ticket_messages %}
+    {% render_ticket_reply_form %}
+</div>
+
+<script>
+function toggleForwardedTo(messageType) {
+    var field = document.getElementById('forwarded_to_field');
+    if (messageType === 'send_to') {
+        field.style.display = 'block';
+    } else {
+        field.style.display = 'none';
     }
-    
-    document.addEventListener('DOMContentLoaded', function() {
-        var selectedType = document.querySelector('input[name="message_type"]:checked');
-        if (selectedType) {
-            toggleForwardedTo(selectedType.value);
-        }
-    });
-    </script>
-{% else %}
-    <div style="padding: 40px; text-align: center;">
-        <p style="font-size: 18px; color: #6b7280;">ایجاد تیکت از پنل ادمین غیرفعال است.</p>
-    </div>
-{% endif %}
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    var selectedType = document.querySelector('input[name="message_type"]:checked');
+    if (selectedType) {
+        toggleForwardedTo(selectedType.value);
+    }
+});
+</script>
 {% endblock %}
