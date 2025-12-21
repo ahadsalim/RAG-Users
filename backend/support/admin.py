@@ -230,7 +230,7 @@ class SLAPolicyAdmin(admin.ModelAdmin):
     def priority_display(self, obj):
         if obj.priority and isinstance(obj.priority, list) and len(obj.priority) > 0:
             priority_dict = dict(Ticket.PRIORITY_CHOICES)
-            priorities = [priority_dict.get(p, p) for p in obj.priority]
+            priorities = [str(priority_dict.get(p, p)) for p in obj.priority]
             return ', '.join(priorities)
         return '-'
     priority_display.short_description = _('اولویت')
