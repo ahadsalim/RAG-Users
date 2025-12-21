@@ -97,7 +97,7 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
         fields = [
             'email', 'username', 'password', 'password_confirm',
             'first_name', 'last_name', 'phone_number', 'user_type',
-            'company_name', 'language', 'timezone', 'currency'
+            'company_name', 'language', 'timezone', 'preferred_currency'
         ]
         extra_kwargs = {
             'email': {'required': False},
@@ -186,7 +186,7 @@ class UserProfileSerializer(serializers.ModelSerializer):
             'phone_number', 'phone_verified', 'email_verified',
             'avatar', 'bio', 'user_type', 'national_id', 'national_id_verified',
             'company_name', 'economic_code', 'organization', 'organization_role',
-            'language', 'timezone', 'currency', 'chat_context',
+            'language', 'timezone', 'preferred_currency', 'chat_context',
             'two_factor_enabled', 'max_concurrent_sessions',
             'email_notifications', 'sms_notifications', 'push_notifications',
             'is_superuser', 'is_staff',

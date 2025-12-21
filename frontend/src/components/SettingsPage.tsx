@@ -23,6 +23,8 @@ interface UserSettings {
   company_name: string;
   email: string;
   phone: string;
+  national_id: string;
+  avatar: string | null;
   
   // Preferences
   theme: 'light' | 'dark';
@@ -75,6 +77,8 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ isOpen, onClose }) => {
       company_name: user?.company_name || '',
       email: user?.email || '',
       phone: user?.phone_number || '',
+      national_id: user?.national_id || '',
+      avatar: user?.avatar || null,
       theme: 'light',
       enable_web_search: null,
     };
@@ -273,10 +277,93 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ isOpen, onClose }) => {
 // Profile Tab
 const ProfileTab: React.FC<{ settings: UserSettings; setSettings: React.Dispatch<React.SetStateAction<UserSettings>>; userPhone?: string; userType?: string }> = ({ settings, setSettings, userPhone, userType }) => {
   const isBusiness = userType === 'business';
+  const [uploading, setUploading] = React.useState(false);
+  const [uploadError, setUploadError] = React.useState('');
+  
+  const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    
+    // بررسی فرمت
+    const allowedFormats = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+    if (!allowedFormats.includes(file.type)) {
+      setUploadError('فرمت فایل نامعتبر است. فقط jpg, png, webp مجاز است');
+      return;
+    }
+    
+    // بررسی حجم (150KB)
+    if (file.size > 150 * 1024) {
+      setUploadError('حجم فایل بیش از 150KB است');
+      return;
+    }
+    
+    setUploadError('');
+    setUploading(true);
+    
+    try {
+      const formData = new FormData();
+      formData.append('avatar', file);
+      
+      const response = await axios.post('/api/v1/auth/profile/avatar/upload/', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
+      
+      setSettings({ ...settings, avatar: response.data.avatar_url });
+    } catch (error: any) {
+      setUploadError(error.response?.data?.error || 'خطا در آپلود تصویر');
+    } finally {
+      setUploading(false);
+    }
+  };
+  
+  const handleAvatarDelete = async () => {
+    try {
+      await axios.delete('/api/v1/auth/profile/avatar/delete/');
+      setSettings({ ...settings, avatar: null });
+    } catch (error) {
+      console.error('Error deleting avatar:', error);
+    }
+  };
   
   return (
     <div className="bg-gray-50 dark:bg-gray-800 rounded-xl p-5">
       <div className="space-y-5">
+        {/* تصویر پروفایل */}
+        <div className="flex items-center justify-between">
+          <span className="text-sm font-medium text-gray-700 dark:text-gray-300">تصویر پروفایل</span>
+          <div className="flex items-center gap-3">
+            {settings.avatar && (
+              <img src={settings.avatar} alt="Avatar" className="w-12 h-12 rounded-full object-cover" />
+            )}
+            <input
+              type="file"
+              id="avatar-upload"
+              accept="image/jpeg,image/jpg,image/png,image/webp"
+              onChange={handleAvatarUpload}
+              className="hidden"
+            />
+            <label
+              htmlFor="avatar-upload"
+              className="px-3 py-1.5 bg-blue-500 text-white rounded-lg text-sm cursor-pointer hover:bg-blue-600"
+            >
+              {uploading ? 'در حال آپلود...' : 'انتخاب تصویر'}
+            </label>
+            {settings.avatar && (
+              <button
+                onClick={handleAvatarDelete}
+                className="px-3 py-1.5 bg-red-500 text-white rounded-lg text-sm hover:bg-red-600"
+              >
+                حذف
+              </button>
+            )}
+          </div>
+        </div>
+        {uploadError && (
+          <div className="text-sm text-red-500">{uploadError}</div>
+        )}
+        <div className="text-xs text-gray-500">حداکثر حجم: 150KB | فرمت‌های مجاز: JPG, PNG, WEBP</div>
+
+        <div className="border-t border-gray-200 dark:border-gray-700" />
         {/* نام */}
         <div className="flex items-center justify-between">
           <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
@@ -302,6 +389,21 @@ const ProfileTab: React.FC<{ settings: UserSettings; setSettings: React.Dispatch
             type="email"
             value={settings.email}
             onChange={(e) => setSettings({ ...settings, email: e.target.value })}
+            className="w-64 px-3 py-1.5 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-sm"
+          />
+        </div>
+
+        <div className="border-t border-gray-200 dark:border-gray-700" />
+
+        {/* کدملی */}
+        <div className="flex items-center justify-between">
+          <span className="text-sm font-medium text-gray-700 dark:text-gray-300">کدملی</span>
+          <input
+            type="text"
+            value={settings.national_id}
+            onChange={(e) => setSettings({ ...settings, national_id: e.target.value })}
+            maxLength={10}
+            placeholder="10 رقم"
             className="w-64 px-3 py-1.5 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-sm"
           />
         </div>

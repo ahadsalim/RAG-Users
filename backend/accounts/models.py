@@ -194,7 +194,7 @@ class User(AbstractUser):
     email_verified = models.BooleanField(default=False, verbose_name=_('ایمیل تایید شده'))
     
     # Profile Information
-    avatar = models.ImageField(upload_to='avatars/', blank=True, null=True, verbose_name=_('تصویر پروفایل'))
+    avatar = models.ImageField(upload_to='profile/', blank=True, null=True, verbose_name=_('تصویر پروفایل'))
     bio = models.TextField(blank=True, max_length=500, verbose_name=_('بیوگرافی'))
     user_type = models.CharField(max_length=20, choices=USER_TYPE_CHOICES, default='individual', verbose_name=_('نوع کاربر'))
     
@@ -251,11 +251,10 @@ class User(AbstractUser):
         null=True,
         blank=True,
         related_name='preferred_by_users',
-        verbose_name=_('ارز ترجیحی'),
+        verbose_name=_('واحد پول'),
         help_text=_('ارز مورد نظر برای نمایش قیمت‌ها (پیش‌فرض: تومان)')
     )
     timezone = models.CharField(max_length=50, default='Asia/Tehran', verbose_name=_('منطقه زمانی'))
-    currency = models.CharField(max_length=3, default='IRR', verbose_name=_('واحد پول'))
     
     # Chat Context/Memory
     chat_context = models.JSONField(

@@ -39,7 +39,7 @@ class UserAdmin(BaseUserAdmin):
             'fields': ('is_active', 'is_staff', 'is_superuser', 'staff_groups'),
         }),
         (_('تنظیمات'), {
-            'fields': ('language', 'timezone', 'currency'),
+            'fields': ('language', 'timezone', 'preferred_currency'),
             'classes': ('collapse',)
         }),
         (_('امنیت'), {

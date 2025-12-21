@@ -189,7 +189,7 @@ class CustomTicketAdmin(admin.ModelAdmin):
             return ''
         
         html = f'''
-        <div style="max-width: 900px; margin: 0 auto; background: #f8f9fa; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
+        <div style="max-width: 1200px; margin: 0 auto; background: #f8f9fa; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
             <h2 style="margin-top: 0; color: #2c3e50; border-bottom: 2px solid #3b82f6; padding-bottom: 10px;">📋 اطلاعات تیکت</h2>
             <div style="background: white; padding: 15px; border-radius: 6px;">
                 <div style="display: flex; justify-content: space-between; margin-bottom: 10px; padding-bottom: 10px; border-bottom: 1px solid #e5e7eb;">
@@ -257,7 +257,7 @@ class CustomTicketAdmin(admin.ModelAdmin):
             '''
         
         html = f'''
-        <div style="max-width: 900px; margin: 0 auto; background: #f8f9fa; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
+        <div style="max-width: 1200px; margin: 0 auto; background: #f8f9fa; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
             <h2 style="margin-top: 0; color: #2c3e50; border-bottom: 2px solid #3b82f6; padding-bottom: 10px;">⏰ اطلاعات زمانی</h2>
             <div style="background: white; padding: 15px; border-radius: 6px;">
                 <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
@@ -352,7 +352,7 @@ class CustomTicketAdmin(admin.ModelAdmin):
             '''
         
         html = f'''
-        <div style="max-width: 900px; margin: 0 auto; background: #f8f9fa; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
+        <div style="max-width: 1200px; margin: 0 auto; background: #f8f9fa; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
             <h2 style="margin-top: 0; color: #2c3e50; border-bottom: 2px solid #3b82f6; padding-bottom: 10px;">💬 تاریخچه مکالمات</h2>
             {subject_html}
             {initial_message}
@@ -441,7 +441,7 @@ class CustomTicketAdmin(admin.ModelAdmin):
         
         # ساخت HTML با استفاده از + به جای f-string برای JavaScript
         html = '''
-        <div style="max-width: 900px; margin: 0 auto; background: #ffffff; padding: 25px; border-radius: 8px; border: 2px solid #e5e7eb; margin-top: 20px;">
+        <div style="max-width: 1200px; margin: 0 auto; background: #ffffff; padding: 25px; border-radius: 8px; border: 2px solid #e5e7eb; margin-top: 20px;">
             <h2 style="margin-top: 0; color: #2c3e50; border-bottom: 2px solid #3b82f6; padding-bottom: 10px;">✍️ ارسال پاسخ / پیام جدید</h2>
             
             <form method="post" action="" id="ticket-reply-form">

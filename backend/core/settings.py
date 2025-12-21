@@ -539,8 +539,29 @@ S3_ENDPOINT_URL = config('S3_ENDPOINT_URL', default='')
 S3_ACCESS_KEY_ID = config('S3_ACCESS_KEY_ID', default='')
 S3_SECRET_ACCESS_KEY = config('S3_SECRET_ACCESS_KEY', default='')
 S3_TEMP_BUCKET = config('S3_TEMP_BUCKET', default='')
+S3_USERS_BUCKET = config('S3_USERS_BUCKET', default='users-system')
 S3_USE_SSL = config('S3_USE_SSL', default=True, cast=bool)
 S3_REGION = config('S3_REGION', default='us-east-1')
+
+# Configure Django storage backends
+STORAGES = {
+    "default": {
+        "BACKEND": "storages.backends.s3boto3.S3Boto3Storage",
+        "OPTIONS": {
+            "access_key": S3_ACCESS_KEY_ID,
+            "secret_key": S3_SECRET_ACCESS_KEY,
+            "bucket_name": S3_USERS_BUCKET,
+            "endpoint_url": S3_ENDPOINT_URL,
+            "region_name": S3_REGION,
+            "use_ssl": S3_USE_SSL,
+            "verify": False,
+            "file_overwrite": False,
+        },
+    },
+    "staticfiles": {
+        "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
+    },
+}
 
 # RAG Core Configuration
 RAG_CORE_BASE_URL = config('RAG_CORE_BASE_URL', default='')
