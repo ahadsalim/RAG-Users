@@ -186,7 +186,7 @@ class CustomTicketAdmin(admin.ModelAdmin):
             return ''
         
         html = f'''
-        <div style="max-width: 1200px; margin: 0 auto; background: #f8f9fa; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
+        <div style="width: 100%; background: #f8f9fa; padding: 20px; border-radius: 8px; margin-bottom: 0;">
             <h2 style="margin-top: 0; color: #2c3e50; border-bottom: 2px solid #3b82f6; padding-bottom: 10px;">📋 اطلاعات تیکت</h2>
             <div style="background: white; padding: 15px; border-radius: 6px;">
                 <div style="display: flex; justify-content: space-between; margin-bottom: 10px; padding-bottom: 10px; border-bottom: 1px solid #e5e7eb;">
@@ -225,6 +225,16 @@ class CustomTicketAdmin(admin.ModelAdmin):
             jalali_first_response_dt = jdatetime.datetime.fromgregorian(datetime=obj.first_response_at)
             jalali_first_response = jalali_first_response_dt.strftime('%Y/%m/%d %H:%M')
         
+        # پیدا کردن SLA Policy مناسب
+        from support.models import SLAPolicy
+        sla_policy = None
+        if obj.department:
+            sla_policies = SLAPolicy.objects.filter(
+                department=obj.department,
+                is_active=True
+            ).filter(priority__contains=obj.priority)
+            sla_policy = sla_policies.first()
+        
         # استفاده مستقیم از فیلدهای response_due و resolution_due
         sla_html = ''
         
@@ -255,15 +265,19 @@ class CustomTicketAdmin(admin.ModelAdmin):
             bg_color = '#fee2e2' if (is_response_breached or is_resolution_breached) else '#dcfce7'
             border_color = '#ef4444' if (is_response_breached or is_resolution_breached) else '#22c55e'
             
+            sla_title = f'⏱️ محدودیت‌های زمانی SLA'
+            if sla_policy:
+                sla_title += f' - {sla_policy.name}'
+            
             sla_html = f'''
             <div style="background: {bg_color}; padding: 15px; border-radius: 6px; border-right: 4px solid {border_color}; margin-top: 15px;">
-                <h3 style="margin: 0 0 10px 0; color: {border_color};">⏱️ محدودیت‌های زمانی SLA</h3>
+                <h3 style="margin: 0 0 10px 0; color: {border_color};">{sla_title}</h3>
                 {''.join(sla_parts)}
             </div>
             '''
         
         html = f'''
-        <div style="max-width: 1200px; margin: 0 auto; background: #f8f9fa; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
+        <div style="width: 100%; background: #f8f9fa; padding: 20px; border-radius: 8px; margin-bottom: 0;">
             <h2 style="margin-top: 0; color: #2c3e50; border-bottom: 2px solid #3b82f6; padding-bottom: 10px;">⏰ اطلاعات زمانی</h2>
             <div style="background: white; padding: 15px; border-radius: 6px;">
                 <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
@@ -358,7 +372,7 @@ class CustomTicketAdmin(admin.ModelAdmin):
             '''
         
         html = f'''
-        <div style="max-width: 1200px; margin: 0 auto; background: #f8f9fa; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
+        <div style="width: 100%; background: #f8f9fa; padding: 20px; border-radius: 8px; margin-bottom: 0;">
             <h2 style="margin-top: 0; color: #2c3e50; border-bottom: 2px solid #3b82f6; padding-bottom: 10px;">💬 تاریخچه مکالمات</h2>
             {subject_html}
             {initial_message}
@@ -406,10 +420,20 @@ class CustomTicketAdmin(admin.ModelAdmin):
     priority_badge.short_description = 'اولویت'
     
     def sla_indicator(self, obj):
-        if obj.is_sla_breached():
-            return format_html('<span style="color: #ef4444; font-weight: bold;">⚠ نقض SLA</span>')
-        return format_html('<span style="color: #22c55e;">✓ عادی</span>')
-    sla_indicator.short_description = 'SLA'
+        """نمایش وضعیت SLA در لیست تیکت‌ها"""
+        # بررسی نقض پاسخ‌دهی
+        response_breached = obj.response_due and timezone.now() > obj.response_due and not obj.first_response_at
+        # بررسی نقض حل مشکل
+        resolution_breached = obj.resolution_due and timezone.now() > obj.resolution_due and obj.status not in ['closed', 'resolved']
+        
+        if response_breached or resolution_breached:
+            return format_html('<span style="color: #ef4444; font-weight: bold;">⚠️ با تاخیر</span>')
+        elif obj.first_response_at and obj.response_due and obj.first_response_at <= obj.response_due:
+            return format_html('<span style="color: #22c55e; font-weight: bold;">✓ در موعد مقرر</span>')
+        elif obj.response_due:
+            return format_html('<span style="color: #3b82f6;">⏳ در حال بررسی</span>')
+        return format_html('<span style="color: #6b7280;">-</span>')
+    sla_indicator.short_description = 'وضعیت SLA'
     
     def created_at_jalali(self, obj):
         """نمایش تاریخ ایجاد به شمسی"""
@@ -447,7 +471,7 @@ class CustomTicketAdmin(admin.ModelAdmin):
         
         # ساخت HTML با استفاده از + به جای f-string برای JavaScript
         html = '''
-        <div style="max-width: 1200px; margin: 0 auto; background: #ffffff; padding: 25px; border-radius: 8px; border: 2px solid #e5e7eb; margin-top: 20px;">
+        <div style="width: 100%; background: #ffffff; padding: 25px; border-radius: 8px; border: 2px solid #e5e7eb; margin-top: 0;">
             <h2 style="margin-top: 0; color: #2c3e50; border-bottom: 2px solid #3b82f6; padding-bottom: 10px;">✍️ ارسال پاسخ / پیام جدید</h2>
             
             <form method="post" action="" id="ticket-reply-form">
