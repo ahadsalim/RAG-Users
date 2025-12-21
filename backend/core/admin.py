@@ -6,7 +6,7 @@ from django.contrib import admin
 from django.contrib.auth.models import Group
 from django.apps import apps
 from django.utils.translation import gettext_lazy as _
-from .models import SiteSettings
+from .models import SiteSettings, Language, Timezone
 
 
 class BaseAdminWithCustomCSS(admin.ModelAdmin):
@@ -78,3 +78,51 @@ class SiteSettingsAdmin(admin.ModelAdmin):
     def save_model(self, request, obj, form, change):
         obj.updated_by = request.user
         super().save_model(request, obj, form, change)
+
+
+@admin.register(Language)
+class LanguageAdmin(admin.ModelAdmin):
+    """مدیریت زبان‌ها"""
+    
+    list_display = ['native_name', 'code', 'name', 'is_rtl', 'is_active', 'is_default', 'order']
+    list_filter = ['is_active', 'is_default', 'is_rtl']
+    search_fields = ['name', 'code', 'native_name']
+    ordering = ['order', 'name']
+    
+    fieldsets = (
+        (_('اطلاعات زبان'), {
+            'fields': ('name', 'code', 'native_name', 'is_rtl')
+        }),
+        (_('تنظیمات'), {
+            'fields': ('is_active', 'is_default', 'order')
+        }),
+    )
+    
+    class Media:
+        css = {
+            'all': ('admin/css/custom_admin.css',)
+        }
+
+
+@admin.register(Timezone)
+class TimezoneAdmin(admin.ModelAdmin):
+    """مدیریت مناطق زمانی"""
+    
+    list_display = ['display_name', 'code', 'utc_offset', 'is_active', 'is_default', 'order']
+    list_filter = ['is_active', 'is_default']
+    search_fields = ['name', 'code', 'display_name']
+    ordering = ['order', 'utc_offset']
+    
+    fieldsets = (
+        (_('اطلاعات منطقه زمانی'), {
+            'fields': ('name', 'code', 'utc_offset', 'display_name')
+        }),
+        (_('تنظیمات'), {
+            'fields': ('is_active', 'is_default', 'order')
+        }),
+    )
+    
+    class Media:
+        css = {
+            'all': ('admin/css/custom_admin.css',)
+        }

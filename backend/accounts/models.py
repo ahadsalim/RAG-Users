@@ -173,10 +173,6 @@ class User(AbstractUser):
         ('business', _('حقوقی')),
     ]
     
-    LANGUAGE_CHOICES = [
-        ('fa', _('فارسی')),
-        ('en', _('انگلیسی')),
-    ]
     
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     
@@ -244,7 +240,14 @@ class User(AbstractUser):
     )
     
     # Settings & Preferences
-    language = models.CharField(max_length=5, choices=LANGUAGE_CHOICES, default='fa', verbose_name=_('زبان'))
+    language = models.ForeignKey(
+        'core.Language',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='users',
+        verbose_name=_('زبان')
+    )
     preferred_currency = models.ForeignKey(
         'finance.Currency',
         on_delete=models.SET_NULL,
@@ -254,7 +257,14 @@ class User(AbstractUser):
         verbose_name=_('واحد پول'),
         help_text=_('ارز مورد نظر برای نمایش قیمت‌ها (پیش‌فرض: تومان)')
     )
-    timezone = models.CharField(max_length=50, default='Asia/Tehran', verbose_name=_('منطقه زمانی'))
+    timezone = models.ForeignKey(
+        'core.Timezone',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='users',
+        verbose_name=_('منطقه زمانی')
+    )
     
     # Chat Context/Memory
     chat_context = models.JSONField(

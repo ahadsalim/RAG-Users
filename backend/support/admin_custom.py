@@ -181,37 +181,7 @@ class CustomTicketAdmin(admin.ModelAdmin):
             logging.error(f'Error in _send_to_all_channels: {e}')
     
     def ticket_info_display(self, obj):
-        """نمایش اطلاعات تیکت - افقی"""
-        if not obj:
-            return ''
-        
-        html = f'''
-        <div style="width: 100% !important; max-width: none !important; background: #f8f9fa; padding: 20px; border-radius: 8px; margin-bottom: 0;">
-            <div style="background: white; padding: 15px; border-radius: 6px;">
-                <div style="display: flex; justify-content: space-between; margin-bottom: 10px; padding-bottom: 10px; border-bottom: 1px solid #e5e7eb;">
-                    <span><strong>شماره تیکت:</strong> <span style="font-family: monospace; font-size: 14px; color: #3b82f6;">{obj.ticket_number}</span></span>
-                    <span><strong>کاربر:</strong> {obj.user.get_full_name() if hasattr(obj.user, 'get_full_name') else obj.user}</span>
-                </div>
-                <div style="display: flex; justify-content: space-between; margin-bottom: 10px; padding-bottom: 10px; border-bottom: 1px solid #e5e7eb;">
-                    <span><strong>سازمان:</strong> {obj.organization.name if obj.organization else '-'}</span>
-                    <span><strong>دپارتمان:</strong> {obj.department.name if obj.department else '-'}</span>
-                </div>
-                <div style="display: flex; justify-content: space-between; margin-bottom: 10px; padding-bottom: 10px; border-bottom: 1px solid #e5e7eb;">
-                    <span><strong>دسته‌بندی:</strong> {obj.category.name if obj.category else '-'}</span>
-                    <span><strong>اولویت:</strong> {self._get_priority_badge(obj.priority)}</span>
-                </div>
-                <div style="display: flex; justify-content: space-between;">
-                    <span><strong>وضعیت:</strong> {self._get_status_badge(obj.status)}</span>
-                    <span><strong>کارشناس مسئول:</strong> {obj.assigned_to.get_full_name() if obj.assigned_to and hasattr(obj.assigned_to, 'get_full_name') else (obj.assigned_to if obj.assigned_to else '-')}</span>
-                </div>
-            </div>
-        </div>
-        '''
-        return format_html(html)
-    ticket_info_display.short_description = ''
-    
-    def time_info_display(self, obj):
-        """نمایش اطلاعات زمانی و SLA با تاریخ شمسی"""
+        """نمایش اطلاعات تیکت و زمانی - یکپارچه"""
         if not obj:
             return ''
         
@@ -219,79 +189,70 @@ class CustomTicketAdmin(admin.ModelAdmin):
         jalali_created = jdatetime.datetime.fromgregorian(datetime=obj.created_at)
         jalali_created_str = jalali_created.strftime('%Y/%m/%d %H:%M')
         
-        jalali_first_response = ''
+        # وضعیت پاسخ
         if obj.first_response_at:
             jalali_first_response_dt = jdatetime.datetime.fromgregorian(datetime=obj.first_response_at)
-            jalali_first_response = jalali_first_response_dt.strftime('%Y/%m/%d %H:%M')
+            response_status = f'<span style="color: #22c55e; font-weight: bold;">{jalali_first_response_dt.strftime("%Y/%m/%d %H:%M")}</span>'
+        else:
+            response_status = '<span style="color: #ef4444; font-weight: bold;">پاسخ داده نشده</span>'
         
-        # پیدا کردن SLA Policy مناسب
-        from support.models import SLAPolicy
-        sla_policy = None
-        if obj.department:
-            # جستجو در تمام SLA Policyها
-            sla_policies = SLAPolicy.objects.filter(
-                department=obj.department,
-                is_active=True
-            )
-            # پیدا کردن policy که اولویت تیکت در لیست priority آن باشد
-            for policy in sla_policies:
-                if policy.priority and obj.priority in policy.priority:
-                    sla_policy = policy
-                    break
-        
-        # استفاده مستقیم از فیلدهای response_due و resolution_due
-        sla_html = ''
-        
+        # محاسبه SLA
+        sla_rows = ''
         if obj.response_due or obj.resolution_due:
             is_response_breached = obj.response_due and timezone.now() > obj.response_due and not obj.first_response_at
             is_resolution_breached = obj.resolution_due and timezone.now() > obj.resolution_due and obj.status not in ['closed', 'resolved']
             
-            sla_parts = []
-            
             if obj.response_due:
                 jalali_response_deadline = jdatetime.datetime.fromgregorian(datetime=obj.response_due)
-                sla_parts.append(f'''
-                <div style="background: white; padding: 10px; border-radius: 4px; margin-bottom: 8px;">
-                    <strong>مهلت پاسخ‌دهی:</strong> <span style="color: {'#ef4444' if is_response_breached else '#22c55e'}; font-weight: bold;">{jalali_response_deadline.strftime('%Y/%m/%d %H:%M')}</span>
-                    {'<span style="color: #ef4444; margin-right: 10px;">⚠️ نقض شده - جریمه خواهد شد!</span>' if is_response_breached else '<span style="color: #22c55e; margin-right: 10px;">✓</span>'}
+                response_color = '#ef4444' if is_response_breached else '#22c55e'
+                response_icon = '⚠️' if is_response_breached else '✓'
+                sla_rows += f'''
+                <div style="display: flex; justify-content: space-between; margin-bottom: 10px; padding-bottom: 10px; border-bottom: 1px solid #e5e7eb;">
+                    <span><strong>مهلت پاسخ‌دهی:</strong> <span style="color: {response_color}; font-weight: bold;">{jalali_response_deadline.strftime('%Y/%m/%d %H:%M')} {response_icon}</span></span>
                 </div>
-                ''')
+                '''
             
             if obj.resolution_due:
                 jalali_resolution_deadline = jdatetime.datetime.fromgregorian(datetime=obj.resolution_due)
-                sla_parts.append(f'''
-                <div style="background: white; padding: 10px; border-radius: 4px;">
-                    <strong>مهلت حل مشکل:</strong> <span style="color: {'#ef4444' if is_resolution_breached else '#22c55e'}; font-weight: bold;">{jalali_resolution_deadline.strftime('%Y/%m/%d %H:%M')}</span>
-                    {'<span style="color: #ef4444; margin-right: 10px;">⚠️ نقض شده - جریمه خواهد شد!</span>' if is_resolution_breached else '<span style="color: #22c55e; margin-right: 10px;">✓</span>'}
+                resolution_color = '#ef4444' if is_resolution_breached else '#22c55e'
+                resolution_icon = '⚠️' if is_resolution_breached else '✓'
+                sla_rows += f'''
+                <div style="display: flex; justify-content: space-between; margin-bottom: 10px; padding-bottom: 10px; border-bottom: 1px solid #e5e7eb;">
+                    <span><strong>مهلت حل مشکل:</strong> <span style="color: {resolution_color}; font-weight: bold;">{jalali_resolution_deadline.strftime('%Y/%m/%d %H:%M')} {resolution_icon}</span></span>
                 </div>
-                ''')
-            
-            bg_color = '#fee2e2' if (is_response_breached or is_resolution_breached) else '#dcfce7'
-            border_color = '#ef4444' if (is_response_breached or is_resolution_breached) else '#22c55e'
-            
-            sla_title = f'⏱️ محدودیت‌های زمانی SLA'
-            if sla_policy:
-                sla_title += f' - {sla_policy.name}'
-            
-            sla_html = f'''
-            <div style="background: {bg_color}; padding: 15px; border-radius: 6px; border-right: 4px solid {border_color}; margin-top: 15px;">
-                <h3 style="margin: 0 0 10px 0; color: {border_color};">{sla_title}</h3>
-                {''.join(sla_parts)}
-            </div>
-            '''
+                '''
         
         html = f'''
-        <div style="width: 100% !important; max-width: none !important; background: #f8f9fa; padding: 20px; border-radius: 8px; margin-bottom: 0; margin-top: 0;">
-            <div style="background: white; padding: 15px; border-radius: 6px;">
-                <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
-                    <span><strong>زمان ایجاد تیکت:</strong> {jalali_created_str}</span>
-                    <span><strong>زمان آخرین پاسخ:</strong> {jalali_first_response if jalali_first_response else '<span style="color: #ef4444;">هنوز پاسخ داده نشده</span>'}</span>
-                </div>
+        <div style="width: 100% !important; max-width: none !important; background: white; padding: 20px; border-radius: 8px; margin-bottom: 0; border: 1px solid #e5e7eb;">
+            <div style="display: flex; justify-content: space-between; margin-bottom: 10px; padding-bottom: 10px; border-bottom: 1px solid #e5e7eb;">
+                <span><strong>شماره تیکت:</strong> <span style="font-family: monospace; font-size: 14px; color: #3b82f6;">{obj.ticket_number}</span></span>
+                <span><strong>کاربر:</strong> {obj.user.get_full_name() if hasattr(obj.user, 'get_full_name') else obj.user}</span>
             </div>
-            {sla_html}
+            <div style="display: flex; justify-content: space-between; margin-bottom: 10px; padding-bottom: 10px; border-bottom: 1px solid #e5e7eb;">
+                <span><strong>سازمان:</strong> {obj.organization.name if obj.organization else '-'}</span>
+                <span><strong>دپارتمان:</strong> {obj.department.name if obj.department else '-'}</span>
+            </div>
+            <div style="display: flex; justify-content: space-between; margin-bottom: 10px; padding-bottom: 10px; border-bottom: 1px solid #e5e7eb;">
+                <span><strong>دسته‌بندی:</strong> {obj.category.name if obj.category else '-'}</span>
+                <span><strong>اولویت:</strong> {self._get_priority_badge(obj.priority)}</span>
+            </div>
+            <div style="display: flex; justify-content: space-between; margin-bottom: 10px; padding-bottom: 10px; border-bottom: 1px solid #e5e7eb;">
+                <span><strong>وضعیت:</strong> {self._get_status_badge(obj.status)}</span>
+                <span><strong>کارشناس مسئول:</strong> {obj.assigned_to.get_full_name() if obj.assigned_to and hasattr(obj.assigned_to, 'get_full_name') else (obj.assigned_to if obj.assigned_to else '-')}</span>
+            </div>
+            <div style="display: flex; justify-content: space-between; margin-bottom: 10px; padding-bottom: 10px; border-bottom: 1px solid #e5e7eb;">
+                <span><strong>زمان ایجاد تیکت:</strong> {jalali_created_str}</span>
+                <span><strong>زمان آخرین پاسخ:</strong> {response_status}</span>
+            </div>
+            {sla_rows}
         </div>
         '''
         return format_html(html)
+    ticket_info_display.short_description = ''
+    
+    def time_info_display(self, obj):
+        """این متد دیگر استفاده نمی‌شود - همه چیز در ticket_info_display است"""
+        return ''
     time_info_display.short_description = ''
     
     def messages_display(self, obj):
@@ -375,7 +336,7 @@ class CustomTicketAdmin(admin.ModelAdmin):
             '''
         
         html = f'''
-        <div style="width: 100% !important; max-width: none !important; background: #f8f9fa; padding: 20px; border-radius: 8px; margin-bottom: 0; margin-top: 0;">
+        <div style="width: 100% !important; max-width: none !important; background: white; padding: 20px; border-radius: 8px; margin-bottom: 0; margin-top: 0; border: 1px solid #e5e7eb;">
             {subject_html}
             {initial_message}
             {messages_html if messages_html else '<p style="color: #6b7280; text-align: center; padding: 20px;">هنوز پیامی ثبت نشده است.</p>'}

@@ -1,6 +1,7 @@
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 from django.core.cache import cache
+import uuid
 
 
 class SiteSettings(models.Model):
@@ -79,3 +80,59 @@ class SiteSettings(models.Model):
     def delete(self, *args, **kwargs):
         """جلوگیری از حذف تنظیمات سایت"""
         raise ValueError("تنظیمات سایت قابل حذف نیست")
+
+
+class Language(models.Model):
+    """زبان‌های قابل انتخاب در سیستم"""
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    name = models.CharField(max_length=100, verbose_name=_('نام زبان'))
+    code = models.CharField(max_length=10, unique=True, verbose_name=_('کد زبان'), help_text=_('مثال: fa, en, ar'))
+    native_name = models.CharField(max_length=100, verbose_name=_('نام بومی'), help_text=_('مثال: فارسی، English'))
+    is_rtl = models.BooleanField(default=False, verbose_name=_('راست به چپ'))
+    is_active = models.BooleanField(default=True, verbose_name=_('فعال'))
+    is_default = models.BooleanField(default=False, verbose_name=_('پیش‌فرض'))
+    order = models.IntegerField(default=0, verbose_name=_('ترتیب نمایش'))
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name=_('تاریخ ایجاد'))
+    updated_at = models.DateTimeField(auto_now=True, verbose_name=_('تاریخ به‌روزرسانی'))
+    
+    class Meta:
+        verbose_name = _('زبان')
+        verbose_name_plural = _('زبان‌ها')
+        ordering = ['order', 'name']
+    
+    def __str__(self):
+        return f"{self.native_name} ({self.code})"
+    
+    def save(self, *args, **kwargs):
+        # اگر این زبان پیش‌فرض است، بقیه را غیرپیش‌فرض کن
+        if self.is_default:
+            Language.objects.exclude(pk=self.pk).update(is_default=False)
+        super().save(*args, **kwargs)
+
+
+class Timezone(models.Model):
+    """مناطق زمانی قابل انتخاب در سیستم"""
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    name = models.CharField(max_length=100, verbose_name=_('نام منطقه زمانی'))
+    code = models.CharField(max_length=50, unique=True, verbose_name=_('کد منطقه'), help_text=_('مثال: Asia/Tehran'))
+    utc_offset = models.CharField(max_length=10, verbose_name=_('اختلاف با UTC'), help_text=_('مثال: +03:30, -05:00'))
+    display_name = models.CharField(max_length=150, verbose_name=_('نام نمایشی'), help_text=_('مثال: تهران (UTC+03:30)'))
+    is_active = models.BooleanField(default=True, verbose_name=_('فعال'))
+    is_default = models.BooleanField(default=False, verbose_name=_('پیش‌فرض'))
+    order = models.IntegerField(default=0, verbose_name=_('ترتیب نمایش'))
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name=_('تاریخ ایجاد'))
+    updated_at = models.DateTimeField(auto_now=True, verbose_name=_('تاریخ به‌روزرسانی'))
+    
+    class Meta:
+        verbose_name = _('منطقه زمانی')
+        verbose_name_plural = _('مناطق زمانی')
+        ordering = ['order', 'utc_offset']
+    
+    def __str__(self):
+        return self.display_name
+    
+    def save(self, *args, **kwargs):
+        # اگر این منطقه پیش‌فرض است، بقیه را غیرپیش‌فرض کن
+        if self.is_default:
+            Timezone.objects.exclude(pk=self.pk).update(is_default=False)
+        super().save(*args, **kwargs)

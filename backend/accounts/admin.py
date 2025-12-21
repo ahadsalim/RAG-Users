@@ -25,29 +25,26 @@ class UserAdmin(BaseUserAdmin):
     ordering = ['-created_at']
     
     fieldsets = (
-        (_('اطلاعات ورود'), {
-            'fields': ('phone_number', 'email', 'password_change_link')
-        }),
-        (_('اطلاعات شخصی'), {
-            'fields': ('first_name', 'last_name', 'avatar', 'bio', 'user_type', 'national_id', 'national_id_verified')
-        }),
-        (_('اطلاعات تجاری'), {
-            'fields': ('company_name', 'economic_code', 'organization', 'organization_role'),
-            'classes': ('collapse',)
+        (_('اطلاعات کاربر'), {
+            'fields': (
+                'phone_number', 'email', 'password_change_link',
+                'first_name', 'last_name', 'avatar', 'bio', 'user_type', 
+                'national_id', 'national_id_verified',
+                'company_name', 'economic_code', 'organization', 'organization_role'
+            )
         }),
         (_('دسترسی‌ها'), {
             'fields': ('is_active', 'is_staff', 'is_superuser', 'staff_groups'),
         }),
-        (_('تنظیمات'), {
-            'fields': ('language', 'timezone', 'preferred_currency'),
+        (_('تنظیمات و اعلان‌ها'), {
+            'fields': (
+                'language', 'timezone', 'preferred_currency',
+                'email_notifications', 'sms_notifications', 'push_notifications'
+            ),
             'classes': ('collapse',)
         }),
         (_('امنیت'), {
             'fields': ('two_factor_enabled', 'phone_verified', 'email_verified', 'last_password_change', 'failed_login_attempts', 'locked_until'),
-            'classes': ('collapse',)
-        }),
-        (_('اعلان‌ها'), {
-            'fields': ('email_notifications', 'sms_notifications', 'push_notifications'),
             'classes': ('collapse',)
         }),
         (_('تاریخ‌ها'), {

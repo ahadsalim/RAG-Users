@@ -31,25 +31,31 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         self.stdout.write(self.style.NOTICE('شروع ایجاد داده‌های اولیه...'))
         
-        # 1. ایجاد ارز پایه (ریال)
+        # 1. ایجاد زبان‌ها
+        self.create_languages()
+        
+        # 2. ایجاد مناطق زمانی
+        self.create_timezones()
+        
+        # 3. ایجاد ارز پایه (ریال)
         self.create_currencies()
         
-        # 2. ایجاد پلن‌ها
+        # 4. ایجاد پلن‌ها
         self.create_plans()
         
-        # 3. ایجاد درگاه پرداخت زرین‌پال
+        # 5. ایجاد درگاه پرداخت زرین‌پال
         self.create_payment_gateway()
         
-        # 4. ایجاد تنظیمات سایت
+        # 6. ایجاد تنظیمات سایت
         self.create_site_settings()
         
-        # 5. ایجاد تنظیمات مالی
+        # 7. ایجاد تنظیمات مالی
         self.create_financial_settings()
         
-        # 6. ایجاد قالب‌های اعلان
+        # 8. ایجاد قالب‌های اعلان
         self.create_notification_templates()
         
-        # 7. ایجاد کاربر سوپر ادمین
+        # 9. ایجاد کاربر سوپر ادمین
         if not options['skip_admin']:
             admin_password = options.get('admin_password')
             if not admin_password:
@@ -58,6 +64,85 @@ class Command(BaseCommand):
         
         self.stdout.write(self.style.SUCCESS('✓ داده‌های اولیه با موفقیت ایجاد شدند!'))
 
+    def create_languages(self):
+        """ایجاد زبان‌های پیش‌فرض"""
+        from core.models import Language
+        
+        languages = [
+            {
+                'code': 'fa',
+                'name': 'Persian',
+                'native_name': 'فارسی',
+                'is_rtl': True,
+                'is_active': True,
+                'is_default': True,
+                'order': 1
+            },
+            {
+                'code': 'en',
+                'name': 'English',
+                'native_name': 'English',
+                'is_rtl': False,
+                'is_active': True,
+                'is_default': False,
+                'order': 2
+            },
+        ]
+        
+        for lang_data in languages:
+            lang, created = Language.objects.get_or_create(
+                code=lang_data['code'],
+                defaults=lang_data
+            )
+            if created:
+                self.stdout.write(self.style.SUCCESS(f'  ✓ زبان {lang_data["native_name"]} ایجاد شد'))
+            else:
+                self.stdout.write(self.style.WARNING(f'  - زبان {lang_data["native_name"]} از قبل موجود است'))
+    
+    def create_timezones(self):
+        """ایجاد مناطق زمانی پرکاربرد"""
+        from core.models import Timezone
+        
+        timezones = [
+            # ایران
+            {'code': 'Asia/Tehran', 'name': 'Tehran', 'utc_offset': '+03:30', 'display_name': 'تهران (UTC+03:30)', 'is_default': True, 'order': 1},
+            
+            # خاورمیانه
+            {'code': 'Asia/Dubai', 'name': 'Dubai', 'utc_offset': '+04:00', 'display_name': 'دبی (UTC+04:00)', 'is_default': False, 'order': 2},
+            {'code': 'Asia/Riyadh', 'name': 'Riyadh', 'utc_offset': '+03:00', 'display_name': 'ریاض (UTC+03:00)', 'is_default': False, 'order': 3},
+            {'code': 'Asia/Kuwait', 'name': 'Kuwait', 'utc_offset': '+03:00', 'display_name': 'کویت (UTC+03:00)', 'is_default': False, 'order': 4},
+            
+            # اروپا
+            {'code': 'Europe/London', 'name': 'London', 'utc_offset': '+00:00', 'display_name': 'لندن (UTC+00:00)', 'is_default': False, 'order': 5},
+            {'code': 'Europe/Paris', 'name': 'Paris', 'utc_offset': '+01:00', 'display_name': 'پاریس (UTC+01:00)', 'is_default': False, 'order': 6},
+            {'code': 'Europe/Berlin', 'name': 'Berlin', 'utc_offset': '+01:00', 'display_name': 'برلین (UTC+01:00)', 'is_default': False, 'order': 7},
+            {'code': 'Europe/Istanbul', 'name': 'Istanbul', 'utc_offset': '+03:00', 'display_name': 'استانبول (UTC+03:00)', 'is_default': False, 'order': 8},
+            
+            # آمریکا
+            {'code': 'America/New_York', 'name': 'New York', 'utc_offset': '-05:00', 'display_name': 'نیویورک (UTC-05:00)', 'is_default': False, 'order': 9},
+            {'code': 'America/Los_Angeles', 'name': 'Los Angeles', 'utc_offset': '-08:00', 'display_name': 'لس‌آنجلس (UTC-08:00)', 'is_default': False, 'order': 10},
+            {'code': 'America/Chicago', 'name': 'Chicago', 'utc_offset': '-06:00', 'display_name': 'شیکاگو (UTC-06:00)', 'is_default': False, 'order': 11},
+            
+            # آسیا
+            {'code': 'Asia/Tokyo', 'name': 'Tokyo', 'utc_offset': '+09:00', 'display_name': 'توکیو (UTC+09:00)', 'is_default': False, 'order': 12},
+            {'code': 'Asia/Shanghai', 'name': 'Shanghai', 'utc_offset': '+08:00', 'display_name': 'شانگهای (UTC+08:00)', 'is_default': False, 'order': 13},
+            {'code': 'Asia/Singapore', 'name': 'Singapore', 'utc_offset': '+08:00', 'display_name': 'سنگاپور (UTC+08:00)', 'is_default': False, 'order': 14},
+            {'code': 'Asia/Kolkata', 'name': 'Kolkata', 'utc_offset': '+05:30', 'display_name': 'کلکته (UTC+05:30)', 'is_default': False, 'order': 15},
+            
+            # استرالیا
+            {'code': 'Australia/Sydney', 'name': 'Sydney', 'utc_offset': '+11:00', 'display_name': 'سیدنی (UTC+11:00)', 'is_default': False, 'order': 16},
+        ]
+        
+        for tz_data in timezones:
+            tz, created = Timezone.objects.get_or_create(
+                code=tz_data['code'],
+                defaults=tz_data
+            )
+            if created:
+                self.stdout.write(self.style.SUCCESS(f'  ✓ منطقه زمانی {tz_data["display_name"]} ایجاد شد'))
+            else:
+                self.stdout.write(self.style.WARNING(f'  - منطقه زمانی {tz_data["display_name"]} از قبل موجود است'))
+    
     def create_currencies(self):
         """ایجاد ارز پایه (ریال)"""
         from finance.models import Currency
