@@ -263,7 +263,8 @@ class User(AbstractUser):
         null=True,
         blank=True,
         related_name='users',
-        verbose_name=_('منطقه زمانی')
+        verbose_name=_('منطقه زمانی'),
+        help_text=_('منطقه زمانی برای نمایش تاریخ و زمان (پیش‌فرض: تهران)')
     )
     
     # Chat Context/Memory

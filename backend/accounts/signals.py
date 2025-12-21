@@ -7,16 +7,28 @@ from django.conf import settings
 
 
 @receiver(post_save, sender=settings.AUTH_USER_MODEL)
-def set_default_currency_for_new_user(sender, instance, created, **kwargs):
+def set_default_currency_and_timezone_for_new_user(sender, instance, created, **kwargs):
     """
-    تنظیم ارز پیش‌فرض برای کاربران جدید
+    تنظیم ارز و منطقه زمانی پیش‌فرض برای کاربران جدید
     """
-    if created and not instance.preferred_currency:
-        from finance.models import Currency
+    if created:
+        update_fields = []
         
-        # دریافت ارز پیش‌فرض
-        default_currency = Currency.get_default_currency()
+        # تنظیم ارز پیش‌فرض
+        if not instance.preferred_currency:
+            from finance.models import Currency
+            default_currency = Currency.get_default_currency()
+            if default_currency:
+                instance.preferred_currency = default_currency
+                update_fields.append('preferred_currency')
         
-        if default_currency:
-            instance.preferred_currency = default_currency
-            instance.save(update_fields=['preferred_currency'])
+        # تنظیم منطقه زمانی پیش‌فرض (تهران)
+        if not instance.timezone:
+            from core.models import Timezone
+            tehran = Timezone.objects.filter(code='Asia/Tehran').first()
+            if tehran:
+                instance.timezone = tehran
+                update_fields.append('timezone')
+        
+        if update_fields:
+            instance.save(update_fields=update_fields)
