@@ -386,7 +386,8 @@ class CustomTicketAdmin(admin.ModelAdmin):
             for user in staff_users
         ])
         
-        js_code = """
+        # JavaScript code - جدا از f-string
+        js_code = '''
             function toggleForwardedTo() {
                 var messageType = document.querySelector('input[name="message_type"]:checked').value;
                 var field = document.getElementById('forwarded_to_field');
@@ -396,15 +397,16 @@ class CustomTicketAdmin(admin.ModelAdmin):
                     field.style.display = 'none';
                 }
             }
-        """
+        '''
         
-        html = f'''
+        # ساخت HTML با استفاده از + به جای f-string برای JavaScript
+        html = '''
         <div style="background: #ffffff; padding: 25px; border-radius: 8px; border: 2px solid #e5e7eb; margin-top: 20px;">
             <h2 style="margin-top: 0; color: #2c3e50; border-bottom: 2px solid #3b82f6; padding-bottom: 10px;">✍️ ارسال پاسخ / پیام جدید</h2>
             
             <form method="post" action="" id="ticket-reply-form">
                 <input type="hidden" name="action" value="send_reply">
-                <input type="hidden" name="ticket_id" value="{obj.id}">
+                <input type="hidden" name="ticket_id" value="''' + str(obj.id) + '''">
                 
                 <div style="margin-bottom: 20px;">
                     <label style="display: block; font-weight: bold; margin-bottom: 8px; color: #374151;">
@@ -443,7 +445,7 @@ class CustomTicketAdmin(admin.ModelAdmin):
                     </label>
                     <select name="forwarded_to" style="width: 100%; padding: 10px; border: 1px solid #d1d5db; border-radius: 6px;">
                         <option value="">انتخاب کارشناس...</option>
-                        {staff_options}
+                        ''' + staff_options + '''
                     </select>
                 </div>
                 
@@ -461,10 +463,11 @@ class CustomTicketAdmin(admin.ModelAdmin):
                 </div>
             </form>
             
-            <script>{js_code}</script>
+            <script>''' + js_code + '''</script>
         </div>
         '''
-        return format_html(html)
+        from django.utils.safestring import mark_safe
+        return mark_safe(html)
     reply_form_display.short_description = ''
     
     def change_view(self, request, object_id, form_url='', extra_context=None):
