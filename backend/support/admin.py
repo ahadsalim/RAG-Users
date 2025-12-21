@@ -83,16 +83,6 @@ class TicketAdmin(CustomTicketAdmin):
     pass
 
 
-@admin.register(TicketMessage)
-class TicketMessageAdmin(admin.ModelAdmin):
-    list_display = ['ticket', 'sender', 'message_type', 'is_staff_reply', 'created_at']
-    list_filter = ['message_type', 'is_staff_reply', 'created_at']
-    search_fields = ['ticket__ticket_number', 'content']
-    readonly_fields = ['ticket', 'sender', 'is_staff_reply', 'created_at', 'updated_at']
-    raw_id_fields = ['ticket', 'sender']
-    ordering = ['-created_at']
-
-
 @admin.register(TicketAttachment)
 class TicketAttachmentAdmin(admin.ModelAdmin):
     list_display = ['file_name', 'ticket', 'message', 'uploaded_by', 'file_size_display', 'mime_type', 'created_at']
