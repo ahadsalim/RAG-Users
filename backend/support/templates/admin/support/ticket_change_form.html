@@ -65,28 +65,25 @@
             {% endfor %}
         </fieldset>
     {% endfor %}
-{% endif %}
-        
-        <script>
-        function toggleForwardedTo(messageType) {
-            var field = document.getElementById('forwarded_to_field');
-            if (messageType === 'send_to') {
-                field.style.display = 'block';
-            } else {
-                field.style.display = 'none';
-            }
+    
+    <script>
+    function toggleForwardedTo(messageType) {
+        var field = document.getElementById('forwarded_to_field');
+        if (messageType === 'send_to') {
+            field.style.display = 'block';
+        } else {
+            field.style.display = 'none';
         }
-        
-        // اجرای اولیه
-        document.addEventListener('DOMContentLoaded', function() {
-            var selectedType = document.querySelector('input[name="message_type"]:checked');
-            if (selectedType) {
-                toggleForwardedTo(selectedType.value);
-            }
-        });
-        </script>
+    }
+    
+    document.addEventListener('DOMContentLoaded', function() {
+        var selectedType = document.querySelector('input[name="message_type"]:checked');
+        if (selectedType) {
+            toggleForwardedTo(selectedType.value);
+        }
+    });
+    </script>
 {% else %}
-    {# فرم ایجاد تیکت جدید غیرفعال است #}
     <div style="padding: 40px; text-align: center;">
         <p style="font-size: 18px; color: #6b7280;">ایجاد تیکت از پنل ادمین غیرفعال است.</p>
     </div>
