@@ -198,6 +198,38 @@ class TicketCreateSerializer(serializers.ModelSerializer):
             'subject', 'description', 'category', 'department',
             'priority'
         ]
+        extra_kwargs = {
+            'category': {'required': True, 'allow_null': False},
+            'department': {'required': True, 'allow_null': False},
+        }
+    
+    def validate(self, data):
+        """اعتبارسنجی داده‌های تیکت"""
+        # بررسی اجباری بودن دسته‌بندی
+        if not data.get('category'):
+            raise serializers.ValidationError({
+                'category': 'انتخاب دسته‌بندی الزامی است.'
+            })
+        
+        # بررسی اجباری بودن دپارتمان
+        if not data.get('department'):
+            raise serializers.ValidationError({
+                'department': 'انتخاب دپارتمان الزامی است.'
+            })
+        
+        # بررسی فعال بودن دسته‌بندی
+        if data.get('category') and not data['category'].is_active:
+            raise serializers.ValidationError({
+                'category': 'دسته‌بندی انتخاب شده غیرفعال است.'
+            })
+        
+        # بررسی فعال بودن دپارتمان
+        if data.get('department') and not data['department'].is_active:
+            raise serializers.ValidationError({
+                'department': 'دپارتمان انتخاب شده غیرفعال است.'
+            })
+        
+        return data
     
     def create(self, validated_data):
         user = self.context['request'].user

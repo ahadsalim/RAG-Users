@@ -187,7 +187,8 @@ class Ticket(models.Model):
         null=True,
         blank=True,
         related_name='tickets',
-        verbose_name=_('دسته‌بندی')
+        verbose_name=_('دسته‌بندی'),
+        help_text=_('انتخاب دسته‌بندی الزامی است')
     )
     department = models.ForeignKey(
         TicketDepartment,
@@ -195,7 +196,8 @@ class Ticket(models.Model):
         null=True,
         blank=True,
         related_name='tickets',
-        verbose_name=_('دپارتمان')
+        verbose_name=_('دپارتمان'),
+        help_text=_('انتخاب دپارتمان الزامی است')
     )
     
     # وضعیت و اولویت
