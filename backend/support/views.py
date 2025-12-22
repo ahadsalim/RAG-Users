@@ -209,7 +209,34 @@ class TicketViewSet(viewsets.ModelViewSet):
             # اگر کاربر پیام جدید فرستاد، تیکت باید به وضعیت باز برگردد
             if ticket.status in ['answered', 'waiting', 'closed', 'resolved']:
                 ticket.status = 'open'
-                ticket.save(update_fields=['status'])
+                # بروزرسانی مهلت پاسخ‌دهی (response_due) - مهلت حل مشکل ثابت می‌ماند
+                from datetime import timedelta
+                from support.models import SLAPolicy
+                
+                # پیدا کردن سیاست SLA
+                sla_policy = None
+                if ticket.department:
+                    sla_policy = SLAPolicy.objects.filter(
+                        departments=ticket.department,
+                        priority__contains=ticket.priority,
+                        is_active=True
+                    ).first()
+                
+                if not sla_policy:
+                    policies_without_dept = SLAPolicy.objects.filter(
+                        priority__contains=ticket.priority,
+                        is_active=True
+                    ).annotate(
+                        dept_count=models.Count('departments')
+                    ).filter(dept_count=0)
+                    sla_policy = policies_without_dept.first()
+                
+                # بروزرسانی فقط response_due
+                if sla_policy:
+                    from django.utils import timezone
+                    ticket.response_due = timezone.now() + timedelta(minutes=sla_policy.response_time)
+                
+                ticket.save(update_fields=['status', 'response_due'])
         
         # ثبت در تاریخچه
         TicketHistory.objects.create(

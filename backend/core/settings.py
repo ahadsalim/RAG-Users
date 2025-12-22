@@ -321,6 +321,11 @@ CELERY_BEAT_SCHEDULE = {
         'task': 'core.tasks.cleanup_old_files',
         'schedule': crontab(hour=2, minute=0),
     },
+    # بستن خودکار تیکت‌های answered که مهلت حل مشکل آنها گذشته - هر 30 دقیقه
+    'auto-close-answered-tickets': {
+        'task': 'support.tasks.auto_close_answered_tickets',
+        'schedule': crontab(minute='*/30'),
+    },
 }
 
 # Payment Gateways
