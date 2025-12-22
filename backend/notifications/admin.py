@@ -1,5 +1,6 @@
 from django.contrib import admin
 from django.utils.html import format_html
+from django import forms
 from .models import (
     NotificationTemplate, Notification, NotificationPreference,
     DeviceToken, NotificationLog
@@ -14,11 +15,8 @@ class NotificationTemplateAdmin(admin.ModelAdmin):
     readonly_fields = ['created_at', 'updated_at']
     
     fieldsets = (
-        ('اطلاعات پایه', {
-            'fields': ('code', 'name', 'description', 'category')
-        }),
-        ('محتوای قالب', {
-            'fields': ('title_template', 'body_template')
+        ('اطلاعات پایه و محتوای قالب', {
+            'fields': ('code', 'name', 'description', 'category', 'title_template', 'body_template')
         }),
         ('قالب‌های مخصوص', {
             'fields': ('email_subject_template', 'email_html_template', 'sms_template'),
@@ -35,6 +33,13 @@ class NotificationTemplateAdmin(admin.ModelAdmin):
             'classes': ('collapse',)
         }),
     )
+    
+    def formfield_for_dbfield(self, db_field, request, **kwargs):
+        if db_field.name == 'description':
+            kwargs['widget'] = forms.Textarea(attrs={'rows': 2, 'style': 'width: 100%;'})
+        elif db_field.name == 'body_template':
+            kwargs['widget'] = forms.Textarea(attrs={'rows': 2, 'style': 'width: 100%;'})
+        return super().formfield_for_dbfield(db_field, request, **kwargs)
     
     def channels_display(self, obj):
         if obj.channels:
