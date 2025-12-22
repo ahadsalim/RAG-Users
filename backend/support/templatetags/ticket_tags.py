@@ -8,10 +8,11 @@ register = template.Library()
 def render_ticket_info(context):
     """Render ticket info display"""
     adminform = context.get('adminform')
+    request = context.get('request')
     if adminform and hasattr(adminform, 'form') and adminform.form.instance.pk:
         model_admin = adminform.model_admin
         obj = adminform.form.instance
-        return mark_safe(model_admin.ticket_info_display(obj))
+        return mark_safe(model_admin.ticket_info_display(obj, request))
     return ''
 
 
@@ -19,10 +20,11 @@ def render_ticket_info(context):
 def render_ticket_messages(context):
     """Render ticket messages display"""
     adminform = context.get('adminform')
+    request = context.get('request')
     if adminform and hasattr(adminform, 'form') and adminform.form.instance.pk:
         model_admin = adminform.model_admin
         obj = adminform.form.instance
-        return mark_safe(model_admin.messages_display(obj))
+        return mark_safe(model_admin.messages_display(obj, request))
     return ''
 
 

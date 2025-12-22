@@ -199,19 +199,21 @@ class CustomTicketAdmin(admin.ModelAdmin):
             import logging
             logging.error(f'Error in _send_to_all_channels: {e}')
     
-    def ticket_info_display(self, obj):
+    def ticket_info_display(self, obj, request=None):
         """نمایش اطلاعات تیکت و زمانی - یکپارچه"""
         if not obj:
             return ''
         
-        # تبدیل به تاریخ شمسی
-        jalali_created = jdatetime.datetime.fromgregorian(datetime=obj.created_at)
-        jalali_created_str = jalali_created.strftime('%Y/%m/%d %H:%M')
+        from core.utils.timezone_utils import format_datetime_jalali
+        
+        # تبدیل به تاریخ شمسی بر اساس timezone کاربر
+        user = request.user if request else None
+        jalali_created_str = format_datetime_jalali(obj.created_at, user)
         
         # وضعیت پاسخ
         if obj.first_response_at:
-            jalali_first_response_dt = jdatetime.datetime.fromgregorian(datetime=obj.first_response_at)
-            response_status = f'<span style="color: #22c55e; font-weight: bold;">{jalali_first_response_dt.strftime("%Y/%m/%d %H:%M")}</span>'
+            jalali_first_response = format_datetime_jalali(obj.first_response_at, user)
+            response_status = f'<span style="color: #22c55e; font-weight: bold;">{jalali_first_response}</span>'
         else:
             response_status = '<span style="color: #ef4444; font-weight: bold;">پاسخ داده نشده</span>'
         
@@ -222,47 +224,59 @@ class CustomTicketAdmin(admin.ModelAdmin):
             is_resolution_breached = obj.resolution_due and timezone.now() > obj.resolution_due and obj.status not in ['closed', 'resolved']
             
             if obj.response_due:
-                jalali_response_deadline = jdatetime.datetime.fromgregorian(datetime=obj.response_due)
+                jalali_response_deadline = format_datetime_jalali(obj.response_due, user)
                 response_color = '#ef4444' if is_response_breached else '#22c55e'
                 response_icon = '⚠️' if is_response_breached else '✓'
                 sla_rows += f'''
                 <div style="display: flex; justify-content: space-between; margin-bottom: 10px; padding-bottom: 10px; border-bottom: 1px solid #e5e7eb;">
-                    <span><strong>مهلت پاسخ‌دهی:</strong> <span style="color: {response_color}; font-weight: bold;">{jalali_response_deadline.strftime('%Y/%m/%d %H:%M')} {response_icon}</span></span>
+                    <span><strong>مهلت پاسخ‌دهی:</strong> <span style="color: {response_color}; font-weight: bold;">{jalali_response_deadline} {response_icon}</span></span>
                 </div>
                 '''
             
             if obj.resolution_due:
-                jalali_resolution_deadline = jdatetime.datetime.fromgregorian(datetime=obj.resolution_due)
+                jalali_resolution_deadline = format_datetime_jalali(obj.resolution_due, user)
                 resolution_color = '#ef4444' if is_resolution_breached else '#22c55e'
                 resolution_icon = '⚠️' if is_resolution_breached else '✓'
                 sla_rows += f'''
                 <div style="display: flex; justify-content: space-between; margin-bottom: 10px; padding-bottom: 10px; border-bottom: 1px solid #e5e7eb;">
-                    <span><strong>مهلت حل مشکل:</strong> <span style="color: {resolution_color}; font-weight: bold;">{jalali_resolution_deadline.strftime('%Y/%m/%d %H:%M')} {resolution_icon}</span></span>
+                    <span><strong>مهلت حل مشکل:</strong> <span style="color: {resolution_color}; font-weight: bold;">{jalali_resolution_deadline} {resolution_icon}</span></span>
                 </div>
                 '''
         
         html = f'''
         <div style="width: 100% !important; max-width: none !important; background: white; padding: 20px; border-radius: 8px; margin-bottom: 0; border: 1px solid #e5e7eb;">
-            <div style="display: flex; justify-content: space-between; margin-bottom: 10px; padding-bottom: 10px; border-bottom: 1px solid #e5e7eb;">
-                <span><strong>شماره تیکت:</strong> <span style="font-family: monospace; font-size: 14px; color: #3b82f6;">{obj.ticket_number}</span></span>
-                <span><strong>کاربر:</strong> {obj.user.get_full_name() if hasattr(obj.user, 'get_full_name') else obj.user}</span>
-            </div>
-            <div style="display: flex; justify-content: space-between; margin-bottom: 10px; padding-bottom: 10px; border-bottom: 1px solid #e5e7eb;">
-                <span><strong>سازمان:</strong> {obj.organization.name if obj.organization else '-'}</span>
-                <span><strong>دپارتمان:</strong> {obj.department.name if obj.department else '-'}</span>
-            </div>
-            <div style="display: flex; justify-content: space-between; margin-bottom: 10px; padding-bottom: 10px; border-bottom: 1px solid #e5e7eb;">
-                <span><strong>دسته‌بندی:</strong> {obj.category.name if obj.category else '-'}</span>
-                <span><strong>اولویت:</strong> {self._get_priority_badge(obj.priority)}</span>
-            </div>
-            <div style="display: flex; justify-content: space-between; margin-bottom: 10px; padding-bottom: 10px; border-bottom: 1px solid #e5e7eb;">
-                <span><strong>وضعیت:</strong> {self._get_status_badge(obj.status)}</span>
-                <span><strong>کارشناس مسئول:</strong> {obj.assigned_to.get_full_name() if obj.assigned_to and hasattr(obj.assigned_to, 'get_full_name') else (obj.assigned_to if obj.assigned_to else '-')}</span>
-            </div>
-            <div style="display: flex; justify-content: space-between; margin-bottom: 10px; padding-bottom: 10px; border-bottom: 1px solid #e5e7eb;">
-                <span><strong>زمان ایجاد تیکت:</strong> {jalali_created_str}</span>
-                <span><strong>زمان آخرین پاسخ:</strong> {response_status}</span>
-            </div>
+            <table style="width: 100%; border-collapse: collapse;">
+                <tr style="border-bottom: 1px solid #e5e7eb;">
+                    <td style="padding: 10px; width: 25%;"><strong>شماره تیکت:</strong></td>
+                    <td style="padding: 10px; width: 25%;"><span style="font-family: monospace; font-size: 14px; color: #3b82f6;">{obj.ticket_number}</span></td>
+                    <td style="padding: 10px; width: 25%;"><strong>موبایل:</strong></td>
+                    <td style="padding: 10px; width: 25%;">{obj.user.phone_number if hasattr(obj.user, 'phone_number') else obj.user}</td>
+                </tr>
+                <tr style="border-bottom: 1px solid #e5e7eb;">
+                    <td style="padding: 10px;"><strong>سازمان:</strong></td>
+                    <td style="padding: 10px;">{obj.organization.name if obj.organization else '-'}</td>
+                    <td style="padding: 10px;"><strong>دپارتمان:</strong></td>
+                    <td style="padding: 10px;">{obj.department.name if obj.department else '-'}</td>
+                </tr>
+                <tr style="border-bottom: 1px solid #e5e7eb;">
+                    <td style="padding: 10px;"><strong>دسته‌بندی:</strong></td>
+                    <td style="padding: 10px;">{obj.category.name if obj.category else '-'}</td>
+                    <td style="padding: 10px;"><strong>کارشناس مسئول:</strong></td>
+                    <td style="padding: 10px;">{obj.assigned_to.get_full_name() if obj.assigned_to and hasattr(obj.assigned_to, 'get_full_name') else (obj.assigned_to if obj.assigned_to else '-')}</td>
+                </tr>
+                <tr style="border-bottom: 1px solid #e5e7eb;">
+                    <td style="padding: 10px;"><strong>وضعیت:</strong></td>
+                    <td style="padding: 10px;">{self._get_status_badge(obj.status)}</td>
+                    <td style="padding: 10px;"><strong>اولویت:</strong></td>
+                    <td style="padding: 10px;">{self._get_priority_badge(obj.priority)}</td>
+                </tr>
+                <tr style="border-bottom: 1px solid #e5e7eb;">
+                    <td style="padding: 10px;"><strong>زمان ایجاد تیکت:</strong></td>
+                    <td style="padding: 10px;">{jalali_created_str}</td>
+                    <td style="padding: 10px;"><strong>زمان آخرین پاسخ:</strong></td>
+                    <td style="padding: 10px;">{response_status}</td>
+                </tr>
+            </table>
             {sla_rows}
         </div>
         '''
@@ -274,21 +288,26 @@ class CustomTicketAdmin(admin.ModelAdmin):
         return ''
     time_info_display.short_description = ''
     
-    def messages_display(self, obj):
+    def messages_display(self, obj, request=None):
         """نمایش موضوع و تاریخچه مکالمات"""
         if not obj:
             return ''
         
-        # موضوع تیکت
+        from core.utils.timezone_utils import format_datetime_jalali
+        user = request.user if request else None
+        
+        # موضوع تیکت - در همان خط
         subject_html = f'''
         <div style="background: white; padding: 15px; border-radius: 6px; margin-bottom: 15px; border-right: 4px solid #3b82f6;">
-            <h3 style="margin: 0 0 10px 0; color: #3b82f6;">موضوع:</h3>
-            <div style="font-size: 16px; line-height: 1.6;">{obj.subject}</div>
+            <div style="display: flex; align-items: center; gap: 10px;">
+                <strong style="color: #3b82f6; white-space: nowrap;">موضوع:</strong>
+                <div style="font-size: 16px; line-height: 1.6; flex: 1;">{obj.subject}</div>
+            </div>
         </div>
         '''
         
         # محتوای اولیه تیکت
-        jalali_created = jdatetime.datetime.fromgregorian(datetime=obj.created_at)
+        jalali_created = format_datetime_jalali(obj.created_at, user)
         initial_message = f'''
         <div style="background: #f0fdf4; padding: 15px; border-radius: 8px; margin-bottom: 15px; border-right: 4px solid #16a34a;">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
@@ -296,7 +315,7 @@ class CustomTicketAdmin(admin.ModelAdmin):
                     <strong style="color: #16a34a;">👤 {obj.user.get_full_name() if hasattr(obj.user, 'get_full_name') else obj.user}</strong>
                     <span style="background: #dcfce7; color: #166534; padding: 2px 8px; border-radius: 4px; font-size: 12px; margin-right: 10px;">ایجاد تیکت</span>
                 </div>
-                <span style="color: #6b7280; font-size: 13px;">{jalali_created.strftime('%Y/%m/%d %H:%M')}</span>
+                <span style="color: #6b7280; font-size: 13px;">{jalali_created}</span>
             </div>
             <div style="white-space: pre-wrap; line-height: 1.6; font-size: 14px;">
                 {obj.description}
@@ -309,7 +328,7 @@ class CustomTicketAdmin(admin.ModelAdmin):
         messages_html = ''
         
         for msg in messages:
-            jalali_msg_time = jdatetime.datetime.fromgregorian(datetime=msg.created_at)
+            jalali_msg_time = format_datetime_jalali(msg.created_at, user)
             
             # تعیین رنگ و آیکون بر اساس نوع پیام
             if msg.is_staff_reply:
@@ -345,7 +364,7 @@ class CustomTicketAdmin(admin.ModelAdmin):
                         <strong style="color: {border_color};">{icon} {msg.sender.get_full_name() if msg.sender and hasattr(msg.sender, 'get_full_name') else (msg.sender if msg.sender else 'سیستم')}</strong>
                         {message_type_badge}
                     </div>
-                    <span style="color: #6b7280; font-size: 13px;">{jalali_msg_time.strftime('%Y/%m/%d %H:%M')}</span>
+                    <span style="color: #6b7280; font-size: 13px;">{jalali_msg_time}</span>
                 </div>
                 <div style="white-space: pre-wrap; line-height: 1.6; font-size: 14px;">
                     {msg.content}
@@ -441,12 +460,21 @@ class CustomTicketAdmin(admin.ModelAdmin):
         # JavaScript code - جدا از f-string
         js_code = '''
             function toggleForwardedTo() {
-                var messageType = document.querySelector('input[name="message_type"]:checked').value;
+                var messageType = document.querySelector('select[name="message_type"]').value;
                 var field = document.getElementById('forwarded_to_field');
                 if (messageType === 'send_to') {
                     field.style.display = 'block';
                 } else {
                     field.style.display = 'none';
+                }
+            }
+            
+            function toggleHelp() {
+                var popup = document.getElementById('help_popup');
+                if (popup.style.display === 'none') {
+                    popup.style.display = 'block';
+                } else {
+                    popup.style.display = 'none';
                 }
             }
         '''
@@ -461,28 +489,25 @@ class CustomTicketAdmin(admin.ModelAdmin):
                 <input type="hidden" name="ticket_id" value="''' + str(obj.id) + '''">
                 
                 <div style="margin-bottom: 20px;">
-                    <label style="display: block; font-weight: bold; margin-bottom: 8px; color: #374151; font-size: 14px;">
-                        نوع پیام: <span style="color: #ef4444;">*</span>
-                    </label>
-                    <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px;">
-                        <label style="display: flex; align-items: center; padding: 12px; border: 2px solid #e5e7eb; border-radius: 6px; cursor: pointer; transition: all 0.2s;">
-                            <input type="radio" name="message_type" value="reply" checked style="margin-left: 8px;" onchange="toggleForwardedTo()">
-                            <span style="font-weight: 500; font-size: 14px;">پاسخ</span>
+                    <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">
+                        <label style="font-weight: bold; color: #374151; font-size: 14px;">
+                            نوع پیام: <span style="color: #ef4444;">*</span>
                         </label>
-                        <label style="display: flex; align-items: center; padding: 12px; border: 2px solid #e5e7eb; border-radius: 6px; cursor: pointer; transition: all 0.2s;">
-                            <input type="radio" name="message_type" value="note" style="margin-left: 8px;" onchange="toggleForwardedTo()">
-                            <span style="font-weight: 500; font-size: 14px;">یادداشت داخلی</span>
-                        </label>
-                        <label style="display: flex; align-items: center; padding: 12px; border: 2px solid #e5e7eb; border-radius: 6px; cursor: pointer; transition: all 0.2s;">
-                            <input type="radio" name="message_type" value="question" style="margin-left: 8px;" onchange="toggleForwardedTo()">
-                            <span style="font-weight: 500; font-size: 14px;">منتظر پاسخ کاربر</span>
-                        </label>
-                        <label style="display: flex; align-items: center; padding: 12px; border: 2px solid #e5e7eb; border-radius: 6px; cursor: pointer; transition: all 0.2s;">
-                            <input type="radio" name="message_type" value="send_to" style="margin-left: 8px;" onchange="toggleForwardedTo()">
-                            <span style="font-weight: 500; font-size: 14px;">ارسال به کارشناس</span>
-                        </label>
+                        <button type="button" onclick="toggleHelp()" style="background: #3b82f6; color: white; border: none; border-radius: 50%; width: 20px; height: 20px; font-size: 12px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-weight: bold;">i</button>
                     </div>
-                    <div style="margin-top: 10px; padding: 12px; background: #f0f9ff; border-radius: 6px; border-right: 4px solid #3b82f6;">
+                    <div style="display: flex; gap: 10px; align-items: center;">
+                        <select name="message_type" onchange="toggleForwardedTo()" style="flex: 1; padding: 12px; border: 2px solid #d1d5db; border-radius: 6px; font-size: 14px; font-family: Tahoma, Arial, sans-serif;">
+                            <option value="reply" selected>پاسخ</option>
+                            <option value="note">یادداشت داخلی</option>
+                            <option value="question">منتظر پاسخ کاربر</option>
+                            <option value="send_to">ارسال به کارشناس</option>
+                        </select>
+                        <select name="forwarded_to" id="forwarded_to_field" style="flex: 1; padding: 12px; border: 2px solid #d1d5db; border-radius: 6px; font-size: 14px; font-family: Tahoma, Arial, sans-serif; display: none;">
+                            <option value="">انتخاب کارشناس...</option>
+                            ''' + staff_options + '''
+                        </select>
+                    </div>
+                    <div id="help_popup" style="display: none; margin-top: 10px; padding: 12px; background: #f0f9ff; border-radius: 6px; border-right: 4px solid #3b82f6;">
                         <div style="font-size: 13px; color: #1e40af; line-height: 1.8;">
                             <strong>📌 راهنما:</strong><br>
                             • <strong>پاسخ:</strong> پاسخ به کاربر (قابل رویت برای کاربر) - وضعیت: "پاسخ داده شده"<br>
@@ -491,16 +516,6 @@ class CustomTicketAdmin(admin.ModelAdmin):
                             • <strong>ارسال به کارشناس:</strong> محرمانه - تخصیص به کارشناس دیگر - وضعیت: "در حال بررسی"
                         </div>
                     </div>
-                </div>
-                
-                <div style="margin-bottom: 20px; display: none;" id="forwarded_to_field">
-                    <label style="display: block; font-weight: bold; margin-bottom: 8px; color: #374151; font-size: 14px;">
-                        ارسال به کارشناس: <span style="color: #ef4444;">*</span>
-                    </label>
-                    <select name="forwarded_to" style="width: 100%; padding: 12px; border: 2px solid #d1d5db; border-radius: 6px; font-size: 14px; font-family: Tahoma, Arial, sans-serif;">
-                        <option value="">انتخاب کارشناس...</option>
-                        ''' + staff_options + '''
-                    </select>
                 </div>
                 
                 <div style="margin-bottom: 20px;">
