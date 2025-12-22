@@ -44,6 +44,14 @@ class SiteSettings(models.Model):
         help_text=_('پیامی که در حالت تعمیر به کاربران نمایش داده می‌شود')
     )
     
+    # SMS Settings
+    sms_signature = models.CharField(
+        max_length=200,
+        blank=True,
+        verbose_name=_('امضای سایت در پیامک'),
+        help_text=_('این متن به انتهای تمام پیامک‌ها (به جز OTP) اضافه می‌شود')
+    )
+    
     # Timestamps
     updated_at = models.DateTimeField(auto_now=True)
     updated_by = models.ForeignKey(

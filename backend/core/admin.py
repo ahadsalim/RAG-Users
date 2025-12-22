@@ -71,6 +71,7 @@ class SiteSettingsAdmin(admin.ModelAdmin):
                 'twitter_url',
                 'maintenance_mode', 
                 'maintenance_message',
+                'sms_signature',
             )
         }),
     )

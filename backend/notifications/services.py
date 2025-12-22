@@ -229,6 +229,16 @@ class SMSService:
             # متن پیامک
             sms_text = rendered_content.get('sms_text', notification.body)
             
+            # اضافه کردن امضای سایت (به جز OTP)
+            # بررسی اینکه آیا این پیامک OTP است یا خیر
+            is_otp = notification.category == 'security' and 'otp' in notification.title.lower()
+            
+            if not is_otp:
+                from core.models import SiteSettings
+                site_settings = SiteSettings.get_settings()
+                if site_settings.sms_signature:
+                    sms_text = f"{sms_text}\n{site_settings.sms_signature}"
+            
             # محدودیت 500 کاراکتر
             if len(sms_text) > 500:
                 sms_text = sms_text[:497] + '...'
