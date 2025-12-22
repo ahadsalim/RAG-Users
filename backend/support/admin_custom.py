@@ -183,10 +183,19 @@ class CustomTicketAdmin(admin.ModelAdmin):
         user = request.user if request else None
         jalali_created_str = format_datetime_jalali(obj.created_at, user)
         
-        # وضعیت پاسخ
+        # وضعیت پاسخ و بررسی تاخیر
         if obj.first_response_at:
             jalali_first_response = format_datetime_jalali(obj.first_response_at, user)
-            response_status = f'<span style="color: #22c55e; font-weight: bold;">{jalali_first_response}</span>'
+            # بررسی تاخیر در پاسخ
+            response_delayed = obj.response_due and obj.first_response_at > obj.response_due
+            if response_delayed:
+                delay = obj.first_response_at - obj.response_due
+                hours = int(delay.total_seconds() // 3600)
+                minutes = int((delay.total_seconds() % 3600) // 60)
+                delay_text = f'{hours} ساعت و {minutes} دقیقه' if hours > 0 else f'{minutes} دقیقه'
+                response_status = f'<span style="color: #ef4444; font-weight: bold;">{jalali_first_response} ⚠️</span> <span style="background: #fee2e2; color: #991b1b; padding: 2px 8px; border-radius: 4px; font-size: 11px; margin-right: 5px;">تاخیر {delay_text}</span>'
+            else:
+                response_status = f'<span style="color: #22c55e; font-weight: bold;">{jalali_first_response} ✓</span>'
         else:
             response_status = '<span style="color: #ef4444; font-weight: bold;">پاسخ داده نشده</span>'
         
