@@ -496,13 +496,13 @@ class CustomTicketAdmin(admin.ModelAdmin):
                         <button type="button" onclick="toggleHelp()" style="background: #3b82f6; color: white; border: none; border-radius: 50%; width: 20px; height: 20px; font-size: 12px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-weight: bold;">i</button>
                     </div>
                     <div style="display: flex; gap: 10px; align-items: center;">
-                        <select name="message_type" onchange="toggleForwardedTo()" style="flex: 1; padding: 12px; border: 2px solid #d1d5db; border-radius: 6px; font-size: 14px; font-family: Tahoma, Arial, sans-serif;">
+                        <select name="message_type" onchange="toggleForwardedTo()" style="width: 250px; padding: 12px; border: 2px solid #d1d5db; border-radius: 6px; font-size: 14px; font-family: Tahoma, Arial, sans-serif; direction: rtl; text-align: right;">
                             <option value="reply" selected>پاسخ</option>
                             <option value="note">یادداشت داخلی</option>
                             <option value="question">منتظر پاسخ کاربر</option>
                             <option value="send_to">ارسال به کارشناس</option>
                         </select>
-                        <select name="forwarded_to" id="forwarded_to_field" style="flex: 1; padding: 12px; border: 2px solid #d1d5db; border-radius: 6px; font-size: 14px; font-family: Tahoma, Arial, sans-serif; display: none;">
+                        <select name="forwarded_to" id="forwarded_to_field" style="width: 250px; padding: 12px; border: 2px solid #d1d5db; border-radius: 6px; font-size: 14px; font-family: Tahoma, Arial, sans-serif; direction: rtl; text-align: right; display: none;">
                             <option value="">انتخاب کارشناس...</option>
                             ''' + staff_options + '''
                         </select>
