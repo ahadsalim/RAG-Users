@@ -23,48 +23,68 @@ def ticket_pre_save(sender, instance, **kwargs):
 def ticket_post_save(sender, instance, created, **kwargs):
     """ارسال نوتیفیکیشن بعد از ایجاد یا تغییر تیکت"""
     try:
-        from notifications.models import Notification
+        from notifications.services import NotificationService
         
         if created:
             # نوتیفیکیشن برای کاربر
-            Notification.objects.create(
+            context = {
+                'user_name': instance.user.get_full_name() if hasattr(instance.user, 'get_full_name') else str(instance.user),
+                'ticket_number': instance.ticket_number,
+                'subject': instance.subject,
+                'ticket_id': str(instance.id)
+            }
+            NotificationService.create_notification(
                 user=instance.user,
-                title='تیکت جدید ایجاد شد',
-                message=f'تیکت #{instance.ticket_number} با موضوع "{instance.subject}" ایجاد شد.',
-                notification_type='ticket',
-                data={'ticket_id': str(instance.id), 'ticket_number': instance.ticket_number}
+                template_code='ticket_created_user',
+                context=context,
+                priority='normal'
             )
             
             # نوتیفیکیشن برای کارشناس تخصیص داده شده
             if instance.assigned_to:
-                Notification.objects.create(
+                context = {
+                    'staff_name': instance.assigned_to.get_full_name() if hasattr(instance.assigned_to, 'get_full_name') else str(instance.assigned_to),
+                    'ticket_number': instance.ticket_number,
+                    'subject': instance.subject,
+                    'ticket_id': str(instance.id)
+                }
+                NotificationService.create_notification(
                     user=instance.assigned_to,
-                    title='تیکت جدید تخصیص داده شد',
-                    message=f'تیکت #{instance.ticket_number} به شما تخصیص داده شد.',
-                    notification_type='ticket',
-                    data={'ticket_id': str(instance.id), 'ticket_number': instance.ticket_number}
+                    template_code='ticket_assigned_staff',
+                    context=context,
+                    priority='high'
                 )
         else:
             # بررسی تغییر وضعیت
             previous_status = getattr(instance, '_previous_status', None)
             if previous_status and previous_status != instance.status:
-                Notification.objects.create(
+                context = {
+                    'user_name': instance.user.get_full_name() if hasattr(instance.user, 'get_full_name') else str(instance.user),
+                    'ticket_number': instance.ticket_number,
+                    'status': instance.get_status_display(),
+                    'ticket_id': str(instance.id)
+                }
+                NotificationService.create_notification(
                     user=instance.user,
-                    title='تغییر وضعیت تیکت',
-                    message=f'وضعیت تیکت #{instance.ticket_number} به "{instance.get_status_display()}" تغییر کرد.',
-                    notification_type='ticket',
-                    data={'ticket_id': str(instance.id), 'ticket_number': instance.ticket_number}
+                    template_code='ticket_status_changed',
+                    context=context,
+                    priority='normal'
                 )
             
             # بررسی تغییر کارشناس
             previous_assigned = getattr(instance, '_previous_assigned_to', None)
             if instance.assigned_to and previous_assigned != instance.assigned_to:
-                Notification.objects.create(
+                context = {
+                    'staff_name': instance.assigned_to.get_full_name() if hasattr(instance.assigned_to, 'get_full_name') else str(instance.assigned_to),
+                    'ticket_number': instance.ticket_number,
+                    'subject': instance.subject,
+                    'ticket_id': str(instance.id)
+                }
+                NotificationService.create_notification(
                     user=instance.assigned_to,
-                    title='تیکت جدید تخصیص داده شد',
-                    message=f'تیکت #{instance.ticket_number} به شما تخصیص داده شد.',
-                    notification_type='ticket',
-                    data={'ticket_id': str(instance.id), 'ticket_number': instance.ticket_number}
+                    template_code='ticket_assigned_staff',
+                    context=context,
+                    priority='high'
                 )
     except Exception:
         pass
@@ -81,28 +101,36 @@ def ticket_message_post_save(sender, instance, created, **kwargs):
         return
     
     try:
-        from notifications.models import Notification
+        from notifications.services import NotificationService
         
         ticket = instance.ticket
         
         if instance.is_staff_reply:
             # نوتیفیکیشن برای کاربر
-            Notification.objects.create(
+            context = {
+                'user_name': ticket.user.get_full_name() if hasattr(ticket.user, 'get_full_name') else str(ticket.user),
+                'ticket_number': ticket.ticket_number,
+                'ticket_id': str(ticket.id)
+            }
+            NotificationService.create_notification(
                 user=ticket.user,
-                title='پاسخ جدید در تیکت',
-                message=f'پاسخ جدیدی در تیکت #{ticket.ticket_number} دریافت شد.',
-                notification_type='ticket',
-                data={'ticket_id': str(ticket.id), 'ticket_number': ticket.ticket_number}
+                template_code='ticket_reply_user',
+                context=context,
+                priority='high'
             )
         else:
             # نوتیفیکیشن برای کارشناس
             if ticket.assigned_to:
-                Notification.objects.create(
+                context = {
+                    'staff_name': ticket.assigned_to.get_full_name() if hasattr(ticket.assigned_to, 'get_full_name') else str(ticket.assigned_to),
+                    'ticket_number': ticket.ticket_number,
+                    'ticket_id': str(ticket.id)
+                }
+                NotificationService.create_notification(
                     user=ticket.assigned_to,
-                    title='پیام جدید در تیکت',
-                    message=f'پیام جدیدی در تیکت #{ticket.ticket_number} دریافت شد.',
-                    notification_type='ticket',
-                    data={'ticket_id': str(ticket.id), 'ticket_number': ticket.ticket_number}
+                    template_code='ticket_message_staff',
+                    context=context,
+                    priority='normal'
                 )
     except Exception:
         pass

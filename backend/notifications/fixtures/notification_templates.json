@@ -1,0 +1,142 @@
+[
+  {
+    "model": "notifications.notificationtemplate",
+    "pk": "00000000-0000-0000-0001-000000000001",
+    "fields": {
+      "code": "ticket_created_user",
+      "name": "تیکت جدید - کاربر",
+      "description": "اعلان برای کاربر هنگام ایجاد تیکت جدید",
+      "category": "support",
+      "title_template": "تیکت جدید ایجاد شد",
+      "body_template": "تیکت #{{ticket_number}} با موضوع \"{{subject}}\" ایجاد شد.",
+      "email_subject_template": "تیکت #{{ticket_number}} ایجاد شد",
+      "email_html_template": "<p>سلام {{user_name}} عزیز،</p><p>تیکت شما با شماره <strong>#{{ticket_number}}</strong> و موضوع \"{{subject}}\" با موفقیت ایجاد شد.</p><p>کارشناسان ما در اسرع وقت به تیکت شما رسیدگی خواهند کرد.</p>",
+      "sms_template": "تیکت #{{ticket_number}} با موضوع \"{{subject}}\" ایجاد شد.",
+      "channels": ["in_app", "sms", "email"],
+      "default_priority": "normal",
+      "is_active": true,
+      "require_confirmation": false,
+      "metadata": {}
+    }
+  },
+  {
+    "model": "notifications.notificationtemplate",
+    "pk": "00000000-0000-0000-0001-000000000002",
+    "fields": {
+      "code": "ticket_assigned_staff",
+      "name": "تیکت تخصیص داده شده - کارشناس",
+      "description": "اعلان برای کارشناس هنگام تخصیص تیکت",
+      "category": "support",
+      "title_template": "تیکت جدید تخصیص داده شد",
+      "body_template": "تیکت #{{ticket_number}} به شما تخصیص داده شد.",
+      "email_subject_template": "تیکت #{{ticket_number}} به شما تخصیص داده شد",
+      "email_html_template": "<p>سلام {{staff_name}} عزیز،</p><p>تیکت شماره <strong>#{{ticket_number}}</strong> با موضوع \"{{subject}}\" به شما تخصیص داده شد.</p><p>لطفاً در اسرع وقت به این تیکت رسیدگی کنید.</p>",
+      "sms_template": "تیکت #{{ticket_number}} به شما تخصیص داده شد.",
+      "channels": ["in_app", "email"],
+      "default_priority": "high",
+      "is_active": true,
+      "require_confirmation": false,
+      "metadata": {}
+    }
+  },
+  {
+    "model": "notifications.notificationtemplate",
+    "pk": "00000000-0000-0000-0001-000000000003",
+    "fields": {
+      "code": "ticket_status_changed",
+      "name": "تغییر وضعیت تیکت",
+      "description": "اعلان برای کاربر هنگام تغییر وضعیت تیکت",
+      "category": "support",
+      "title_template": "تغییر وضعیت تیکت",
+      "body_template": "وضعیت تیکت #{{ticket_number}} به \"{{status}}\" تغییر کرد.",
+      "email_subject_template": "تغییر وضعیت تیکت #{{ticket_number}}",
+      "email_html_template": "<p>سلام {{user_name}} عزیز،</p><p>وضعیت تیکت شماره <strong>#{{ticket_number}}</strong> به \"{{status}}\" تغییر کرد.</p>",
+      "sms_template": "وضعیت تیکت #{{ticket_number}} به \"{{status}}\" تغییر کرد.",
+      "channels": ["in_app", "sms"],
+      "default_priority": "normal",
+      "is_active": true,
+      "require_confirmation": false,
+      "metadata": {}
+    }
+  },
+  {
+    "model": "notifications.notificationtemplate",
+    "pk": "00000000-0000-0000-0001-000000000004",
+    "fields": {
+      "code": "ticket_reply_user",
+      "name": "پاسخ جدید تیکت - کاربر",
+      "description": "اعلان برای کاربر هنگام دریافت پاسخ از کارشناس",
+      "category": "support",
+      "title_template": "پاسخ جدید در تیکت",
+      "body_template": "پاسخ جدیدی در تیکت #{{ticket_number}} دریافت شد.",
+      "email_subject_template": "پاسخ جدید در تیکت #{{ticket_number}}",
+      "email_html_template": "<p>سلام {{user_name}} عزیز،</p><p>کارشناس ما پاسخ جدیدی در تیکت شماره <strong>#{{ticket_number}}</strong> ارسال کرده است.</p><p>برای مشاهده پاسخ به پنل کاربری خود مراجعه کنید.</p>",
+      "sms_template": "پاسخ جدیدی در تیکت #{{ticket_number}} دریافت شد.",
+      "channels": ["in_app", "sms", "email"],
+      "default_priority": "high",
+      "is_active": true,
+      "require_confirmation": false,
+      "metadata": {}
+    }
+  },
+  {
+    "model": "notifications.notificationtemplate",
+    "pk": "00000000-0000-0000-0001-000000000005",
+    "fields": {
+      "code": "ticket_question_user",
+      "name": "سوال جدید در تیکت - کاربر",
+      "description": "اعلان برای کاربر هنگام دریافت سوال از کارشناس",
+      "category": "support",
+      "title_template": "سوال جدید در تیکت",
+      "body_template": "کارشناس سوالی در تیکت #{{ticket_number}} مطرح کرده است.",
+      "email_subject_template": "سوال جدید در تیکت #{{ticket_number}}",
+      "email_html_template": "<p>سلام {{user_name}} عزیز،</p><p>کارشناس ما سوالی در تیکت شماره <strong>#{{ticket_number}}</strong> مطرح کرده است.</p><p>لطفاً در اسرع وقت به این سوال پاسخ دهید.</p>",
+      "sms_template": "کارشناس سوالی در تیکت #{{ticket_number}} مطرح کرده است. لطفاً پاسخ دهید.",
+      "channels": ["in_app", "sms", "email"],
+      "default_priority": "high",
+      "is_active": true,
+      "require_confirmation": false,
+      "metadata": {}
+    }
+  },
+  {
+    "model": "notifications.notificationtemplate",
+    "pk": "00000000-0000-0000-0001-000000000006",
+    "fields": {
+      "code": "ticket_forwarded_staff",
+      "name": "تیکت ارسال شده - کارشناس",
+      "description": "اعلان برای کارشناس هنگام forward شدن تیکت",
+      "category": "support",
+      "title_template": "تیکت جدید ارسال شده",
+      "body_template": "تیکت #{{ticket_number}} توسط {{sender_name}} به شما ارسال شد.",
+      "email_subject_template": "تیکت #{{ticket_number}} به شما ارسال شد",
+      "email_html_template": "<p>سلام {{staff_name}} عزیز،</p><p>تیکت شماره <strong>#{{ticket_number}}</strong> با موضوع \"{{subject}}\" توسط {{sender_name}} به شما ارسال شد.</p><p>لطفاً در اسرع وقت به این تیکت رسیدگی کنید.</p>",
+      "sms_template": "",
+      "channels": ["in_app", "email"],
+      "default_priority": "high",
+      "is_active": true,
+      "require_confirmation": false,
+      "metadata": {}
+    }
+  },
+  {
+    "model": "notifications.notificationtemplate",
+    "pk": "00000000-0000-0000-0001-000000000007",
+    "fields": {
+      "code": "ticket_message_staff",
+      "name": "پیام جدید تیکت - کارشناس",
+      "description": "اعلان برای کارشناس هنگام دریافت پیام از کاربر",
+      "category": "support",
+      "title_template": "پیام جدید در تیکت",
+      "body_template": "پیام جدیدی در تیکت #{{ticket_number}} دریافت شد.",
+      "email_subject_template": "پیام جدید در تیکت #{{ticket_number}}",
+      "email_html_template": "<p>سلام {{staff_name}} عزیز،</p><p>کاربر پیام جدیدی در تیکت شماره <strong>#{{ticket_number}}</strong> ارسال کرده است.</p><p>لطفاً به این پیام پاسخ دهید.</p>",
+      "sms_template": "",
+      "channels": ["in_app", "email"],
+      "default_priority": "normal",
+      "is_active": true,
+      "require_confirmation": false,
+      "metadata": {}
+    }
+  }
+]
