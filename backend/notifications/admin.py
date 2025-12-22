@@ -13,23 +13,41 @@ class NotificationTemplateAdmin(admin.ModelAdmin):
     list_display = ['name', 'code', 'category', 'default_priority', 'is_active', 'channels_display', 'created_at']
     list_filter = ['category', 'default_priority', 'is_active', 'created_at']
     search_fields = ['name', 'code', 'title_template', 'body_template']
-    readonly_fields = ['created_at', 'updated_at', 'template_variables_help']
+    readonly_fields = ['created_at_jalali', 'updated_at_jalali', 'template_variables_help']
     
     class Media:
         js = ('admin/js/notification_template_help.js',)
     
     fieldsets = (
         ('اطلاعات پایه و تنظیمات', {
-            'fields': ('code', 'name', 'description', 'category', 'channels', 'default_priority', 'is_active', 'require_confirmation')
+            'fields': ('code', 'name', 'description', 'category', 'channels', 'default_priority', 'is_active', 'require_confirmation', 'created_at_jalali', 'updated_at_jalali')
         }),
         ('محتوای قالب', {
             'fields': ('template_variables_help', 'title_template', 'body_template', 'email_subject_template', 'email_html_template', 'sms_template')
         }),
         ('اقدام و متادیتا', {
-            'fields': ('action_url', 'action_text', 'metadata', 'created_at', 'updated_at'),
+            'fields': ('action_url', 'action_text', 'metadata'),
             'classes': ('collapse',)
         }),
     )
+    
+    def created_at_jalali(self, obj):
+        """تبدیل تاریخ ایجاد به شمسی"""
+        if obj and obj.created_at:
+            import jdatetime
+            jalali = jdatetime.datetime.fromgregorian(datetime=obj.created_at)
+            return jalali.strftime('%Y/%m/%d - %H:%M')
+        return '-'
+    created_at_jalali.short_description = 'تاریخ ایجاد'
+    
+    def updated_at_jalali(self, obj):
+        """تبدیل تاریخ به‌روزرسانی به شمسی"""
+        if obj and obj.updated_at:
+            import jdatetime
+            jalali = jdatetime.datetime.fromgregorian(datetime=obj.updated_at)
+            return jalali.strftime('%Y/%m/%d - %H:%M')
+        return '-'
+    updated_at_jalali.short_description = 'آخرین به‌روزرسانی'
     
     def template_variables_help(self, obj):
         """نمایش راهنمای متغیرهای قالب"""
