@@ -27,8 +27,7 @@ class NotificationTemplateAdmin(admin.ModelAdmin):
         }),
         ('اقدام و متادیتا', {
             'fields': ('action_url', 'action_text', 'metadata', 'created_at', 'updated_at'),
-            'classes': ('collapse',),
-            'description': '<div style="padding: 10px; background: #e7f3ff; border-left: 4px solid #0056b3; margin-bottom: 15px;"><strong>📌 توضیحات فیلدها:</strong><ul style="margin: 10px 0;"><li><strong>action_url:</strong> لینک دکمه اقدام در اعلان (مثلاً لینک مشاهده تیکت)</li><li><strong>action_text:</strong> متن دکمه اقدام (مثلاً "مشاهده تیکت")</li><li><strong>metadata:</strong> اطلاعات اضافی به صورت JSON برای استفاده‌های پیشرفته</li></ul></div>'
+            'classes': ('collapse',)
         }),
     )
     
