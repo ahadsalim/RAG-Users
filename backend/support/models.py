@@ -291,11 +291,14 @@ class Ticket(models.Model):
         return f"#{self.ticket_number} - {self.subject}"
     
     def save(self, *args, **kwargs):
+        is_new = self.pk is None
+        
         if not self.ticket_number:
             self.ticket_number = self.generate_ticket_number()
         
-        # تنظیم SLA از طریق SLAPolicy (در صورت نیاز)
-        # SLA باید از طریق SLAPolicy تنظیم شود نه از دپارتمان
+        # تنظیم SLA برای تیکت جدید
+        if is_new and not self.response_due and not self.resolution_due:
+            self.set_sla_deadlines()
         
         # تنظیم تاریخ بسته شدن
         if self.status == 'closed' and not self.closed_at:
@@ -308,6 +311,50 @@ class Ticket(models.Model):
             self.resolved_at = timezone.now()
         
         super().save(*args, **kwargs)
+    
+    def set_sla_deadlines(self):
+        """تنظیم مهلت‌های SLA بر اساس سیاست‌های تعریف شده"""
+        from datetime import timedelta
+        
+        # پیدا کردن سیاست SLA مناسب
+        sla_policy = None
+        
+        # ابتدا بر اساس دپارتمان و اولویت
+        if self.department:
+            sla_policy = SLAPolicy.objects.filter(
+                department=self.department,
+                priority__contains=self.priority,
+                is_active=True
+            ).first()
+        
+        # اگر پیدا نشد، بر اساس اولویت
+        if not sla_policy:
+            sla_policy = SLAPolicy.objects.filter(
+                department__isnull=True,
+                priority__contains=self.priority,
+                is_active=True
+            ).first()
+        
+        # اگر هیچ سیاستی پیدا نشد، از مقادیر پیش‌فرض استفاده کن
+        if not sla_policy:
+            # مقادیر پیش‌فرض بر اساس اولویت
+            default_times = {
+                'urgent': {'response': 30, 'resolution': 240},    # 30 دقیقه، 4 ساعت
+                'high': {'response': 120, 'resolution': 480},     # 2 ساعت، 8 ساعت
+                'medium': {'response': 240, 'resolution': 1440},  # 4 ساعت، 24 ساعت
+                'low': {'response': 480, 'resolution': 2880},     # 8 ساعت، 48 ساعت
+            }
+            times = default_times.get(self.priority, default_times['medium'])
+            response_minutes = times['response']
+            resolution_minutes = times['resolution']
+        else:
+            response_minutes = sla_policy.response_time
+            resolution_minutes = sla_policy.resolution_time
+        
+        # تنظیم مهلت‌ها
+        now = timezone.now()
+        self.response_due = now + timedelta(minutes=response_minutes)
+        self.resolution_due = now + timedelta(minutes=resolution_minutes)
     
     @staticmethod
     def generate_ticket_number():
