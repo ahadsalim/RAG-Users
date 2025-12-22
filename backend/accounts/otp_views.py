@@ -276,7 +276,7 @@ class VerifyOTPView(APIView):
                     'role': user.organization_role
                 } if user.organization else None,
                 'two_factor_enabled': user.two_factor_enabled,
-                'language': user.language,
+                'language': user.language.code if user.language else 'fa',
             },
             'message': 'ورود موفقیت‌آمیز بود' if not created else 'ثبت‌نام و ورود موفقیت‌آمیز بود'
         }, status=status.HTTP_200_OK)
