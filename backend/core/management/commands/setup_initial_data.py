@@ -55,7 +55,10 @@ class Command(BaseCommand):
         # 8. ایجاد قالب‌های اعلان
         self.create_notification_templates()
         
-        # 9. ایجاد کاربر سوپر ادمین
+        # 9. ایجاد سیاست‌های SLA
+        self.create_sla_policies()
+        
+        # 10. ایجاد کاربر سوپر ادمین
         if not options['skip_admin']:
             admin_password = options.get('admin_password')
             if not admin_password:
@@ -517,3 +520,60 @@ class Command(BaseCommand):
             self.stdout.write(self.style.SUCCESS(f'  ✓ {created_count} قالب اعلان ایجاد شد'))
         else:
             self.stdout.write(self.style.WARNING('  - قالب‌های اعلان از قبل وجود دارند'))
+    
+    def create_sla_policies(self):
+        """ایجاد سیاست‌های SLA پیش‌فرض"""
+        from support.models import SLAPolicy
+        
+        policies = [
+            {
+                'name': 'فوری',
+                'description': 'سیاست SLA برای تیکت‌های فوری',
+                'priority': ['urgent'],
+                'response_time': 30,      # 30 دقیقه
+                'resolution_time': 240,   # 4 ساعت
+                'is_active': True,
+            },
+            {
+                'name': 'بالا',
+                'description': 'سیاست SLA برای تیکت‌های با اولویت بالا',
+                'priority': ['high'],
+                'response_time': 120,     # 2 ساعت
+                'resolution_time': 480,   # 8 ساعت
+                'is_active': True,
+            },
+            {
+                'name': 'متوسط',
+                'description': 'سیاست SLA برای تیکت‌های با اولویت متوسط',
+                'priority': ['medium'],
+                'response_time': 240,     # 4 ساعت
+                'resolution_time': 1440,  # 24 ساعت
+                'is_active': True,
+            },
+            {
+                'name': 'کم',
+                'description': 'سیاست SLA برای تیکت‌های با اولویت کم',
+                'priority': ['low'],
+                'response_time': 480,     # 8 ساعت
+                'resolution_time': 2880,  # 48 ساعت
+                'is_active': True,
+            },
+        ]
+        
+        created_count = 0
+        updated_count = 0
+        
+        for policy_data in policies:
+            policy, created = SLAPolicy.objects.update_or_create(
+                name=policy_data['name'],
+                defaults=policy_data
+            )
+            if created:
+                created_count += 1
+            else:
+                updated_count += 1
+        
+        if created_count > 0:
+            self.stdout.write(self.style.SUCCESS(f'  ✓ {created_count} سیاست SLA ایجاد شد'))
+        if updated_count > 0:
+            self.stdout.write(self.style.WARNING(f'  - {updated_count} سیاست SLA به‌روزرسانی شد'))

@@ -327,7 +327,7 @@ class Ticket(models.Model):
                 is_active=True
             ).first()
         
-        # اگر پیدا نشد، بر اساس اولویت
+        # اگر پیدا نشد، بر اساس اولویت (بدون دپارتمان خاص)
         if not sla_policy:
             sla_policy = SLAPolicy.objects.filter(
                 department__isnull=True,
@@ -335,26 +335,14 @@ class Ticket(models.Model):
                 is_active=True
             ).first()
         
-        # اگر هیچ سیاستی پیدا نشد، از مقادیر پیش‌فرض استفاده کن
+        # اگر هیچ سیاستی پیدا نشد، SLA تنظیم نمی‌شود
         if not sla_policy:
-            # مقادیر پیش‌فرض بر اساس اولویت
-            default_times = {
-                'urgent': {'response': 30, 'resolution': 240},    # 30 دقیقه، 4 ساعت
-                'high': {'response': 120, 'resolution': 480},     # 2 ساعت، 8 ساعت
-                'medium': {'response': 240, 'resolution': 1440},  # 4 ساعت، 24 ساعت
-                'low': {'response': 480, 'resolution': 2880},     # 8 ساعت، 48 ساعت
-            }
-            times = default_times.get(self.priority, default_times['medium'])
-            response_minutes = times['response']
-            resolution_minutes = times['resolution']
-        else:
-            response_minutes = sla_policy.response_time
-            resolution_minutes = sla_policy.resolution_time
+            return
         
-        # تنظیم مهلت‌ها
+        # تنظیم مهلت‌ها از SLAPolicy
         now = timezone.now()
-        self.response_due = now + timedelta(minutes=response_minutes)
-        self.resolution_due = now + timedelta(minutes=resolution_minutes)
+        self.response_due = now + timedelta(minutes=sla_policy.response_time)
+        self.resolution_due = now + timedelta(minutes=sla_policy.resolution_time)
     
     @staticmethod
     def generate_ticket_number():

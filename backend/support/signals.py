@@ -92,7 +92,7 @@ def ticket_post_save(sender, instance, created, **kwargs):
 
 @receiver(post_save, sender=TicketMessage)
 def ticket_message_post_save(sender, instance, created, **kwargs):
-    """ارسال نوتیفیکیشن بعد از پیام جدید و تغییر وضعیت تیکت"""
+    """ارسال نوتیفیکیشن بعد از پیام جدید"""
     if not created:
         return
     
@@ -104,11 +104,6 @@ def ticket_message_post_save(sender, instance, created, **kwargs):
         from notifications.services import NotificationService
         
         ticket = instance.ticket
-        
-        # اگر کاربر پیام جدید فرستاده، وضعیت تیکت را به "باز" تغییر بده
-        if not instance.is_staff_reply and ticket.status in ['answered', 'closed', 'resolved']:
-            ticket.status = 'open'
-            ticket.save(update_fields=['status'])
         
         if instance.is_staff_reply:
             # نوتیفیکیشن برای کاربر

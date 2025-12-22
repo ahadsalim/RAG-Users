@@ -206,8 +206,9 @@ class TicketViewSet(viewsets.ModelViewSet):
                 ticket.status = 'in_progress'
                 ticket.save(update_fields=['status'])
         else:
-            if ticket.status == 'waiting':
-                ticket.status = 'in_progress'
+            # اگر کاربر پیام جدید فرستاد، تیکت باید به وضعیت باز برگردد
+            if ticket.status in ['answered', 'waiting', 'closed', 'resolved']:
+                ticket.status = 'open'
                 ticket.save(update_fields=['status'])
         
         # ثبت در تاریخچه
