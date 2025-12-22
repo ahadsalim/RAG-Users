@@ -37,6 +37,8 @@ class NotificationTemplateAdmin(admin.ModelAdmin):
             kwargs['widget'] = forms.Textarea(attrs={'rows': 2, 'style': 'width: 100%;'})
         elif db_field.name == 'body_template':
             kwargs['widget'] = forms.Textarea(attrs={'rows': 2, 'style': 'width: 100%;'})
+        elif db_field.name == 'sms_template':
+            kwargs['widget'] = forms.Textarea(attrs={'rows': 2, 'style': 'width: 100%;'})
         elif db_field.name == 'channels':
             # تبدیل JSONField به CheckboxSelectMultiple
             from .models import NotificationChannel
