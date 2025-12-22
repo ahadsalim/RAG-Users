@@ -321,19 +321,24 @@ class Ticket(models.Model):
         
         # ابتدا بر اساس دپارتمان و اولویت
         if self.department:
+            # جستجوی سیاست‌هایی که این دپارتمان را شامل می‌شوند
             sla_policy = SLAPolicy.objects.filter(
-                department=self.department,
+                departments=self.department,
                 priority__contains=self.priority,
                 is_active=True
             ).first()
         
-        # اگر پیدا نشد، بر اساس اولویت (بدون دپارتمان خاص)
+        # اگر پیدا نشد، بر اساس اولویت (سیاست‌های بدون دپارتمان خاص)
         if not sla_policy:
-            sla_policy = SLAPolicy.objects.filter(
-                department__isnull=True,
+            # سیاست‌هایی که هیچ دپارتمانی ندارند (برای همه)
+            policies_without_dept = SLAPolicy.objects.filter(
                 priority__contains=self.priority,
                 is_active=True
-            ).first()
+            ).annotate(
+                dept_count=models.Count('departments')
+            ).filter(dept_count=0)
+            
+            sla_policy = policies_without_dept.first()
         
         # اگر هیچ سیاستی پیدا نشد، SLA تنظیم نمی‌شود
         if not sla_policy:
@@ -603,13 +608,12 @@ class SLAPolicy(models.Model):
         verbose_name=_('اولویت'),
         help_text=_('می‌توانید چند اولویت انتخاب کنید')
     )
-    department = models.ForeignKey(
+    departments = models.ManyToManyField(
         TicketDepartment,
-        on_delete=models.CASCADE,
-        null=True,
         blank=True,
         related_name='sla_policies',
-        verbose_name=_('دپارتمان')
+        verbose_name=_('دپارتمان‌ها'),
+        help_text=_('این سیاست برای کدام دپارتمان‌ها اعمال شود؟ اگر خالی باشد، برای همه دپارتمان‌ها اعمال می‌شود.')
     )
     
     # زمان‌ها (به دقیقه)

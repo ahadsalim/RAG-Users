@@ -528,7 +528,7 @@ class Command(BaseCommand):
         policies = [
             {
                 'name': 'فوری',
-                'description': 'سیاست SLA برای تیکت‌های فوری',
+                'description': 'سیاست SLA برای تیکت‌های فوری - برای همه دپارتمان‌ها',
                 'priority': ['urgent'],
                 'response_time': 30,      # 30 دقیقه
                 'resolution_time': 240,   # 4 ساعت
@@ -536,7 +536,7 @@ class Command(BaseCommand):
             },
             {
                 'name': 'بالا',
-                'description': 'سیاست SLA برای تیکت‌های با اولویت بالا',
+                'description': 'سیاست SLA برای تیکت‌های با اولویت بالا - برای همه دپارتمان‌ها',
                 'priority': ['high'],
                 'response_time': 120,     # 2 ساعت
                 'resolution_time': 480,   # 8 ساعت
@@ -544,7 +544,7 @@ class Command(BaseCommand):
             },
             {
                 'name': 'متوسط',
-                'description': 'سیاست SLA برای تیکت‌های با اولویت متوسط',
+                'description': 'سیاست SLA برای تیکت‌های با اولویت متوسط - برای همه دپارتمان‌ها',
                 'priority': ['medium'],
                 'response_time': 240,     # 4 ساعت
                 'resolution_time': 1440,  # 24 ساعت
@@ -552,7 +552,7 @@ class Command(BaseCommand):
             },
             {
                 'name': 'کم',
-                'description': 'سیاست SLA برای تیکت‌های با اولویت کم',
+                'description': 'سیاست SLA برای تیکت‌های با اولویت کم - برای همه دپارتمان‌ها',
                 'priority': ['low'],
                 'response_time': 480,     # 8 ساعت
                 'resolution_time': 2880,  # 48 ساعت
@@ -568,6 +568,9 @@ class Command(BaseCommand):
                 name=policy_data['name'],
                 defaults=policy_data
             )
+            # سیاست‌های پیش‌فرض بدون دپارتمان هستند (برای همه)
+            # departments را خالی نگه می‌داریم
+            
             if created:
                 created_count += 1
             else:

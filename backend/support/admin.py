@@ -165,10 +165,11 @@ class SLAPolicyAdminForm(forms.ModelForm):
 @admin.register(SLAPolicy)
 class SLAPolicyAdmin(admin.ModelAdmin):
     form = SLAPolicyAdminForm
-    list_display = ['name', 'priority_display', 'department', 'response_time_display', 'resolution_time_display', 'is_active']
-    list_filter = ['is_active', 'department']
+    list_display = ['name', 'priority_display', 'departments_display', 'response_time_display', 'resolution_time_display', 'is_active']
+    list_filter = ['is_active', 'departments']
     search_fields = ['name', 'description']
     ordering = ['name']
+    filter_horizontal = ['departments']
     
     class Media:
         css = {
@@ -176,7 +177,14 @@ class SLAPolicyAdmin(admin.ModelAdmin):
         }
     
     # همه فیلدها در یک صفحه - بدون تب
-    fields = ('name', 'description', 'priority', 'department', 'response_time', 'resolution_time', 'is_active')
+    fields = ('name', 'description', 'priority', 'departments', 'response_time', 'resolution_time', 'is_active')
+    
+    def departments_display(self, obj):
+        """نمایش دپارتمان‌ها"""
+        if obj.departments.exists():
+            return ', '.join([dept.name for dept in obj.departments.all()])
+        return 'همه دپارتمان‌ها'
+    departments_display.short_description = _('دپارتمان‌ها')
     
     def priority_display(self, obj):
         if obj.priority and isinstance(obj.priority, list) and len(obj.priority) > 0:
