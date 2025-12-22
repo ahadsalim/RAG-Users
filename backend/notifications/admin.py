@@ -15,15 +15,11 @@ class NotificationTemplateAdmin(admin.ModelAdmin):
     readonly_fields = ['created_at', 'updated_at']
     
     fieldsets = (
-        ('اطلاعات پایه و محتوای قالب', {
-            'fields': ('code', 'name', 'description', 'category', 'title_template', 'body_template')
+        ('محتوای قالب', {
+            'fields': ('title_template', 'body_template', 'email_subject_template', 'email_html_template', 'sms_template')
         }),
-        ('قالب‌های مخصوص', {
-            'fields': ('email_subject_template', 'email_html_template', 'sms_template'),
-            'classes': ('collapse',)
-        }),
-        ('تنظیمات', {
-            'fields': ('channels', 'default_priority', 'is_active', 'require_confirmation')
+        ('اطلاعات پایه و تنظیمات', {
+            'fields': ('code', 'name', 'description', 'category', 'channels', 'default_priority', 'is_active', 'require_confirmation')
         }),
         ('اقدام', {
             'fields': ('action_url', 'action_text')
@@ -35,10 +31,23 @@ class NotificationTemplateAdmin(admin.ModelAdmin):
     )
     
     def formfield_for_dbfield(self, db_field, request, **kwargs):
+        from django.forms import CheckboxSelectMultiple
+        
         if db_field.name == 'description':
             kwargs['widget'] = forms.Textarea(attrs={'rows': 2, 'style': 'width: 100%;'})
         elif db_field.name == 'body_template':
             kwargs['widget'] = forms.Textarea(attrs={'rows': 2, 'style': 'width: 100%;'})
+        elif db_field.name == 'channels':
+            # تبدیل JSONField به CheckboxSelectMultiple
+            from .models import NotificationChannel
+            kwargs['widget'] = CheckboxSelectMultiple(choices=[
+                ('email', 'ایمیل'),
+                ('sms', 'پیامک'),
+                ('push', 'Push Notification'),
+                ('in_app', 'داخل برنامه'),
+                ('websocket', 'WebSocket'),
+            ])
+            kwargs['help_text'] = 'کانال‌های ارسال اعلان را انتخاب کنید'
         return super().formfield_for_dbfield(db_field, request, **kwargs)
     
     def channels_display(self, obj):
