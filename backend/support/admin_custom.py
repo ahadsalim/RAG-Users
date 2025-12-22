@@ -191,7 +191,9 @@ class CustomTicketAdmin(admin.ModelAdmin):
             response_status = '<span style="color: #ef4444; font-weight: bold;">پاسخ داده نشده</span>'
         
         # محاسبه SLA
-        sla_rows = ''
+        sla_row_response = ''
+        sla_row_resolution = ''
+        
         if obj.response_due or obj.resolution_due:
             is_response_breached = obj.response_due and timezone.now() > obj.response_due and not obj.first_response_at
             is_resolution_breached = obj.resolution_due and timezone.now() > obj.resolution_due and obj.status not in ['closed', 'resolved']
@@ -200,20 +202,30 @@ class CustomTicketAdmin(admin.ModelAdmin):
                 jalali_response_deadline = format_datetime_jalali(obj.response_due, user)
                 response_color = '#ef4444' if is_response_breached else '#22c55e'
                 response_icon = '⚠️' if is_response_breached else '✓'
-                sla_rows += f'''
-                <div style="display: flex; justify-content: space-between; margin-bottom: 10px; padding-bottom: 10px; border-bottom: 1px solid #e5e7eb;">
-                    <span><strong>مهلت پاسخ‌دهی:</strong> <span style="color: {response_color}; font-weight: bold;">{jalali_response_deadline} {response_icon}</span></span>
-                </div>
+                response_bg = '#fef2f2' if is_response_breached else '#f0fdf4'
+                sla_row_response = f'''
+                <tr style="border-bottom: 1px solid #e5e7eb; background: {response_bg};">
+                    <td style="padding: 10px;"><strong>⏰ مهلت پاسخ‌دهی:</strong></td>
+                    <td style="padding: 10px;" colspan="3">
+                        <span style="color: {response_color}; font-weight: bold; font-size: 14px;">{jalali_response_deadline} {response_icon}</span>
+                        {' <span style="background: #fee2e2; color: #991b1b; padding: 3px 10px; border-radius: 4px; font-size: 12px; margin-right: 10px;">تأخیر در پاسخ</span>' if is_response_breached else ''}
+                    </td>
+                </tr>
                 '''
             
             if obj.resolution_due:
                 jalali_resolution_deadline = format_datetime_jalali(obj.resolution_due, user)
                 resolution_color = '#ef4444' if is_resolution_breached else '#22c55e'
                 resolution_icon = '⚠️' if is_resolution_breached else '✓'
-                sla_rows += f'''
-                <div style="display: flex; justify-content: space-between; margin-bottom: 10px; padding-bottom: 10px; border-bottom: 1px solid #e5e7eb;">
-                    <span><strong>مهلت حل مشکل:</strong> <span style="color: {resolution_color}; font-weight: bold;">{jalali_resolution_deadline} {resolution_icon}</span></span>
-                </div>
+                resolution_bg = '#fef2f2' if is_resolution_breached else '#f0fdf4'
+                sla_row_resolution = f'''
+                <tr style="border-bottom: 1px solid #e5e7eb; background: {resolution_bg};">
+                    <td style="padding: 10px;"><strong>🎯 مهلت حل مشکل:</strong></td>
+                    <td style="padding: 10px;" colspan="3">
+                        <span style="color: {resolution_color}; font-weight: bold; font-size: 14px;">{jalali_resolution_deadline} {resolution_icon}</span>
+                        {' <span style="background: #fee2e2; color: #991b1b; padding: 3px 10px; border-radius: 4px; font-size: 12px; margin-right: 10px;">تأخیر در حل</span>' if is_resolution_breached else ''}
+                    </td>
+                </tr>
                 '''
         
         html = f'''
@@ -249,8 +261,9 @@ class CustomTicketAdmin(admin.ModelAdmin):
                     <td style="padding: 10px;"><strong>زمان آخرین پاسخ:</strong></td>
                     <td style="padding: 10px;">{response_status}</td>
                 </tr>
+                {sla_row_response}
+                {sla_row_resolution}
             </table>
-            {sla_rows}
         </div>
         '''
         return mark_safe(html)
