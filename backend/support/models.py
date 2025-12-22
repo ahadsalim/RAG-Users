@@ -291,7 +291,9 @@ class Ticket(models.Model):
         return f"#{self.ticket_number} - {self.subject}"
     
     def save(self, *args, **kwargs):
-        is_new = self.pk is None
+        # استفاده از _state.adding برای تشخیص تیکت جدید (به جای pk is None)
+        # چون UUIDField قبل از save مقدار می‌گیرد
+        is_new = self._state.adding
         
         if not self.ticket_number:
             self.ticket_number = self.generate_ticket_number()
