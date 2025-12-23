@@ -5,6 +5,7 @@ export interface User {
   first_name?: string
   last_name?: string
   phone_number?: string
+  national_id?: string
   is_superuser?: boolean
   is_staff?: boolean
   user_type?: 'individual' | 'business'
