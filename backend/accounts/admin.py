@@ -28,7 +28,7 @@ class UserAdmin(BaseUserAdmin):
         (_('اطلاعات کاربر'), {
             'fields': (
                 'phone_number', 'email', 'password_change_link',
-                'first_name', 'last_name', 'avatar', 'bio', 'user_type', 
+                'first_name', 'last_name', 'user_type', 
                 'national_id', 'national_id_verified',
                 'company_name', 'economic_code', 'organization', 'organization_role'
             )
