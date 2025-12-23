@@ -187,6 +187,21 @@ docker exec app_backend python manage.py migrate
 
 ## 🔧 تغییرات اخیر
 
+### 2025-12-23: حذف سیستم آپلود عکس پروفایل
+- ✅ **حذف کامل قابلیت آپلود عکس پروفایل**
+  - حذف فیلدهای `avatar` و `bio` از UserAdmin در backend
+  - حذف کامل بخش آپلود عکس از SettingsPage.tsx در frontend
+  - حذف توابع handleAvatarUpload و handleAvatarDelete
+  - حذف UI مربوط به انتخاب، نمایش و حذف عکس
+  - حذف فیلد `avatar` از UserSettings interface
+  - نگهداری فیلد `national_id` در User interface برای استفاده‌های آینده
+  
+- ✅ **دلیل حذف**
+  - مشکلات متعدد در پیاده‌سازی
+  - خطای 403 Forbidden در دسترسی به MinIO
+  - عدم تنظیم متغیر محیطی S3_USERS_BUCKET
+  - درخواست کاربر برای حذف این قابلیت
+
 ### 2025-12-23: سیستم SLA و بستن خودکار تیکت‌ها
 - ✅ **پیاده‌سازی کامل سیستم SLA برای تیکت‌ها**
   - تغییر فیلد `department` در `SLAPolicy` از ForeignKey به ManyToManyField
