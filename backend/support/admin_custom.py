@@ -183,19 +183,10 @@ class CustomTicketAdmin(admin.ModelAdmin):
         user = request.user if request else None
         jalali_created_str = format_datetime_jalali(obj.created_at, user)
         
-        # وضعیت پاسخ و بررسی تاخیر
+        # وضعیت پاسخ (بدون نمایش تاخیر - تاخیر در مهلت پاسخ‌دهی نمایش داده می‌شود)
         if obj.first_response_at:
             jalali_first_response = format_datetime_jalali(obj.first_response_at, user)
-            # بررسی تاخیر در پاسخ
-            response_delayed = obj.response_due and obj.first_response_at > obj.response_due
-            if response_delayed:
-                delay = obj.first_response_at - obj.response_due
-                hours = int(delay.total_seconds() // 3600)
-                minutes = int((delay.total_seconds() % 3600) // 60)
-                delay_text = f'{hours} ساعت و {minutes} دقیقه' if hours > 0 else f'{minutes} دقیقه'
-                response_status = f'<span style="color: #ef4444; font-weight: bold;">{jalali_first_response} ⚠️</span> <span style="background: #fee2e2; color: #991b1b; padding: 2px 8px; border-radius: 4px; font-size: 11px; margin-right: 5px;">تاخیر {delay_text}</span>'
-            else:
-                response_status = f'<span style="color: #22c55e; font-weight: bold;">{jalali_first_response} ✓</span>'
+            response_status = f'<span style="color: #22c55e; font-weight: bold;">{jalali_first_response}</span>'
         else:
             response_status = '<span style="color: #ef4444; font-weight: bold;">پاسخ داده نشده</span>'
         
@@ -212,12 +203,39 @@ class CustomTicketAdmin(admin.ModelAdmin):
                 response_color = '#ef4444' if is_response_breached else '#22c55e'
                 response_icon = '⚠️' if is_response_breached else '✓'
                 response_bg = '#fef2f2' if is_response_breached else '#f0fdf4'
+                
+                # محاسبه تمام تاخیرها (برای هر بار که کاربر پیام فرستاده و با تاخیر پاسخ داده شده)
+                delay_texts = []
+                from support.models import TicketMessage
+                
+                # پیدا کردن تمام پیام‌های کاربر و پاسخ‌های کارشناس
+                messages = obj.messages.all().order_by('created_at')
+                current_response_due = obj.response_due
+                
+                for msg in messages:
+                    if msg.is_staff_reply:
+                        # بررسی تاخیر در این پاسخ
+                        if current_response_due and msg.created_at > current_response_due:
+                            delay = msg.created_at - current_response_due
+                            hours = int(delay.total_seconds() // 3600)
+                            minutes = int((delay.total_seconds() % 3600) // 60)
+                            delay_text = f'{hours} ساعت و {minutes} دقیقه تاخیر' if hours > 0 else f'{minutes} دقیقه تاخیر'
+                            delay_texts.append(delay_text)
+                
+                # نمایش تاخیرها
+                delay_display = ''
+                if delay_texts:
+                    delays_str = ' + '.join(delay_texts)
+                    delay_display = f'<br><span style="color: #991b1b; font-weight: bold; font-size: 13px; margin-top: 5px; display: inline-block;">میزان تاخیر: {delays_str}</span>'
+                
                 sla_row_response = f'''
                 <tr style="border-bottom: 1px solid #e5e7eb; background: {response_bg};">
                     <td style="padding: 10px;"><strong>⏰ مهلت پاسخ‌دهی:</strong></td>
-                    <td style="padding: 10px;" colspan="3">
+                    <td style="padding: 10px;">
                         <span style="color: {response_color}; font-weight: bold; font-size: 14px;">{jalali_response_deadline} {response_icon}</span>
-                        {' <span style="background: #fee2e2; color: #991b1b; padding: 3px 10px; border-radius: 4px; font-size: 12px; margin-right: 10px;">تأخیر در پاسخ</span>' if is_response_breached else ''}
+                    </td>
+                    <td style="padding: 10px;" colspan="2">
+                        {delay_display if delay_texts else ''}
                     </td>
                 </tr>
                 '''
