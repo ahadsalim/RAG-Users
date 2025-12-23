@@ -226,15 +226,17 @@ class CustomTicketAdmin(admin.ModelAdmin):
                 delay_display = ''
                 if delay_texts:
                     delays_str = ' + '.join(delay_texts)
-                    delay_display = f'<br><span style="color: #991b1b; font-weight: bold; font-size: 13px; margin-top: 5px; display: inline-block;">میزان تاخیر: {delays_str}</span>'
+                    delay_display = f'<span style="color: #991b1b; font-weight: bold; font-size: 13px;">میزان تاخیر: {delays_str}</span>'
+                    # اگر تاخیر دارد، رنگ زمینه قرمز می‌شود
+                    response_bg = '#fef2f2'
                 
                 sla_row_response = f'''
                 <tr style="border-bottom: 1px solid #e5e7eb; background: {response_bg};">
-                    <td style="padding: 10px;"><strong>⏰ مهلت پاسخ‌دهی:</strong></td>
-                    <td style="padding: 10px;">
+                    <td style="padding: 10px; vertical-align: middle;"><strong>⏰ مهلت پاسخ‌دهی:</strong></td>
+                    <td style="padding: 10px; vertical-align: middle;">
                         <span style="color: {response_color}; font-weight: bold; font-size: 14px;">{jalali_response_deadline} {response_icon}</span>
                     </td>
-                    <td style="padding: 10px;" colspan="2">
+                    <td style="padding: 10px; vertical-align: middle;" colspan="2">
                         {delay_display if delay_texts else ''}
                     </td>
                 </tr>
@@ -245,12 +247,20 @@ class CustomTicketAdmin(admin.ModelAdmin):
                 resolution_color = '#ef4444' if is_resolution_breached else '#22c55e'
                 resolution_icon = '⚠️' if is_resolution_breached else '✓'
                 resolution_bg = '#fef2f2' if is_resolution_breached else '#f0fdf4'
+                
+                # نمایش تاخیر در حل در ستون دوم
+                resolution_delay_display = ''
+                if is_resolution_breached:
+                    resolution_delay_display = '<span style="color: #991b1b; font-weight: bold; font-size: 13px;">تأخیر در حل</span>'
+                
                 sla_row_resolution = f'''
                 <tr style="border-bottom: 1px solid #e5e7eb; background: {resolution_bg};">
-                    <td style="padding: 10px;"><strong>🎯 مهلت حل مشکل:</strong></td>
-                    <td style="padding: 10px;" colspan="3">
+                    <td style="padding: 10px; vertical-align: middle;"><strong>🎯 مهلت حل مشکل:</strong></td>
+                    <td style="padding: 10px; vertical-align: middle;">
                         <span style="color: {resolution_color}; font-weight: bold; font-size: 14px;">{jalali_resolution_deadline} {resolution_icon}</span>
-                        {' <span style="background: #fee2e2; color: #991b1b; padding: 3px 10px; border-radius: 4px; font-size: 12px; margin-right: 10px;">تأخیر در حل</span>' if is_resolution_breached else ''}
+                    </td>
+                    <td style="padding: 10px; vertical-align: middle;" colspan="2">
+                        {resolution_delay_display}
                     </td>
                 </tr>
                 '''
