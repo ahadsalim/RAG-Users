@@ -98,26 +98,26 @@ sudo ./start.sh
 - ✅ اجرای migrations
 - ✅ ایجاد داده‌های اولیه (زبان‌ها، ارزها، مناطق زمانی، پلن‌ها، SLA، قالب‌های اعلان)
 - ✅ ایجاد کاربر سوپر ادمین
-- ✅ تنظیم بکآپ خودکار روزانه
+- ✅ تنظیم بکآپ خودکار هر 6 ساعت با انتقال به سرور پشتیبان
 
 ### انتقال از سرور قبلی
 
 ```bash
-# 1. در سرور قبلی: بکآپ
+# 1. در سرور قبلی: بکآپ کامل
 cd /srv/deployment
-sudo ./backup_manager.sh backup-full
+sudo ./backup_manual.sh backup-full
 
 # 2. انتقال فایل بکآپ
-scp /srv/backups/full_backup_*.tar.gz root@NEW_SERVER_IP:/tmp/
+scp /srv/backups/manual/full_backup_*.tar.gz root@NEW_SERVER_IP:/tmp/
 
 # 3. در سرور جدید: نصب
 cd /srv/deployment
 sudo ./start.sh
 
 # 4. بازیابی بکآپ
-sudo mkdir -p /srv/backups
-sudo mv /tmp/full_backup_*.tar.gz /srv/backups/
-sudo ./backup_manager.sh restore-full
+sudo mkdir -p /srv/backups/manual
+sudo mv /tmp/full_backup_*.tar.gz /srv/backups/manual/
+sudo ./backup_manual.sh restore-full
 ```
 
 برای جزئیات کامل، [راهنمای استقرار](deployment/README.md) را مطالعه کنید.
@@ -142,20 +142,30 @@ sudo ./manager.sh migrate      # اجرای migrations
 sudo ./manager.sh update       # به‌روزرسانی سیستم
 ```
 
-### Backup Manager
-برای پشتیبان‌گیری و بازیابی:
+### Backup System
 
+**بکآپ خودکار (هر 6 ساعت):**
+```bash
+# اجرا می‌شود توسط cron - شامل: PostgreSQL, Redis, NPM Config, .env
+# بکآپ‌ها به سرور پشتیبان منتقل می‌شوند
+sudo /srv/deployment/backup_auto.sh   # اجرای دستی
+tail -f /var/log/backup-auto.log      # مشاهده لاگ
+```
+
+**بکآپ دستی:**
 ```bash
 cd /srv/deployment
-sudo ./backup_manager.sh              # منوی تعاملی
+sudo ./backup_manual.sh               # منوی تعاملی
 
 # یا دستورات مستقیم:
-sudo ./backup_manager.sh backup-full  # پشتیبان کامل
-sudo ./backup_manager.sh backup-db    # فقط دیتابیس
-sudo ./backup_manager.sh restore-full # بازیابی کامل
-sudo ./backup_manager.sh restore-db   # بازیابی دیتابیس
-sudo ./backup_manager.sh list         # لیست پشتیبان‌ها
+sudo ./backup_manual.sh backup-full   # پشتیبان کامل (شامل SSL و Media)
+sudo ./backup_manual.sh backup-db     # فقط دیتابیس
+sudo ./backup_manual.sh restore-full  # بازیابی کامل
+sudo ./backup_manual.sh restore-db    # بازیابی دیتابیس
 ```
+
+**تنظیم سرور پشتیبان:**
+برای راه‌اندازی بکآپ خودکار به سرور پشتیبان، [راهنمای تنظیم SSH](deployment/BACKUP_SETUP.md) را مطالعه کنید.
 
 ## 🔑 دسترسی به سیستم
 
@@ -197,7 +207,8 @@ sudo ./backup_manager.sh list         # لیست پشتیبان‌ها
 - Docker & Docker Compose
 - Nginx Proxy Manager (Reverse Proxy + SSL)
 - UFW Firewall
-- Automated Backups
+- Automated Backups (Every 6 hours to remote server)
+- SSH Key-based Remote Backup
 
 ## 📝 تنظیمات محیطی
 
@@ -254,7 +265,8 @@ ZARINPAL_MERCHANT_ID=YOUR_MERCHANT_ID
 - اسکریپت‌های مدیریت و backup
 - Nginx Proxy Manager با SSL
 - UFW Firewall
-- Backup خودکار روزانه
+- **بکآپ خودکار**: هر 6 ساعت به سرور پشتیبان (PostgreSQL, Redis, NPM Config)
+- **بکآپ دستی**: بکآپ کامل شامل SSL و Media Files
 - **سیستم StaffGroup**: گروه‌بندی کارمندان با دسترسی‌های سفارشی
 - **داده‌های اولیه**: زبان‌ها، ارزها، مناطق زمانی (590+)، پلن‌ها، قالب‌های اعلان، SLA
 - **مدیریت مالی**: ارزها (ریال، تومان)، درگاه زرین‌پال، تنظیمات مالیاتی

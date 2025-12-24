@@ -484,13 +484,32 @@ sudo ufw enable
 
 ### Backup
 
-```bash
-# Database
-docker-compose exec postgres pg_dump -U tejarat_user tejarat_db > backup.sql
+**بکآپ خودکار (هر 6 ساعت):**
+- PostgreSQL Database
+- Redis Data
+- Nginx Proxy Manager Config
+- فایل .env
+- انتقال خودکار به سرور پشتیبان از طریق SSH
 
-# Restore
-docker-compose exec -T postgres psql -U tejarat_user tejarat_db < backup.sql
+```bash
+# اجرای دستی بکآپ خودکار
+sudo /srv/deployment/backup_auto.sh
+
+# مشاهده لاگ بکآپ
+tail -f /var/log/backup-auto.log
 ```
+
+**بکآپ دستی کامل:**
+```bash
+cd /srv/deployment
+sudo ./backup_manual.sh backup-full   # شامل SSL و Media Files
+sudo ./backup_manual.sh backup-db     # فقط دیتابیس
+sudo ./backup_manual.sh restore-full  # بازیابی کامل
+sudo ./backup_manual.sh restore-db    # بازیابی دیتابیس
+```
+
+**تنظیم سرور پشتیبان:**
+برای راه‌اندازی بکآپ خودکار به سرور پشتیبان، به [راهنمای تنظیم SSH](../deployment/BACKUP_SETUP.md) مراجعه کنید.
 
 ---
 
@@ -501,8 +520,15 @@ docker-compose exec -T postgres psql -U tejarat_user tejarat_db < backup.sql
 
 ---
 
-**نسخه:** 1.1.0  
-**آخرین به‌روزرسانی:** 2025-12-18
+**نسخه:** 1.2.0  
+**آخرین به‌روزرسانی:** 2025-12-24
+
+### تغییرات نسخه 1.2.0
+- سیستم بکآپ خودکار هر 6 ساعت با انتقال SSH به سرور پشتیبان
+- تفکیک اسکریپت‌های بکآپ: `backup_auto.sh` و `backup_manual.sh`
+- افزودن NPM Config به بکآپ خودکار
+- بهبود امنیت فایل `.env` با پشتیبانی از کاراکترهای خاص
+- مستندات کامل تنظیم SSH برای بکآپ ریموت
 
 ### تغییرات نسخه 1.1.0
 - حذف اپ `admin_panel` و یکپارچه‌سازی با `accounts`
