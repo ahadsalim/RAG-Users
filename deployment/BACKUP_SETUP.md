@@ -115,7 +115,22 @@ BACKUP_KEEP_LOCAL=false
 
 ---
 
-## 🕐 مرحله 3: تنظیم Cron Job (بکآپ هر 6 ساعت)
+## 🕐 مرحله 3: تنظیم Timezone و Cron Job
+
+### تنظیم Timezone به UTC:
+
+```bash
+# تنظیم timezone سرور به UTC
+sudo timedatectl set-timezone UTC
+
+# بررسی تنظیمات
+timedatectl
+
+# Restart cron service
+sudo systemctl restart cron
+```
+
+### تنظیم Cron Job (بکآپ هر 6 ساعت):
 
 ```bash
 # ویرایش crontab
@@ -125,7 +140,8 @@ crontab -e
 **اضافه کردن خط زیر:**
 
 ```cron
-# بکآپ خودکار هر 6 ساعت (ساعت 0، 6، 12، 18)
+# بکآپ خودکار هر 6 ساعت به وقت UTC (ساعت 0، 6، 12، 18 UTC)
+# معادل: 03:30، 09:30، 15:30، 21:30 به وقت تهران (زمستان)
 0 */6 * * * /srv/deployment/backup_auto.sh >> /var/log/backup-auto.log 2>&1
 ```
 

@@ -870,10 +870,23 @@ BACKUP_RETENTION_DAYS=30
 BACKUP_KEEP_LOCAL=false
 ```
 
+### Timezone سرور
+
+**مهم:** همه سرورها باید روی UTC تنظیم شوند:
+
+```bash
+# تنظیم timezone به UTC
+sudo timedatectl set-timezone UTC
+
+# Restart cron
+sudo systemctl restart cron
+```
+
 ### Cron Job
 
 ```bash
-# بکآپ خودکار هر 6 ساعت
+# بکآپ خودکار هر 6 ساعت به وقت UTC (0، 6، 12، 18 UTC)
+# معادل: 03:30، 09:30، 15:30، 21:30 تهران (زمستان)
 0 */6 * * * /srv/deployment/backup_auto.sh >> /var/log/backup-auto.log 2>&1
 ```
 

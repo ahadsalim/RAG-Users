@@ -2,8 +2,9 @@
 
 # ============================================
 # Automatic Database Backup Script
-# Runs every 6 hours via cron
-# Backs up PostgreSQL + Redis to remote server
+# Runs every 6 hours via cron (UTC timezone)
+# Schedule: 0, 6, 12, 18 UTC
+# Backs up PostgreSQL + Redis + NPM + .env to remote server
 # ============================================
 
 set -e
