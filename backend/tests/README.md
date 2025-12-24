@@ -1,19 +1,13 @@
 # 🧪 Tests Directory
 
-این پوشه شامل تمام تست‌ها و ابزارهای کمکی سیستم است.
+تست‌های سیستم و ابزارهای کمکی
 
-## 📁 ساختار پوشه
+## 📁 فایل‌ها
 
 ```
 tests/
-├── integration/          # تست‌های یکپارچه‌سازی
-│   └── test_system.py   # تست جامع سیستم (MinIO + RAG Core)
-├── utils/               # ابزارهای کمکی
-│   ├── cleanup_old_files.py        # پاک‌سازی فایل‌های قدیمی MinIO
-│   └── clear_all_conversations.py  # حذف تمام مکالمات
-└── debug/               # ابزارهای دیباگ
-    ├── debug_query.py           # دیباگ اتصال به RAG Core
-    └── check_token_payload.py   # بررسی JWT token
+├── test_system.py    # تست جامع سیستم + ابزارهای کمکی
+└── README.md         # این فایل
 ```
 
 ---
@@ -24,11 +18,7 @@ tests/
 
 ```bash
 # اجرا در Docker
-docker exec app_backend python3 /app/tests/integration/test_system.py
-
-# یا مستقیم
-cd /srv/backend
-python3 tests/integration/test_system.py
+docker exec app_backend python3 /app/tests/test_system.py --test
 ```
 
 **تست‌های انجام شده:**
@@ -38,60 +28,36 @@ python3 tests/integration/test_system.py
 
 ---
 
-### ابزارهای Utility
-
-#### 1. پاک‌سازی فایل‌های قدیمی MinIO
+### پاک‌سازی فایل‌های قدیمی MinIO
 
 ```bash
 # حذف فایل‌های قدیمی‌تر از 24 ساعت
-docker exec app_backend python3 /app/tests/utils/cleanup_old_files.py --hours 24
+docker exec app_backend python3 /app/tests/test_system.py --cleanup 24
 
 # حذف تمام فایل‌ها (خطرناک!)
-docker exec app_backend python3 /app/tests/utils/cleanup_old_files.py --all
-```
-
-#### 2. حذف تمام مکالمات
-
-```bash
-docker exec app_backend python3 /app/tests/utils/clear_all_conversations.py
+docker exec app_backend python3 /app/tests/test_system.py --cleanup-all
 ```
 
 ---
 
-### ابزارهای Debug
+## 🗄️ Management Commands
 
-#### 1. دیباگ اتصال RAG Core
-
-```bash
-docker exec app_backend python3 /app/tests/debug/debug_query.py
-```
-
-#### 2. بررسی JWT Token
+### پاکسازی دیتابیس
 
 ```bash
-docker exec app_backend python3 /app/tests/debug/check_token_payload.py
+# حذف کاربران غیر سوپرادمین و داده‌های مرتبط
+docker exec app_backend python3 manage.py cleanup_database --confirm
 ```
 
----
-
-## 📝 نکات مهم
-
-### برای توسعه‌دهندگان:
-
-1. **قبل از commit:**
-   - تست جامع را اجرا کنید
-   - مطمئن شوید همه تست‌ها موفق هستند
-
-2. **اضافه کردن تست جدید:**
-   - تست‌های integration در `integration/`
-   - تست‌های unit در `unit/` (در آینده)
-   - ابزارهای کمکی در `utils/`
-   - ابزارهای debug در `debug/`
-
-3. **نام‌گذاری:**
-   - فایل‌های تست: `test_*.py`
-   - فایل‌های utility: نام توصیفی
-   - همیشه docstring اضافه کنید
+این دستور موارد زیر را حذف می‌کند:
+- تمام کاربران غیر سوپرادمین
+- تمام مکالمات و پیام‌ها
+- اعلان‌ها و نوتیفیکیشن‌های کاربران
+- اشتراک‌ها و تراکنش‌ها
+- تیکت‌های پشتیبانی
+- نشست‌ها و لاگ‌های حسابرسی
+- سازمان‌ها و دعوت‌نامه‌ها
+- آنالیتیکس کاربران
 
 ---
 
@@ -101,32 +67,13 @@ docker exec app_backend python3 /app/tests/debug/check_token_payload.py
 
 ```bash
 # در crontab اضافه کنید:
-0 2 * * * docker exec app_backend python3 /app/tests/utils/cleanup_old_files.py --hours 24
+0 2 * * * docker exec app_backend python3 /app/tests/test_system.py --cleanup 24
 ```
 
 ---
 
-## 📊 CI/CD
+## 📝 نکات
 
-در آینده می‌توان این تست‌ها را در pipeline CI/CD اضافه کرد:
-
-```yaml
-# مثال برای GitLab CI
-test:
-  script:
-    - docker exec app_backend python3 /app/tests/integration/test_system.py
-```
-
----
-
-## 🐛 گزارش مشکلات
-
-اگر تستی fail شد:
-
-1. لاگ‌های Docker را بررسی کنید
-2. از ابزارهای debug استفاده کنید
-3. مطمئن شوید سرویس‌های خارجی (MinIO, RAG Core) در دسترس هستند
-
----
-
-**آخرین به‌روزرسانی:** 2025-11-30
+- قبل از commit تست‌ها را اجرا کنید
+- مطمئن شوید سرویس‌های خارجی (MinIO, RAG Core) در دسترس هستند
+- برای دیباگ از لاگ‌های Docker استفاده کنید
