@@ -101,7 +101,25 @@ else
 fi
 
 # ============================================
-# 3. Backup .env file
+# 3. Nginx Proxy Manager Data Backup
+# ============================================
+
+print_info "Backing up Nginx Proxy Manager data..."
+
+docker run --rm \
+    -v app_npm_data:/data \
+    -v ${BACKUP_DIR}:/backup \
+    alpine \
+    tar czf /backup/${BACKUP_NAME}_npm_data.tar.gz -C /data . 2>/dev/null
+
+if [ $? -eq 0 ]; then
+    print_success "NPM data backup completed"
+else
+    print_info "NPM data backup skipped (volume may not exist)"
+fi
+
+# ============================================
+# 4. Backup .env file
 # ============================================
 
 print_info "Backing up .env file..."
@@ -112,7 +130,7 @@ if [ $? -eq 0 ]; then
 fi
 
 # ============================================
-# 4. Create compressed archive
+# 5. Create compressed archive
 # ============================================
 
 print_info "Creating compressed archive..."
@@ -121,12 +139,14 @@ cd "$BACKUP_DIR"
 tar -czf "${BACKUP_NAME}.tar.gz" \
     "${BACKUP_NAME}_postgres.dump" \
     "${BACKUP_NAME}_redis.rdb" \
+    "${BACKUP_NAME}_npm_data.tar.gz" \
     "${BACKUP_NAME}_env" 2>/dev/null
 
 if [ $? -eq 0 ]; then
     # Remove individual files
     rm -f "${BACKUP_NAME}_postgres.dump" \
           "${BACKUP_NAME}_redis.rdb" \
+          "${BACKUP_NAME}_npm_data.tar.gz" \
           "${BACKUP_NAME}_env"
     
     BACKUP_SIZE=$(du -h "${BACKUP_NAME}.tar.gz" | cut -f1)
@@ -136,7 +156,7 @@ else
 fi
 
 # ============================================
-# 5. Transfer to remote backup server
+# 6. Transfer to remote backup server
 # ============================================
 
 print_info "Transferring backup to remote server..."
@@ -179,7 +199,7 @@ if [ $? -eq 0 ]; then
 fi
 
 # ============================================
-# 7. Cleanup old local backups (keep only 3 days)
+# 8. Cleanup old local backups (keep only 3 days)
 # ============================================
 
 print_info "Cleaning old local backups (keeping last 3 days)..."
@@ -187,7 +207,7 @@ find "$BACKUP_DIR" -name "db_backup_*.tar.gz" -mtime +3 -delete 2>/dev/null
 print_success "Local cleanup completed"
 
 # ============================================
-# 8. Log completion
+# 9. Log completion
 # ============================================
 
 LOG_FILE="/var/log/backup-auto.log"

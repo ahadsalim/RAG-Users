@@ -12,6 +12,32 @@
 
 ---
 
+## 📝 نکات مهم
+
+### ⏰ نگهداری بکآپ‌ها:
+
+- **بکآپ‌های محلی**: حداکثر 3 روز (برای صرفه‌جویی در فضای دیسک)
+- **بکآپ‌های سرور پشتیبان**: 30 روز (قابل تنظیم در `.env`)
+
+### 🔐 محتویات بکآپ خودکار (هر 6 ساعت):
+
+1. **PostgreSQL Database** - تمام داده‌های کاربران
+2. **Redis Data** - Cache و Session‌ها
+3. **NPM Data** - تنظیمات Nginx Proxy Manager
+4. **فایل .env** - تنظیمات محیطی
+
+### 🔐 محتویات بکآپ کامل (دستی):
+
+1. **PostgreSQL Database** - تمام داده‌های کاربران
+2. **Redis Data** - Cache و Session‌ها
+3. **Media Files** - فایل‌های رسانه‌ای (اگر از S3 استفاده نمی‌کنید)
+4. **Static Files** - فایل‌های استاتیک
+5. **Nginx Proxy Manager Data** - تنظیمات Nginx Proxy Manager
+6. **Nginx Proxy Manager SSL Certificates (Let's Encrypt)** - گواهی‌های SSL
+7. **فایل .env** - تنظیمات محیطی
+
+---
+
 ## 🔧 مرحله 1: تنظیم SSH Key
 
 ### در سرور اصلی (Production):
@@ -148,7 +174,7 @@ du -sh /backup/tejarat-chat/
 **اجرا می‌شود:** هر 6 ساعت توسط cron
 
 **عملکرد:**
-- بکآپ PostgreSQL + Redis + .env
+- بکآپ PostgreSQL + Redis + NPM Config + .env
 - فشرده‌سازی
 - انتقال به سرور پشتیبان
 - پاکسازی بکآپ‌های قدیمی
