@@ -59,8 +59,8 @@ ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAACAQC... root@production
 
 ```bash
 # 1. ایجاد پوشه برای بکآپ‌ها
-mkdir -p /backup/tejarat-chat
-chmod 755 /backup/tejarat-chat
+mkdir -p /backup/users
+chmod 755 /backup/users
 
 # 2. اضافه کردن Public Key
 mkdir -p /root/.ssh
@@ -104,7 +104,7 @@ nano /srv/deployment/.env
 # ===========================
 BACKUP_SERVER_HOST=YOUR_BACKUP_SERVER_IP
 BACKUP_SERVER_USER=root
-BACKUP_SERVER_PATH=/backup/tejarat-chat
+BACKUP_SERVER_PATH=/backup/users
 BACKUP_SSH_KEY=/root/.ssh/backup_key
 BACKUP_RETENTION_DAYS=30
 BACKUP_KEEP_LOCAL=false
@@ -379,7 +379,7 @@ fi
 1. **محدود کردن دسترسی SSH Key:**
 ```bash
 # در سرور پشتیبان: /root/.ssh/authorized_keys
-command="/usr/bin/rsync --server -vlogDtprze.iLsfxC . /backup/tejarat-chat/",no-port-forwarding,no-X11-forwarding,no-agent-forwarding ssh-rsa AAAAB3NzaC1yc2...
+command="/usr/bin/rsync --server -vlogDtprze.iLsfxC . /backup/users/",no-port-forwarding,no-X11-forwarding,no-agent-forwarding ssh-rsa AAAAB3NzaC1yc2...
 ```
 
 2. **رمزنگاری بکآپ‌ها (اختیاری):**
