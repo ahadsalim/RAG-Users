@@ -1,14 +1,13 @@
 #!/usr/bin/env python3
 """
-تست جامع سیستم و ابزارهای کمکی
-شامل: MinIO, RAG Core, File Upload, Query, Cleanup
+تست جامع سیستم
+شامل: MinIO, RAG Core, File Upload, Query
 """
 import os
 import sys
 import asyncio
 import httpx
-import argparse
-from datetime import datetime, timedelta
+from datetime import datetime
 from io import BytesIO
 
 sys.path.insert(0, '/app')
@@ -21,7 +20,6 @@ from django.conf import settings
 from django.contrib.auth import get_user_model
 from rest_framework_simplejwt.tokens import RefreshToken
 from core.storage import S3Service
-from botocore.exceptions import ClientError
 
 User = get_user_model()
 
@@ -164,82 +162,6 @@ class SystemTester:
         print(f"{'='*80}\n")
 
 
-def cleanup_old_files(hours=24):
-    """حذف فایل‌های قدیمی‌تر از X ساعت از MinIO"""
-    s3 = S3Service()
-    bucket = 'temp-userfile'
-    
-    print(f"🔍 جستجوی فایل‌های قدیمی‌تر از {hours} ساعت...")
-    
-    try:
-        response = s3.s3_client.list_objects_v2(Bucket=bucket)
-        
-        if 'Contents' not in response:
-            print("✅ هیچ فایلی در MinIO وجود ندارد.")
-            return
-        
-        files = response['Contents']
-        now = datetime.utcnow()
-        cutoff_time = now - timedelta(hours=hours)
-        
-        deleted_count = 0
-        deleted_size = 0
-        kept_count = 0
-        
-        for file in files:
-            file_time = file['LastModified'].replace(tzinfo=None)
-            
-            if file_time < cutoff_time:
-                try:
-                    s3.s3_client.delete_object(Bucket=bucket, Key=file['Key'])
-                    deleted_count += 1
-                    deleted_size += file['Size']
-                    print(f"  ❌ حذف شد: {file['Key']} ({file['Size']/1024:.1f} KB)")
-                except Exception as e:
-                    print(f"  ⚠️  خطا در حذف {file['Key']}: {e}")
-            else:
-                kept_count += 1
-        
-        print(f"\n📊 نتیجه:")
-        print(f"  ✅ فایل‌های حذف شده: {deleted_count}")
-        print(f"  💾 حجم آزاد شده: {deleted_size / (1024*1024):.2f} MB")
-        print(f"  📁 فایل‌های باقی‌مانده: {kept_count}")
-        
-    except ClientError as e:
-        print(f"❌ خطا در دسترسی به MinIO: {e}")
-        sys.exit(1)
-    except Exception as e:
-        print(f"❌ خطای غیرمنتظره: {e}")
-        sys.exit(1)
-
-
-def cleanup_all_files():
-    """حذف تمام فایل‌ها از MinIO"""
-    s3 = S3Service()
-    bucket = 'temp-userfile'
-    
-    print("⚠️  حذف تمام فایل‌ها از MinIO...")
-    
-    try:
-        response = s3.s3_client.list_objects_v2(Bucket=bucket)
-        
-        if 'Contents' not in response:
-            print("✅ هیچ فایلی در MinIO وجود ندارد.")
-            return
-        
-        files = response['Contents']
-        total_size = sum(f['Size'] for f in files)
-        
-        for file in files:
-            s3.s3_client.delete_object(Bucket=bucket, Key=file['Key'])
-        
-        print(f"✅ {len(files)} فایل حذف شد ({total_size / (1024*1024):.2f} MB)")
-        
-    except Exception as e:
-        print(f"❌ خطا: {e}")
-        sys.exit(1)
-
-
 async def run_tests():
     """اجرای تست‌های سیستم"""
     user = User.objects.first()
@@ -258,26 +180,8 @@ async def run_tests():
 
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description='تست سیستم و ابزارهای کمکی')
-    parser.add_argument('--test', action='store_true', help='اجرای تست‌های سیستم')
-    parser.add_argument('--cleanup', type=int, metavar='HOURS', help='حذف فایل‌های قدیمی‌تر از X ساعت')
-    parser.add_argument('--cleanup-all', action='store_true', help='حذف تمام فایل‌ها (خطرناک!)')
-    
-    args = parser.parse_args()
-    
-    if args.test:
-        print(f"\n{BLUE}{'='*80}{RESET}")
-        print(f"{BLUE}🚀 شروع تست جامع سیستم{RESET}")
-        print(f"{BLUE}⏰ {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}{RESET}")
-        print(f"{BLUE}{'='*80}{RESET}\n")
-        asyncio.run(run_tests())
-    elif args.cleanup:
-        cleanup_old_files(args.cleanup)
-    elif args.cleanup_all:
-        confirm = input("⚠️  آیا مطمئن هستید که می‌خواهید تمام فایل‌ها را حذف کنید؟ (yes/no): ")
-        if confirm.lower() == 'yes':
-            cleanup_all_files()
-        else:
-            print("❌ لغو شد.")
-    else:
-        parser.print_help()
+    print(f"\n{BLUE}{'='*80}{RESET}")
+    print(f"{BLUE}🚀 شروع تست جامع سیستم{RESET}")
+    print(f"{BLUE}⏰ {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}{RESET}")
+    print(f"{BLUE}{'='*80}{RESET}\n")
+    asyncio.run(run_tests())
