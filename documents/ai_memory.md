@@ -215,7 +215,7 @@ docker exec app_backend python manage.py migrate
   
 - ✅ **تنظیمات SSH و امنیت**
   - راهنمای کامل تنظیم SSH Key در `deployment/BACKUP_SETUP.md`
-  - استفاده از ED25519 یا RSA-4096 برای امنیت بالا
+  - استفاده از ED25519 (مدرن، سریع، امن‌تر از RSA)
   - محدودیت دسترسی SSH Key به فقط rsync
   - تست اتصال قبل از فعال‌سازی
   

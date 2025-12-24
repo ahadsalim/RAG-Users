@@ -43,8 +43,8 @@
 ### در سرور اصلی (Production):
 
 ```bash
-# 1. ایجاد SSH Key برای بکآپ
-ssh-keygen -t rsa -b 4096 -f /root/.ssh/backup_key -N ""
+# 1. ایجاد SSH Key برای بکآپ (ED25519 - سریع و امن)
+ssh-keygen -t ed25519 -f /root/.ssh/backup_key -N ""
 
 # 2. نمایش Public Key
 cat /root/.ssh/backup_key.pub
@@ -52,7 +52,7 @@ cat /root/.ssh/backup_key.pub
 
 **خروجی را کپی کنید** (شبیه این):
 ```
-ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAACAQC... root@production
+ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIGx... root@production
 ```
 
 ### در سرور پشتیبان (Backup Server):
