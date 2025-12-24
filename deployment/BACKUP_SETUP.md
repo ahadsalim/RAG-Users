@@ -178,6 +178,7 @@ sudo ./backup_manual.sh backup-full
 - Media Files (اگر از S3 استفاده نمی‌کنید)
 - Static Files
 - Nginx Proxy Manager Data
+- Nginx Proxy Manager SSL Certificates (Let's Encrypt)
 - فایل .env
 
 **محل ذخیره:** `/srv/backups/manual/full_backup_YYYYMMDD_HHMMSS.tar.gz`

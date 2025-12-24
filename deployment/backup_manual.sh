@@ -129,12 +129,24 @@ backup_full() {
         print_success "NPM data backup completed"
     fi
     
-    # 6. Environment file
+    # 6. Nginx Proxy Manager SSL Certificates
+    print_info "Backing up NPM SSL certificates (Let's Encrypt)..."
+    docker run --rm \
+        -v app_npm_letsencrypt:/data \
+        -v ${BACKUP_PATH}:/backup \
+        alpine \
+        tar czf /backup/npm_letsencrypt.tar.gz -C /data . 2>/dev/null
+    
+    if [ $? -eq 0 ]; then
+        print_success "NPM SSL certificates backup completed"
+    fi
+    
+    # 7. Environment file
     print_info "Backing up .env file..."
     cp "$ENV_FILE" "${BACKUP_PATH}/env" 2>/dev/null
     print_success ".env backup completed"
     
-    # 7. Create final compressed archive
+    # 8. Create final compressed archive
     print_info "Creating compressed archive..."
     cd "$BACKUP_DIR"
     tar -czf "${BACKUP_NAME}.tar.gz" "${BACKUP_NAME}/" 2>/dev/null
@@ -340,6 +352,18 @@ restore_full() {
             sh -c "rm -rf /data/* && tar xzf /backup/npm_data.tar.gz -C /data"
         
         print_success "NPM data restored"
+    fi
+    
+    # Restore NPM SSL Certificates
+    if [ -f "${RESTORE_PATH}/npm_letsencrypt.tar.gz" ]; then
+        print_info "Restoring NPM SSL certificates..."
+        docker run --rm \
+            -v app_npm_letsencrypt:/data \
+            -v ${RESTORE_PATH}:/backup \
+            alpine \
+            sh -c "rm -rf /data/* && tar xzf /backup/npm_letsencrypt.tar.gz -C /data"
+        
+        print_success "NPM SSL certificates restored"
     fi
     
     # Start all services

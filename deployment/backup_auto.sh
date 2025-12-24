@@ -179,11 +179,11 @@ if [ $? -eq 0 ]; then
 fi
 
 # ============================================
-# 7. Cleanup old local backups
+# 7. Cleanup old local backups (keep only 3 days)
 # ============================================
 
-print_info "Cleaning old local backups..."
-find "$BACKUP_DIR" -name "db_backup_*.tar.gz" -mtime +7 -delete 2>/dev/null
+print_info "Cleaning old local backups (keeping last 3 days)..."
+find "$BACKUP_DIR" -name "db_backup_*.tar.gz" -mtime +3 -delete 2>/dev/null
 print_success "Local cleanup completed"
 
 # ============================================
