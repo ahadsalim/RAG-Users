@@ -307,7 +307,7 @@ tail -50 /var/log/backup-auto.log
 # تست rsync دستی
 rsync -avz -e "ssh -i /root/.ssh/backup_key" \
     /srv/backups/auto/ \
-    root@BACKUP_SERVER_IP:/backup/tejarat-chat/
+    root@BACKUP_SERVER_IP:/backup/users/
 ```
 
 ### مشکل 3: فضای دیسک کم
@@ -379,7 +379,7 @@ fi
 1. **محدود کردن دسترسی SSH Key:**
 ```bash
 # در سرور پشتیبان: /root/.ssh/authorized_keys
-command="/usr/bin/rsync --server -vlogDtprze.iLsfxC . /backup/users/",no-port-forwarding,no-X11-forwarding,no-agent-forwarding ssh-rsa AAAAB3NzaC1yc2...
+command="/usr/bin/rsync --server -vlogDtprze.iLsfxC . /backup/tejarat-chat/",no-port-forwarding,no-X11-forwarding,no-agent-forwarding ssh-rsa AAAAB3NzaC1yc2...
 ```
 
 2. **رمزنگاری بکآپ‌ها (اختیاری):**
