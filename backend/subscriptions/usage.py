@@ -267,6 +267,40 @@ class UsageService:
         }
     
     @staticmethod
+    def get_usage_stats_personal(user, days: int = 30) -> dict:
+        """آمار مصرف شخصی کاربر (نه تجمیعی) در N روز اخیر"""
+        
+        start_date = timezone.now() - timedelta(days=days)
+        
+        # آمار کلی - فقط مصرف شخصی
+        logs = ModelUsageLog.objects.filter(
+            user=user,
+            created_at__gte=start_date
+        )
+        
+        total_queries = logs.filter(action_type='query').count()
+        token_totals = logs.aggregate(
+            input_total=Sum('input_tokens'),
+            output_total=Sum('output_tokens')
+        )
+        
+        # آمار روزانه
+        daily_stats = logs.filter(action_type='query').annotate(
+            date=TruncDate('created_at')
+        ).values('date').annotate(
+            count=Count('id')
+        ).order_by('date')
+        
+        return {
+            'total_queries': total_queries,
+            'total_input_tokens': token_totals['input_total'] or 0,
+            'total_output_tokens': token_totals['output_total'] or 0,
+            'total_tokens': (token_totals['input_total'] or 0) + (token_totals['output_total'] or 0),
+            'daily_stats': list(daily_stats),
+            'period_days': days
+        }
+    
+    @staticmethod
     def get_usage_stats(user, days: int = 30) -> dict:
         """آمار مصرف کاربر در N روز اخیر"""
         
@@ -301,6 +335,49 @@ class UsageService:
             'daily_stats': list(daily_stats),
             'period_days': days
         }
+    
+    @staticmethod
+    def check_quota_personal(user, subscription=None) -> tuple:
+        """
+        بررسی سهمیه شخصی کاربر (نه تجمیعی)
+        برای نمایش در صفحه اشتراک - فقط مصرف شخصی کاربر
+        
+        Returns:
+            tuple: (can_query: bool, message: str, usage_info: dict)
+        """
+        
+        if not subscription:
+            return False, 'اشتراک فعالی ندارید', {}
+        
+        # دریافت محدودیت‌ها از پلن
+        features = subscription.plan.features or {}
+        max_daily = features.get('max_queries_per_day', subscription.plan.max_queries_per_day or 10)
+        max_monthly = features.get('max_queries_per_month', subscription.plan.max_queries_per_month or 200)
+        
+        # مصرف شخصی کاربر (بدون اعضای سازمان)
+        daily_used = UsageLog.objects.filter(
+            user=user,
+            action_type='query',
+            created_at__date=timezone.now().date()
+        ).count()
+        
+        monthly_used = UsageLog.objects.filter(
+            user=user,
+            action_type='query',
+            subscription=subscription,
+            created_at__gte=subscription.start_date
+        ).count()
+        
+        usage_info = {
+            'daily_used': daily_used,
+            'daily_limit': max_daily,
+            'daily_remaining': max(0, max_daily - daily_used),
+            'monthly_used': monthly_used,
+            'monthly_limit': max_monthly,
+            'monthly_remaining': max(0, max_monthly - monthly_used),
+        }
+        
+        return True, 'OK', usage_info
     
     @staticmethod
     def check_quota(user, subscription=None) -> tuple:
@@ -348,6 +425,38 @@ class UsageService:
             return False, f'سهمیه ماهانه شما ({max_monthly} سوال) تمام شده است', usage_info
         
         return True, 'OK', usage_info
+    
+    @staticmethod
+    def get_quota_percentage_personal(user) -> dict:
+        """درصد مصرف شخصی سهمیه (نه تجمیعی)"""
+        
+        subscription = user.get_active_subscription()
+        
+        if not subscription:
+            return {'daily': 0, 'monthly': 0}
+        
+        features = subscription.plan.features or {}
+        max_daily = features.get('max_queries_per_day', subscription.plan.max_queries_per_day or 10)
+        max_monthly = features.get('max_queries_per_month', subscription.plan.max_queries_per_month or 200)
+        
+        # مصرف شخصی کاربر
+        daily_used = UsageLog.objects.filter(
+            user=user,
+            action_type='query',
+            created_at__date=timezone.now().date()
+        ).count()
+        
+        monthly_used = UsageLog.objects.filter(
+            user=user,
+            action_type='query',
+            subscription=subscription,
+            created_at__gte=subscription.start_date
+        ).count()
+        
+        return {
+            'daily': min(100, int((daily_used / max_daily) * 100)) if max_daily > 0 else 0,
+            'monthly': min(100, int((monthly_used / max_monthly) * 100)) if max_monthly > 0 else 0,
+        }
     
     @staticmethod
     def get_quota_percentage(user) -> dict:

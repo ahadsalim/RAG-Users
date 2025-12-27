@@ -138,14 +138,15 @@ class SubscriptionViewSet(viewsets.ModelViewSet):
     
     @action(detail=False, methods=['get'])
     def usage(self, request):
-        """Get current usage statistics"""
+        """
+        Get current usage statistics
+        - کاربران حقیقی: آمار شخصی خودشان
+        - کاربران حقوقی (مالک و اعضا): فقط مصرف شخصی خودشان (نه تجمیعی)
+        """
         user = request.user
         
-        # دریافت اشتراک فعال
-        subscription = user.subscriptions.filter(
-            status='active',
-            end_date__gt=timezone.now()
-        ).first()
+        # دریافت اشتراک فعال (برای اعضای سازمان، اشتراک مالک)
+        subscription = user.get_active_subscription()
         
         # اگر اشتراک فعال نیست، اطلاعات پیش‌فرض برگردان
         if not subscription:
@@ -177,10 +178,11 @@ class SubscriptionViewSet(viewsets.ModelViewSet):
                 }
             })
         
-        # دریافت آمار مصرف
-        can_query, message, usage_info = UsageService.check_quota(user, subscription)
-        stats = UsageService.get_usage_stats(user, days=30)
-        quota_percentage = UsageService.get_quota_percentage(user)
+        # دریافت آمار مصرف شخصی کاربر (نه تجمیعی)
+        # برای کاربران حقوقی فقط مصرف خودشان نمایش داده می‌شود
+        can_query, message, usage_info = UsageService.check_quota_personal(user, subscription)
+        stats = UsageService.get_usage_stats_personal(user, days=30)
+        quota_percentage = UsageService.get_quota_percentage_personal(user)
         
         return Response({
             'subscription': {

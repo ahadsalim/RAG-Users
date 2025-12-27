@@ -64,6 +64,10 @@ export function ChatHeader({ onToggleSidebar, conversation, isConnected }: ChatH
 
   // بارگذاری اطلاعات مصرف هنگام hover
   const loadUsage = async () => {
+    // فقط برای کاربران حقیقی آمار نمایش داده می‌شود
+    if (user?.user_type !== 'individual') {
+      return
+    }
     
     try {
       setLoadingUsage(true)
@@ -96,8 +100,11 @@ export function ChatHeader({ onToggleSidebar, conversation, isConnected }: ChatH
   }
 
   const handleMouseEnter = () => {
-    setShowUsageTooltip(true)
-    loadUsage()
+    // فقط برای کاربران حقیقی tooltip نمایش داده می‌شود
+    if (user?.user_type === 'individual') {
+      setShowUsageTooltip(true)
+      loadUsage()
+    }
   }
 
   const handleMouseLeave = () => {
