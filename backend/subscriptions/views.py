@@ -19,8 +19,9 @@ class PlanViewSet(viewsets.ReadOnlyModelViewSet):
     permission_classes = [permissions.AllowAny]
     
     def get_queryset(self):
-        """فیلتر کردن پلن‌ها بر اساس نوع کاربر"""
-        queryset = Plan.objects.filter(is_active=True)
+        """فیلتر کردن پلن‌ها بر اساس نوع کاربر (بدون پلن‌های رایگان)"""
+        # پلن‌های رایگان فقط به صورت خودکار در ثبت‌نام اختصاص می‌یابند
+        queryset = Plan.objects.filter(is_active=True).exclude(price=0)
         
         # اگر کاربر لاگین کرده، فقط پلن‌های مناسب نوع کاربر را نمایش بده
         if self.request.user.is_authenticated:
