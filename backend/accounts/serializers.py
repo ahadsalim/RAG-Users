@@ -177,6 +177,7 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
 class UserProfileSerializer(serializers.ModelSerializer):
     """User profile serializer"""
     organization = serializers.SerializerMethodField()
+    organization_name = serializers.SerializerMethodField()
     sessions_count = serializers.SerializerMethodField()
     
     class Meta:
@@ -185,7 +186,7 @@ class UserProfileSerializer(serializers.ModelSerializer):
             'id', 'email', 'username', 'first_name', 'last_name',
             'phone_number', 'phone_verified', 'email_verified',
             'avatar', 'bio', 'user_type', 'national_id', 'national_id_verified',
-            'company_name', 'economic_code', 'organization', 'organization_role',
+            'company_name', 'economic_code', 'organization', 'organization_name', 'organization_role',
             'language', 'timezone', 'preferred_currency', 'chat_context',
             'two_factor_enabled', 'max_concurrent_sessions',
             'email_notifications', 'sms_notifications', 'push_notifications',
@@ -195,7 +196,7 @@ class UserProfileSerializer(serializers.ModelSerializer):
         read_only_fields = [
             'id', 'email_verified', 'phone_verified', 'national_id_verified',
             'two_factor_enabled', 'is_superuser', 'is_staff',
-            'created_at', 'updated_at', 'last_seen'
+            'created_at', 'updated_at', 'last_seen', 'organization_name'
         ]
     
     def get_organization(self, obj):
@@ -206,6 +207,12 @@ class UserProfileSerializer(serializers.ModelSerializer):
                 'slug': obj.organization.slug,
                 'logo': obj.organization.logo.url if obj.organization.logo else None,
             }
+        return None
+    
+    def get_organization_name(self, obj):
+        """برای کاربران حقوقی، نام سازمان را برمی‌گرداند"""
+        if obj.organization:
+            return obj.organization.name
         return None
     
     def get_sessions_count(self, obj):

@@ -44,37 +44,14 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ isOpen, onClose }) => {
   const [activeTab, setActiveTab] = useState<SettingsTab>('profile');
   const { user } = useAuthStore();
   
-  // بارگذاری اولیه از localStorage با توجه به user فعلی
+  // بارگذاری اولیه از user
   const getInitialSettings = (): UserSettings => {
-    if (typeof window !== 'undefined') {
-      const savedSettings = localStorage.getItem('userSettings');
-      if (savedSettings) {
-        try {
-          const parsed = JSON.parse(savedSettings);
-          // بررسی اینکه آیا شماره تلفن در localStorage با user فعلی مطابقت دارد
-          if (user?.phone_number && parsed.phone !== user.phone_number) {
-            // اگر شماره تلفن متفاوت است، localStorage قدیمی است - پاک کن
-            localStorage.removeItem('userSettings');
-            return {
-              full_name: user?.first_name && user?.last_name ? `${user.first_name} ${user.last_name}` : '',
-              company_name: user?.company_name || '',
-              email: user?.email || '',
-              phone: user?.phone_number || '',
-              national_id: user?.national_id || '',
-              theme: 'light',
-              enable_web_search: null,
-            };
-          }
-          return parsed;
-        } catch (e) {
-          console.error('Error loading settings:', e);
-        }
-      }
-    }
-    // اگر localStorage خالی است، از user فعلی استفاده کن
+    // برای کاربران حقوقی، نام شرکت از organization_name می‌آید
+    const companyName = (user as any)?.organization_name || user?.company_name || '';
+    
     return {
       full_name: user?.first_name && user?.last_name ? `${user.first_name} ${user.last_name}` : '',
-      company_name: user?.company_name || '',
+      company_name: companyName,
       email: user?.email || '',
       phone: user?.phone_number || '',
       national_id: user?.national_id || '',
@@ -113,8 +90,19 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ isOpen, onClose }) => {
       setSaving(true);
       setSaveMessage('');
       
-      // ذخیره تنظیمات عمومی در localStorage
-      localStorage.setItem('userSettings', JSON.stringify(settings));
+      // ارسال تغییرات پروفایل به سرور
+      try {
+        await axios.patch('/api/v1/accounts/profile/', {
+          first_name: settings.full_name.split(' ')[0] || '',
+          last_name: settings.full_name.split(' ').slice(1).join(' ') || '',
+          national_id: settings.national_id,
+        });
+      } catch (error) {
+        console.error('Error saving profile:', error);
+        setSaveMessage('✗ خطا در ذخیره اطلاعات پروفایل');
+        setSaving(false);
+        return;
+      }
       
       // اعمال تم
       if (settings.theme === 'dark') {
@@ -128,14 +116,11 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ isOpen, onClose }) => {
       if (notificationPrefs) {
         try {
           await axios.put('/api/v1/notifications/preferences/', JSON.parse(notificationPrefs));
-          localStorage.removeItem('notificationPreferences'); // پاک کردن بعد از ذخیره موفق
+          localStorage.removeItem('notificationPreferences');
         } catch (error) {
           console.error('Error saving notification preferences:', error);
         }
       }
-      
-      // TODO: ارسال سایر تنظیمات به سرور
-      // await axios.post('/api/v1/users/settings/', settings);
       
       setSaveMessage('✓ تنظیمات با موفقیت ذخیره شد');
       setTimeout(() => setSaveMessage(''), 3000);
