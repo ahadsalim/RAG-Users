@@ -21,9 +21,16 @@ def create_free_subscription(sender, instance, created, **kwargs):
     سوپر ادمین‌ها از طریق setup_initial_data پلن نامحدود دریافت می‌کنند
     
     کاربران حقیقی (individual) -> پلن رایگان حقیقی
-    کاربران حقوقی (business) -> پلن رایگان حقوقی
+    کاربران حقوقی مالک سازمان (business owner) -> پلن رایگان حقوقی
+    اعضای سازمان -> هیچ پلنی (از پلن مالک استفاده می‌کنند)
     """
     if not created or instance.is_superuser:
+        return
+    
+    # اعضای سازمان نباید پلن شخصی بگیرند
+    # آن‌ها از پلن مالک سازمان استفاده می‌کنند
+    if instance.is_organization_member():
+        logger.info(f"User {instance.phone_number} is organization member, no personal subscription created")
         return
     
     try:
