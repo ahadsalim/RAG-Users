@@ -66,6 +66,31 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ isOpen, onClose }) => {
   const [saving, setSaving] = useState(false);
   const [saveMessage, setSaveMessage] = useState('');
 
+  // بارگذاری profile از سرور
+  useEffect(() => {
+    if (isOpen && activeTab === 'profile') {
+      loadProfile();
+    }
+  }, [isOpen, activeTab]);
+
+  const loadProfile = async () => {
+    try {
+      const response = await axios.get('/api/v1/accounts/profile/');
+      const userData = response.data;
+      setSettings({
+        full_name: userData.first_name && userData.last_name ? `${userData.first_name} ${userData.last_name}` : '',
+        company_name: userData.organization_name || userData.company_name || '',
+        email: userData.email || '',
+        phone: userData.phone_number || '',
+        national_id: userData.national_id || '',
+        theme: settings.theme,
+        enable_web_search: settings.enable_web_search,
+      });
+    } catch (error) {
+      console.error('Error loading profile:', error);
+    }
+  };
+
   // بارگذاری اطلاعات اشتراک
   useEffect(() => {
     if (isOpen && activeTab === 'subscription') {
