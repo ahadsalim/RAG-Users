@@ -280,18 +280,33 @@ const ProfileTab: React.FC<{ settings: UserSettings; setSettings: React.Dispatch
   return (
     <div className="bg-gray-50 dark:bg-gray-800 rounded-xl p-5">
       <div className="space-y-5">
-        {/* نام */}
+        {/* نام شرکت/سازمان - فقط برای کاربران حقوقی */}
+        {isBusiness && (
+          <>
+            <div className="flex items-center justify-between">
+              <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                نام شرکت/سازمان
+              </span>
+              <input
+                type="text"
+                value={settings.company_name}
+                onChange={(e) => setSettings({ ...settings, company_name: e.target.value })}
+                className="w-64 px-3 py-1.5 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-sm"
+              />
+            </div>
+            <div className="border-t border-gray-200 dark:border-gray-700" />
+          </>
+        )}
+
+        {/* نام و نام خانوادگی - برای همه */}
         <div className="flex items-center justify-between">
           <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-            {isBusiness ? 'نام شرکت/سازمان' : 'نام و نام خانوادگی'}
+            نام و نام خانوادگی
           </span>
           <input
             type="text"
-            value={isBusiness ? settings.company_name : settings.full_name}
-            onChange={(e) => setSettings({ 
-              ...settings, 
-              [isBusiness ? 'company_name' : 'full_name']: e.target.value 
-            })}
+            value={settings.full_name}
+            onChange={(e) => setSettings({ ...settings, full_name: e.target.value })}
             className="w-64 px-3 py-1.5 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-sm"
           />
         </div>
@@ -311,15 +326,17 @@ const ProfileTab: React.FC<{ settings: UserSettings; setSettings: React.Dispatch
 
         <div className="border-t border-gray-200 dark:border-gray-700" />
 
-        {/* کدملی */}
+        {/* کدملی / شناسه ملی */}
         <div className="flex items-center justify-between">
-          <span className="text-sm font-medium text-gray-700 dark:text-gray-300">کدملی</span>
+          <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+            {isBusiness ? 'شناسه ملی' : 'کدملی'}
+          </span>
           <input
             type="text"
             value={settings.national_id}
             onChange={(e) => setSettings({ ...settings, national_id: e.target.value })}
-            maxLength={10}
-            placeholder="10 رقم"
+            maxLength={isBusiness ? 11 : 10}
+            placeholder={isBusiness ? '11 رقم' : '10 رقم'}
             className="w-64 px-3 py-1.5 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-sm"
           />
         </div>
