@@ -20,6 +20,11 @@ class PlanViewSet(viewsets.ReadOnlyModelViewSet):
     
     def get_queryset(self):
         """فیلتر کردن پلن‌ها بر اساس نوع کاربر (بدون پلن‌های رایگان)"""
+        # اعضای سازمان (غیر از مالک) نباید هیچ پلنی ببینند
+        # آن‌ها از پلن سازمان مادر استفاده می‌کنند
+        if self.request.user.is_authenticated and self.request.user.is_organization_member():
+            return Plan.objects.none()
+        
         # پلن‌های رایگان فقط به صورت خودکار در ثبت‌نام اختصاص می‌یابند
         queryset = Plan.objects.filter(is_active=True).exclude(price=0)
         

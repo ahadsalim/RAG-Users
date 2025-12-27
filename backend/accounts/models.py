@@ -429,6 +429,22 @@ class User(AbstractUser):
         return list(Permission.objects.filter(
             staffgroup__in=self.staff_groups.filter(is_active=True)
         ).values_list('codename', flat=True).distinct())
+    
+    def is_organization_member(self):
+        """
+        بررسی اینکه آیا کاربر عضو یک سازمان است (نه مالک)
+        اعضای سازمان از پلن سازمان مادر استفاده می‌کنند
+        مالک سازمان عضو محسوب نمی‌شود
+        """
+        # اگر مالک سازمانی است، عضو نیست
+        if self.owned_organizations.exists():
+            return False
+        
+        # اگر عضو یک سازمان است (admin یا member)
+        return (
+            self.organization is not None and 
+            self.organization_role in ['admin', 'member']
+        )
 
 
 class UserSession(models.Model):
