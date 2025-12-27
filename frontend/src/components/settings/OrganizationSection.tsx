@@ -305,7 +305,8 @@ export default function OrganizationSection() {
                 <select
                   value={newMember.role}
                   onChange={(e) => setNewMember({ ...newMember, role: e.target.value as 'admin' | 'member' })}
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-right"
+                  dir="rtl"
                 >
                   <option value="member">عضو عادی</option>
                   <option value="admin">مدیر</option>
@@ -384,7 +385,8 @@ export default function OrganizationSection() {
                     <select
                       value={member.organization_role}
                       onChange={(e) => handleChangeRole(member.id, e.target.value as 'admin' | 'member')}
-                      className="text-sm px-2 py-1 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                      className="text-sm px-2 py-1 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-right"
+                      dir="rtl"
                     >
                       <option value="member">عضو</option>
                       <option value="admin">مدیر</option>
