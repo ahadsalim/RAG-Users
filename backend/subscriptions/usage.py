@@ -122,14 +122,16 @@ class UsageService:
         ip_address: str = None,
         user_agent: str = None
     ) -> ModelUsageLog:
-        """ثبت یک مصرف جدید"""
+        """
+        ثبت یک مصرف جدید
+        - برای اعضای سازمان: از اشتراک مالک سازمان استفاده می‌شود
+        - برای سایر کاربران: از اشتراک شخصی استفاده می‌شود
+        """
         
         # اگر subscription ارسال نشده، اشتراک فعال کاربر را پیدا کن
         if subscription is None:
-            subscription = user.subscriptions.filter(
-                status='active',
-                end_date__gt=timezone.now()
-            ).first()
+            # استفاده از متد get_active_subscription که برای اعضای سازمان، اشتراک مالک را برمی‌گرداند
+            subscription = user.get_active_subscription()
         
         # نام پلن در زمان ثبت
         plan_name = ''
@@ -157,12 +159,25 @@ class UsageService:
     
     @staticmethod
     def get_daily_usage(user, subscription=None, date=None) -> int:
-        """تعداد query های یک روز خاص برای اشتراک فعلی"""
+        """
+        تعداد query های یک روز خاص
+        - برای مالک سازمان: مصرف خودش + تمام اعضای سازمان
+        - برای سایر کاربران: فقط مصرف خودشان
+        """
         if date is None:
             date = timezone.now().date()
         
+        # لیست کاربرانی که باید مصرفشان شمرده شود
+        user_ids = {user.id}  # استفاده از set برای جلوگیری از تکرار
+        
+        # اگر مالک سازمان است، اعضا را هم اضافه کن
+        if hasattr(user, 'owned_organizations'):
+            for org in user.owned_organizations.all():
+                member_ids = set(org.members.values_list('id', flat=True))
+                user_ids.update(member_ids)
+        
         queryset = UsageLog.objects.filter(
-            user=user,
+            user_id__in=list(user_ids),
             action_type='query',
             created_at__date=date
         )
@@ -175,7 +190,11 @@ class UsageService:
     
     @staticmethod
     def get_monthly_usage(user, subscription=None) -> int:
-        """تعداد query های اشتراک فعلی (از تاریخ شروع اشتراک)"""
+        """
+        تعداد query های اشتراک فعلی (از تاریخ شروع اشتراک)
+        - برای مالک سازمان: مصرف خودش + تمام اعضای سازمان
+        - برای سایر کاربران: فقط مصرف خودشان
+        """
         
         # اگر اشتراک داده نشده، اشتراک فعال را پیدا کن
         if subscription is None:
@@ -187,9 +206,18 @@ class UsageService:
         if not subscription:
             return 0
         
+        # لیست کاربرانی که باید مصرفشان شمرده شود
+        user_ids = {user.id}  # استفاده از set برای جلوگیری از تکرار
+        
+        # اگر مالک سازمان است، اعضا را هم اضافه کن
+        if hasattr(user, 'owned_organizations'):
+            for org in user.owned_organizations.all():
+                member_ids = set(org.members.values_list('id', flat=True))
+                user_ids.update(member_ids)
+        
         # مصرف از تاریخ شروع اشتراک
         return UsageLog.objects.filter(
-            user=user,
+            user_id__in=list(user_ids),
             action_type='query',
             subscription=subscription,
             created_at__gte=subscription.start_date
