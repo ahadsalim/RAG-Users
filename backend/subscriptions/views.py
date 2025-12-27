@@ -15,9 +15,19 @@ from .notification_service import SubscriptionNotificationService
 
 class PlanViewSet(viewsets.ReadOnlyModelViewSet):
     """API endpoints for viewing subscription plans"""
-    queryset = Plan.objects.filter(is_active=True).order_by('price')
     serializer_class = PlanSerializer
     permission_classes = [permissions.AllowAny]
+    
+    def get_queryset(self):
+        """فیلتر کردن پلن‌ها بر اساس نوع کاربر"""
+        queryset = Plan.objects.filter(is_active=True)
+        
+        # اگر کاربر لاگین کرده، فقط پلن‌های مناسب نوع کاربر را نمایش بده
+        if self.request.user.is_authenticated:
+            user_type = self.request.user.user_type
+            queryset = queryset.filter(plan_type=user_type)
+        
+        return queryset.order_by('price')
 
 
 class SubscriptionViewSet(viewsets.ModelViewSet):

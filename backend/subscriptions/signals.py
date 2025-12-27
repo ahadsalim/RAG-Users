@@ -19,15 +19,26 @@ def create_free_subscription(sender, instance, created, **kwargs):
     """
     ایجاد خودکار اشتراک رایگان برای کاربران جدید (غیر از سوپر ادمین)
     سوپر ادمین‌ها از طریق setup_initial_data پلن نامحدود دریافت می‌کنند
+    
+    کاربران حقیقی (individual) -> پلن رایگان حقیقی
+    کاربران حقوقی (business) -> پلن رایگان حقوقی
     """
     if not created or instance.is_superuser:
         return
     
     try:
-        free_plan = Plan.objects.filter(name='رایگان', is_active=True).first()
+        # انتخاب پلن رایگان بر اساس نوع کاربر
+        user_type = instance.user_type
+        
+        # جستجوی پلن رایگان مناسب
+        free_plan = Plan.objects.filter(
+            plan_type=user_type,
+            price=0,
+            is_active=True
+        ).first()
         
         if not free_plan:
-            logger.warning(f"No free plan found for new user {instance.phone_number}")
+            logger.warning(f"No free plan found for user type '{user_type}' for user {instance.phone_number}")
             return
         
         subscription = Subscription.objects.create(
