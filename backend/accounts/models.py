@@ -445,6 +445,30 @@ class User(AbstractUser):
             self.organization is not None and 
             self.organization_role in ['admin', 'member']
         )
+    
+    def get_active_subscription(self):
+        """
+        دریافت اشتراک فعال کاربر
+        - اگر کاربر عضو سازمان است، اشتراک مالک سازمان را برمی‌گرداند
+        - در غیر این صورت، اشتراک شخصی خود را برمی‌گرداند
+        """
+        from subscriptions.models import Subscription
+        from django.utils import timezone
+        
+        # اگر عضو سازمان است، اشتراک مالک را برگردان
+        if self.is_organization_member() and self.organization:
+            owner = self.organization.owner
+            if owner:
+                return owner.subscriptions.filter(
+                    status__in=['active', 'trial'],
+                    end_date__gt=timezone.now()
+                ).first()
+        
+        # در غیر این صورت، اشتراک شخصی
+        return self.subscriptions.filter(
+            status__in=['active', 'trial'],
+            end_date__gt=timezone.now()
+        ).first()
 
 
 class UserSession(models.Model):

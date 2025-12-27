@@ -60,12 +60,8 @@ class QueryView(APIView):
         data = serializer.validated_data
         user = request.user
         
-        # بررسی اشتراک کاربر
-        from subscriptions.models import Subscription
-        active_subscription = user.subscriptions.filter(
-            status__in=['active', 'trial'],
-            end_date__gt=timezone.now()
-        ).first()
+        # بررسی اشتراک کاربر (شخصی یا سازمانی)
+        active_subscription = user.get_active_subscription()
         
         if not user.is_superuser:
             if not active_subscription:
