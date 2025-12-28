@@ -155,8 +155,18 @@ backup_full() {
         rm -rf "${BACKUP_NAME}/"
         BACKUP_SIZE=$(du -h "${BACKUP_NAME}.tar.gz" | cut -f1)
         print_success "Full backup completed!"
+        
+        # Create checksum
+        print_info "Creating SHA256 checksum..."
+        sha256sum "${BACKUP_NAME}.tar.gz" > "${BACKUP_NAME}.tar.gz.sha256"
+        
+        if [ $? -eq 0 ]; then
+            print_success "Checksum created: ${BACKUP_NAME}.tar.gz.sha256"
+        fi
+        
         echo ""
         print_info "Backup file: ${BACKUP_DIR}/${BACKUP_NAME}.tar.gz"
+        print_info "Checksum file: ${BACKUP_DIR}/${BACKUP_NAME}.tar.gz.sha256"
         print_info "Size: ${BACKUP_SIZE}"
         echo ""
     else
@@ -221,8 +231,18 @@ backup_database_only() {
         rm -rf "${BACKUP_NAME}/"
         BACKUP_SIZE=$(du -h "${BACKUP_NAME}.tar.gz" | cut -f1)
         print_success "Database backup completed!"
+        
+        # Create checksum
+        print_info "Creating SHA256 checksum..."
+        sha256sum "${BACKUP_NAME}.tar.gz" > "${BACKUP_NAME}.tar.gz.sha256"
+        
+        if [ $? -eq 0 ]; then
+            print_success "Checksum created: ${BACKUP_NAME}.tar.gz.sha256"
+        fi
+        
         echo ""
         print_info "Backup file: ${BACKUP_DIR}/${BACKUP_NAME}.tar.gz"
+        print_info "Checksum file: ${BACKUP_DIR}/${BACKUP_NAME}.tar.gz.sha256"
         print_info "Size: ${BACKUP_SIZE}"
         echo ""
     else

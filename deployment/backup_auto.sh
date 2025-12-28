@@ -152,6 +152,19 @@ if [ $? -eq 0 ]; then
     
     BACKUP_SIZE=$(du -h "${BACKUP_NAME}.tar.gz" | cut -f1)
     print_success "Archive created: ${BACKUP_NAME}.tar.gz (${BACKUP_SIZE})"
+    
+    # ============================================
+    # 5.1. Create checksum file
+    # ============================================
+    
+    print_info "Creating SHA256 checksum..."
+    sha256sum "${BACKUP_NAME}.tar.gz" > "${BACKUP_NAME}.tar.gz.sha256"
+    
+    if [ $? -eq 0 ]; then
+        print_success "Checksum created: ${BACKUP_NAME}.tar.gz.sha256"
+    else
+        print_error "Checksum creation failed"
+    fi
 else
     print_error "Archive creation failed"
 fi
@@ -171,6 +184,7 @@ fi
 rsync -avz --progress \
     -e "ssh -i $SSH_KEY -o StrictHostKeyChecking=no -o ConnectTimeout=30" \
     "${BACKUP_DIR}/${BACKUP_NAME}.tar.gz" \
+    "${BACKUP_DIR}/${BACKUP_NAME}.tar.gz.sha256" \
     "${BACKUP_SERVER_USER}@${BACKUP_SERVER_HOST}:${BACKUP_SERVER_PATH}/" 2>&1
 
 if [ $? -eq 0 ]; then
@@ -178,8 +192,9 @@ if [ $? -eq 0 ]; then
     
     # Optional: Remove local backup after successful transfer
     if [ "${BACKUP_KEEP_LOCAL:-false}" != "true" ]; then
-        rm -f "${BACKUP_DIR}/${BACKUP_NAME}.tar.gz"
-        print_info "Local backup removed (transferred to remote)"
+        rm -f "${BACKUP_DIR}/${BACKUP_NAME}.tar.gz" \
+              "${BACKUP_DIR}/${BACKUP_NAME}.tar.gz.sha256"
+        print_info "Local backup and checksum removed (transferred to remote)"
     fi
 else
     print_error "Backup transfer failed - keeping local copy"
@@ -193,7 +208,7 @@ print_info "Cleaning old backups on remote server (keeping last ${RETENTION_DAYS
 
 ssh -i "$SSH_KEY" -o StrictHostKeyChecking=no \
     "${BACKUP_SERVER_USER}@${BACKUP_SERVER_HOST}" \
-    "find ${BACKUP_SERVER_PATH} -name 'db_backup_*.tar.gz' -mtime +${RETENTION_DAYS} -delete" 2>/dev/null
+    "find ${BACKUP_SERVER_PATH} -name 'db_backup_*.tar.gz*' -mtime +${RETENTION_DAYS} -delete" 2>/dev/null
 
 if [ $? -eq 0 ]; then
     print_success "Old backups cleaned"
@@ -204,7 +219,7 @@ fi
 # ============================================
 
 print_info "Cleaning old local backups (keeping last 3 days)..."
-find "$BACKUP_DIR" -name "db_backup_*.tar.gz" -mtime +3 -delete 2>/dev/null
+find "$BACKUP_DIR" -name "db_backup_*.tar.gz*" -mtime +3 -delete 2>/dev/null
 print_success "Local cleanup completed"
 
 # ============================================
@@ -212,10 +227,11 @@ print_success "Local cleanup completed"
 # ============================================
 
 LOG_FILE="/var/log/backup-auto.log"
-echo "[$(date '+%Y-%m-%d %H:%M:%S')] Backup completed: ${BACKUP_NAME}.tar.gz (${BACKUP_SIZE})" >> "$LOG_FILE"
+echo "[$(date '+%Y-%m-%d %H:%M:%S')] Backup completed: ${BACKUP_NAME}.tar.gz (${BACKUP_SIZE}) with checksum" >> "$LOG_FILE"
 
 print_success "Automatic backup completed successfully!"
 print_info "Backup: ${BACKUP_NAME}.tar.gz"
+print_info "Checksum: ${BACKUP_NAME}.tar.gz.sha256"
 print_info "Remote: ${BACKUP_SERVER_USER}@${BACKUP_SERVER_HOST}:${BACKUP_SERVER_PATH}/"
 
 exit 0
