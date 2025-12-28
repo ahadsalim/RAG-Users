@@ -75,7 +75,7 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ isOpen, onClose }) => {
 
   const loadProfile = async () => {
     try {
-      const response = await axios.get('/api/v1/accounts/profile/');
+      const response = await axios.get('/api/v1/auth/profile/');
       const userData = response.data;
       setSettings({
         full_name: userData.first_name && userData.last_name ? `${userData.first_name} ${userData.last_name}` : '',
@@ -117,7 +117,7 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ isOpen, onClose }) => {
       
       // ارسال تغییرات پروفایل به سرور
       try {
-        await axios.patch('/api/v1/accounts/profile/', {
+        await axios.patch('/api/v1/auth/profile/', {
           first_name: settings.full_name.split(' ')[0] || '',
           last_name: settings.full_name.split(' ').slice(1).join(' ') || '',
           national_id: settings.national_id,
