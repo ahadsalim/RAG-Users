@@ -537,23 +537,42 @@ class PaymentGatewayListView(APIView):
     permission_classes = [permissions.IsAuthenticated]
     
     def get(self, request):
-        """دریافت لیست درگاه‌های پرداخت فعال بر اساس ارز پایه سیستم"""
+        """دریافت لیست درگاه‌های پرداخت فعال بر اساس ارز کاربر"""
         from finance.models import Currency
         
-        # دریافت ارز پایه سیستم
-        base_currency = Currency.get_base_currency()
+        # دریافت ارز کاربر (از query param یا تنظیمات کاربر)
+        user_currency_code = request.query_params.get('currency')
         
-        if not base_currency:
+        # اگر ارز مشخص نشده، از ارز پیش‌فرض کاربر استفاده کن
+        if not user_currency_code:
+            if hasattr(request.user, 'preferred_currency') and request.user.preferred_currency:
+                user_currency = request.user.preferred_currency
+            else:
+                # پیش‌فرض: ارز پیش‌فرض سیستم
+                user_currency = Currency.get_default_currency()
+                if not user_currency:
+                    # اگر ارز پیش‌فرض نبود، از ارز پایه استفاده کن
+                    user_currency = Currency.get_base_currency()
+        else:
+            try:
+                user_currency = Currency.objects.get(code=user_currency_code, is_active=True)
+            except Currency.DoesNotExist:
+                return Response(
+                    {'error': f'ارز {user_currency_code} یافت نشد'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+        
+        if not user_currency:
             return Response(
-                {'error': 'ارز پایه سیستم تنظیم نشده است'},
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+                {'error': 'ارز کاربر مشخص نیست'},
+                status=status.HTTP_400_BAD_REQUEST
             )
         
-        # فیلتر درگاه‌ها بر اساس ارز مبنای درگاه
-        # فقط درگاه‌هایی که ارز مبنایشان با ارز پایه سیستم یکسان است
+        # فیلتر درگاه‌ها بر اساس ارزهای پشتیبانی شده
+        # درگاه‌هایی که ارز کاربر را پشتیبانی می‌کنند
         gateways = PaymentGatewayModel.objects.filter(
             is_active=True,
-            base_currency=base_currency
+            supported_currencies=user_currency
         ).order_by('display_order')
         
         data = [{
