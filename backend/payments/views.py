@@ -407,6 +407,15 @@ class ZarinpalCallbackView(APIView):
                     transaction.subscription = subscription
                     transaction.save()
                 
+                # ایجاد فاکتور
+                from finance.services import InvoiceService
+                try:
+                    invoice = InvoiceService.create_invoice_from_payment(transaction)
+                    if invoice:
+                        logger.info(f"Invoice {invoice.invoice_number} created for transaction {transaction.id}")
+                except Exception as e:
+                    logger.error(f"Failed to create invoice for transaction {transaction.id}: {e}")
+                
                 return redirect(
                     f"{settings.FRONTEND_URL}/payment/success?"
                     f"ref_id={result['ref_id']}&"
