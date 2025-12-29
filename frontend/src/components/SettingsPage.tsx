@@ -169,7 +169,7 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ isOpen, onClose }) => {
     ...(isBusinessUser ? [{ id: 'organization' as SettingsTab, label: 'مدیریت سازمان', icon: Building2 }] : []),
     { id: 'preferences' as SettingsTab, label: 'تنظیمات', icon: Palette },
     { id: 'notifications' as SettingsTab, label: 'تنظیمات اطلاع رسانی', icon: Bell },
-    { id: 'security' as SettingsTab, label: 'امنیت', icon: Shield },
+    ...(isBusinessUser ? [{ id: 'security' as SettingsTab, label: 'امنیت', icon: Shield }] : []),
     { id: 'sessions' as SettingsTab, label: 'جلسات فعال', icon: Monitor },
   ];
 
