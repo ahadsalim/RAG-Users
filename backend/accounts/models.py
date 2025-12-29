@@ -182,7 +182,8 @@ class User(AbstractUser):
     # Override email to allow null/blank for phone-only users
     email = models.EmailField(unique=True, blank=True, null=True, verbose_name=_('ایمیل'))
     phone_number = models.CharField(
-        max_length=15, 
+        max_length=15,
+        unique=True,
         validators=[phone_validator],
         verbose_name=_('شماره موبایل')
     )
