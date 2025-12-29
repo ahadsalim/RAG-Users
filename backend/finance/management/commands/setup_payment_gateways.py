@@ -37,6 +37,7 @@ class Command(BaseCommand):
         zarinpal, created = PaymentGateway.objects.get_or_create(
             name='زرین‌پال',
             defaults={
+                'gateway_type': 'zarinpal',
                 'merchant_id': '',
                 'base_currency': irr_currency,  # ارز مبنا: ریال
                 'is_active': True,
@@ -51,6 +52,7 @@ class Command(BaseCommand):
             self.stdout.write(self.style.SUCCESS('✓ زرین‌پال ایجاد شد (پیش‌فرض، حالت تست)'))
         else:
             # به‌روزرسانی
+            zarinpal.gateway_type = 'zarinpal'
             zarinpal.base_currency = irr_currency
             zarinpal.is_active = True
             zarinpal.is_sandbox = True
@@ -64,6 +66,7 @@ class Command(BaseCommand):
         tejarat_test, created = PaymentGateway.objects.get_or_create(
             name='درگاه تست تجارت',
             defaults={
+                'gateway_type': 'tejarat_test',
                 'merchant_id': 'MERCHANT_001',
                 'api_key': '',
                 'base_currency': irr_currency,  # ارز مبنا: ریال
@@ -78,6 +81,7 @@ class Command(BaseCommand):
             tejarat_test.supported_currencies.add(irr_currency)
             self.stdout.write(self.style.SUCCESS('✓ درگاه تست تجارت ایجاد شد (حالت تست)'))
         else:
+            tejarat_test.gateway_type = 'tejarat_test'
             tejarat_test.base_currency = irr_currency
             tejarat_test.is_active = True
             tejarat_test.is_sandbox = True
@@ -92,6 +96,7 @@ class Command(BaseCommand):
         plisio, created = PaymentGateway.objects.get_or_create(
             name='Plisio',
             defaults={
+                'gateway_type': 'plisio',
                 'api_key': 'dd_ujqqgwkdaKp7IHHnRxFRDXvPajxKBYcOfZSA9XZBDpVwW_ELAyQRfZi407mLY',
                 'base_currency': usd_currency,  # ارز مبنا: دلار
                 'is_active': True,
@@ -105,6 +110,7 @@ class Command(BaseCommand):
             plisio.supported_currencies.add(usd_currency)
             self.stdout.write(self.style.SUCCESS('✓ Plisio ایجاد شد (فعال، حالت واقعی)'))
         else:
+            plisio.gateway_type = 'plisio'
             plisio.base_currency = usd_currency
             plisio.is_active = True
             plisio.is_sandbox = False

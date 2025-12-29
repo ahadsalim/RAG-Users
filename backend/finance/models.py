@@ -117,7 +117,20 @@ class Currency(models.Model):
 class PaymentGateway(models.Model):
     """تنظیمات درگاه پرداخت"""
     
+    GATEWAY_TYPE_CHOICES = [
+        ('zarinpal', 'زرین‌پال'),
+        ('tejarat_test', 'درگاه تست تجارت'),
+        ('plisio', 'Plisio'),
+        ('other', 'سایر'),
+    ]
+    
     name = models.CharField(max_length=50, verbose_name=_('نام درگاه'))
+    gateway_type = models.CharField(
+        max_length=20,
+        choices=GATEWAY_TYPE_CHOICES,
+        default='other',
+        verbose_name=_('نوع درگاه')
+    )
     connected_account = models.CharField(max_length=50, blank=True, verbose_name=_('شماره حساب متصل'))
     merchant_id = models.CharField(max_length=255, blank=True, verbose_name=_('شناسه پذیرنده'))
     api_key = models.CharField(max_length=255, blank=True, verbose_name=_('کلید API'))
