@@ -1,5 +1,5 @@
 """
-سرویس‌های پرداخت برای Zarinpal، Stripe و Crypto
+سرویس‌های پرداخت برای Zarinpal
 """
 import requests
 import hashlib
@@ -9,10 +9,9 @@ from decimal import Decimal
 from django.conf import settings
 from django.utils import timezone
 from typing import Optional, Dict, Any
-import stripe
 from .models import (
     Transaction, PaymentStatus, PaymentGateway,
-    ZarinpalPayment, StripePayment, CryptoPayment, Wallet
+    ZarinpalPayment, Wallet
 )
 
 

@@ -2,7 +2,7 @@ from rest_framework import serializers
 from decimal import Decimal
 from .models import (
     Transaction, PaymentGateway, PaymentStatus,
-    ZarinpalPayment, StripePayment, CryptoPayment,
+    ZarinpalPayment, PlisioPayment,
     Wallet, WalletTransaction
 )
 from subscriptions.models import Plan, Subscription
@@ -47,58 +47,28 @@ class ZarinpalPaymentSerializer(serializers.ModelSerializer):
         fields = ['authority', 'card_hash', 'card_pan', 'ref_id', 'fee_type', 'fee']
 
 
-class StripePaymentSerializer(serializers.ModelSerializer):
-    """Serializer برای پرداخت Stripe"""
+class PlisioPaymentSerializer(serializers.ModelSerializer):
+    """Serializer برای پرداخت Plisio"""
     
     class Meta:
-        model = StripePayment
+        model = PlisioPayment
         fields = [
-            'payment_intent_id', 'charge_id', 'customer_id',
-            'payment_method_id', 'card_brand', 'card_last4'
+            'txn_id', 'invoice_url', 'wallet_hash', 'psys_cid',
+            'amount_crypto', 'tx_urls', 'confirmations',
+            'expected_confirmations', 'verify_hash'
         ]
-
-
-class CryptoPaymentSerializer(serializers.ModelSerializer):
-    """Serializer برای پرداخت رمزارز"""
-    
-    cryptocurrency_display = serializers.CharField(
-        source='get_cryptocurrency_display',
-        read_only=True
-    )
-    network_display = serializers.CharField(
-        source='get_network_display',
-        read_only=True
-    )
-    confirmation_progress = serializers.SerializerMethodField()
-    
-    class Meta:
-        model = CryptoPayment
-        fields = [
-            'cryptocurrency', 'cryptocurrency_display',
-            'network', 'network_display',
-            'wallet_address', 'from_address', 'tx_hash',
-            'amount_crypto', 'confirmations',
-            'required_confirmations', 'confirmation_progress'
-        ]
-    
-    def get_confirmation_progress(self, obj):
-        """محاسبه درصد پیشرفت تاییدیه"""
-        if obj.required_confirmations > 0:
-            return min(100, (obj.confirmations / obj.required_confirmations) * 100)
-        return 0
 
 
 class TransactionDetailSerializer(TransactionSerializer):
     """Serializer کامل برای جزئیات تراکنش"""
     
     zarinpal_payment = ZarinpalPaymentSerializer(read_only=True)
-    stripe_payment = StripePaymentSerializer(read_only=True)
-    crypto_payment = CryptoPaymentSerializer(read_only=True)
+    plisio_payment = PlisioPaymentSerializer(read_only=True)
     
     class Meta(TransactionSerializer.Meta):
         fields = TransactionSerializer.Meta.fields + [
             'gateway_transaction_id', 'gateway_response',
-            'zarinpal_payment', 'stripe_payment', 'crypto_payment',
+            'zarinpal_payment', 'plisio_payment',
             'notes', 'metadata', 'ip_address',
             'updated_at', 'refunded_at'
         ]
@@ -130,9 +100,8 @@ class CreatePaymentSerializer(serializers.Serializer):
         default=0
     )
     
-    # فیلدهای مخصوص رمزارز
-    cryptocurrency = serializers.CharField(required=False)
-    network = serializers.CharField(required=False)
+    # فیلدهای مخصوص Plisio
+    crypto_currency = serializers.CharField(required=False, default='USDT_TRX')
     
     def validate(self, attrs):
         """اعتبارسنجی داده‌ها"""
@@ -155,31 +124,19 @@ class CreatePaymentSerializer(serializers.Serializer):
                 'حداقل یکی از موارد plan_id، subscription_id یا amount باید مشخص شود'
             )
         
-        # برای پرداخت رمزارز، cryptocurrency و network الزامی است
-        if attrs.get('gateway') == PaymentGateway.CRYPTO:
-            if not attrs.get('cryptocurrency'):
-                raise serializers.ValidationError(
-                    {'cryptocurrency': 'برای پرداخت رمزارز، نوع رمزارز الزامی است'}
-                )
-            if not attrs.get('network'):
-                raise serializers.ValidationError(
-                    {'network': 'برای پرداخت رمزارز، شبکه الزامی است'}
-                )
-        
         return attrs
 
 
 class VerifyPaymentSerializer(serializers.Serializer):
     """Serializer برای تایید پرداخت"""
     
-    payment_intent_id = serializers.CharField(required=False)  # Stripe
-    tx_hash = serializers.CharField(required=False)  # Crypto
+    txn_id = serializers.CharField(required=False)  # Plisio
     
     def validate(self, attrs):
         """اعتبارسنجی بر اساس نوع درگاه"""
         
         # حداقل یکی باید وجود داشته باشد
-        if not any([attrs.get('payment_intent_id'), attrs.get('tx_hash')]):
+        if not attrs.get('txn_id'):
             raise serializers.ValidationError(
                 'اطلاعات تایید پرداخت ارسال نشده است'
             )
@@ -239,8 +196,7 @@ class WalletChargeSerializer(serializers.Serializer):
     gateway = serializers.ChoiceField(
         choices=[
             PaymentGateway.ZARINPAL,
-            PaymentGateway.STRIPE,
-            PaymentGateway.CRYPTO
+            PaymentGateway.PLISIO
         ]
     )
 

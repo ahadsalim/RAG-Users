@@ -11,19 +11,20 @@ import logging
 
 from .models import (
     Transaction, PaymentGateway as PaymentGatewayChoices, PaymentStatus,
-    ZarinpalPayment, StripePayment, CryptoPayment, Wallet, TejaratTestPayment
+    ZarinpalPayment, PlisioPayment, Wallet, TejaratTestPayment
 )
 from finance.models import PaymentGateway as PaymentGatewayModel
 from .serializers import (
     TransactionSerializer, TransactionDetailSerializer,
     CreatePaymentSerializer, VerifyPaymentSerializer,
     WalletSerializer, WalletChargeSerializer,
-    CryptoPaymentSerializer
+    PlisioPaymentSerializer
 )
 from .services import (
-    ZarinpalService, StripeService, CryptoService, WalletService
+    ZarinpalService, WalletService
 )
 from .tejarat_test_service import TejaratTestService
+from .plisio_service import PlisioService
 from subscriptions.models import Subscription, Plan
 from accounts.models import AuditLog
 
@@ -101,10 +102,8 @@ class TransactionViewSet(viewsets.ModelViewSet):
             result = self._process_zarinpal_payment(transaction, request)
         elif gateway == PaymentGatewayChoices.TEJARAT_TEST:
             result = self._process_tejarat_test_payment(transaction, request)
-        elif gateway == PaymentGatewayChoices.STRIPE:
-            result = self._process_stripe_payment(transaction, request)
-        elif gateway == PaymentGatewayChoices.CRYPTO:
-            result = self._process_crypto_payment(transaction, data)
+        elif gateway == PaymentGatewayChoices.PLISIO:
+            result = self._process_plisio_payment(transaction, request, data)
         elif gateway == PaymentGatewayChoices.CREDIT:
             result = self._process_wallet_payment(transaction)
         else:
@@ -167,22 +166,19 @@ class TransactionViewSet(viewsets.ModelViewSet):
             callback_url=callback_url
         )
     
-    def _process_stripe_payment(self, transaction, request):
-        """پردازش پرداخت Stripe"""
+    def _process_plisio_payment(self, transaction, request, data):
+        """پردازش پرداخت Plisio"""
         
-        service = StripeService()
-        return service.create_payment_intent(transaction)
-    
-    def _process_crypto_payment(self, transaction, data):
-        """پردازش پرداخت رمزارز"""
+        callback_url = request.build_absolute_uri(
+            reverse('payments:plisio-callback')
+        )
         
-        cryptocurrency = data.get('cryptocurrency', 'USDT')
-        network = data.get('network', 'tron')
+        crypto_currency = data.get('crypto_currency', 'USDT_TRX')
         
-        return CryptoService.create_crypto_payment(
+        return PlisioService.create_invoice(
             transaction=transaction,
-            cryptocurrency=cryptocurrency,
-            network=network
+            callback_url=callback_url,
+            currency=crypto_currency
         )
     
     def _process_wallet_payment(self, transaction):
@@ -204,33 +200,16 @@ class TransactionViewSet(viewsets.ModelViewSet):
         
         gateway = transaction.gateway
         
-        if gateway == PaymentGateway.STRIPE:
-            # Stripe معمولاً از طریق webhook تایید می‌شود
-            payment_intent_id = request.data.get('payment_intent_id')
-            if not payment_intent_id:
+        # فقط Plisio نیاز به تایید دستی دارد
+        if gateway == PaymentGatewayChoices.PLISIO:
+            txn_id = request.data.get('txn_id')
+            if not txn_id:
                 return Response(
-                    {'error': 'payment_intent_id الزامی است'},
+                    {'error': 'txn_id الزامی است'},
                     status=status.HTTP_400_BAD_REQUEST
                 )
             
-            service = StripeService()
-            result = service.confirm_payment(payment_intent_id)
-            
-        elif gateway == PaymentGateway.CRYPTO:
-            tx_hash = request.data.get('tx_hash')
-            if not tx_hash:
-                return Response(
-                    {'error': 'tx_hash الزامی است'},
-                    status=status.HTTP_400_BAD_REQUEST
-                )
-            
-            # ذخیره tx_hash
-            crypto_payment = transaction.crypto_payment
-            crypto_payment.tx_hash = tx_hash
-            crypto_payment.save()
-            
-            result = CryptoService.verify_crypto_payment(tx_hash)
-            
+            result = PlisioService.process_callback({'txn_id': txn_id})
         else:
             return Response(
                 {'error': 'تایید برای این درگاه پشتیبانی نمی‌شود'},

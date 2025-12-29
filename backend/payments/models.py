@@ -12,10 +12,7 @@ class PaymentGateway(models.TextChoices):
     """انواع درگاه پرداخت"""
     ZARINPAL = 'zarinpal', 'زرین‌پال'
     TEJARAT_TEST = 'tejarat_test', 'درگاه تست تجارت'
-    STRIPE = 'stripe', 'Stripe'
-    PAYPAL = 'paypal', 'PayPal'
-    CRYPTO = 'crypto', 'Cryptocurrency'
-    BANK_TRANSFER = 'bank_transfer', 'انتقال بانکی'
+    PLISIO = 'plisio', 'پرداخت ارز دیجیتال (Plisio)'
     CREDIT = 'credit', 'اعتبار حساب'
 
 
@@ -261,55 +258,6 @@ class ZarinpalPayment(models.Model):
         verbose_name_plural = 'پرداخت‌های زرین‌پال'
 
 
-class StripePayment(models.Model):
-    """اطلاعات مختص پرداخت Stripe"""
-    
-    transaction = models.OneToOneField(
-        Transaction,
-        on_delete=models.CASCADE,
-        related_name='stripe_payment'
-    )
-    
-    payment_intent_id = models.CharField(
-        max_length=255,
-        unique=True,
-        verbose_name='Payment Intent ID'
-    )
-    
-    charge_id = models.CharField(
-        max_length=255,
-        blank=True,
-        verbose_name='Charge ID'
-    )
-    
-    customer_id = models.CharField(
-        max_length=255,
-        blank=True,
-        verbose_name='Customer ID'
-    )
-    
-    payment_method_id = models.CharField(
-        max_length=255,
-        blank=True,
-        verbose_name='Payment Method ID'
-    )
-    
-    card_brand = models.CharField(
-        max_length=50,
-        blank=True,
-        verbose_name='Card Brand'
-    )
-    card_last4 = models.CharField(
-        max_length=4,
-        blank=True,
-        verbose_name='Card Last 4'
-    )
-    
-    class Meta:
-        verbose_name = 'پرداخت Stripe'
-        verbose_name_plural = 'پرداخت‌های Stripe'
-
-
 class TejaratTestPayment(models.Model):
     """اطلاعات مختص پرداخت درگاه تست تجارت"""
     
@@ -342,65 +290,50 @@ class TejaratTestPayment(models.Model):
         verbose_name_plural = 'پرداخت‌های تست تجارت'
 
 
-class CryptoPayment(models.Model):
-    """اطلاعات مختص پرداخت رمزارز"""
-    
-    CRYPTO_CURRENCIES = [
-        ('BTC', 'Bitcoin'),
-        ('ETH', 'Ethereum'),
-        ('USDT', 'Tether'),
-        ('USDC', 'USD Coin'),
-        ('BNB', 'Binance Coin'),
-    ]
-    
-    NETWORKS = [
-        ('bitcoin', 'Bitcoin Network'),
-        ('ethereum', 'Ethereum Network'),
-        ('bsc', 'Binance Smart Chain'),
-        ('tron', 'Tron Network'),
-        ('polygon', 'Polygon Network'),
-    ]
+class PlisioPayment(models.Model):
+    """اطلاعات مختص پرداخت Plisio (ارز دیجیتال)"""
     
     transaction = models.OneToOneField(
         Transaction,
         on_delete=models.CASCADE,
-        related_name='crypto_payment'
+        related_name='plisio_payment'
     )
     
-    cryptocurrency = models.CharField(
-        max_length=10,
-        choices=CRYPTO_CURRENCIES,
-        verbose_name='رمزارز'
-    )
-    
-    network = models.CharField(
-        max_length=20,
-        choices=NETWORKS,
-        verbose_name='شبکه'
-    )
-    
-    wallet_address = models.CharField(
-        max_length=255,
-        verbose_name='آدرس کیف پول مقصد'
-    )
-    
-    from_address = models.CharField(
-        max_length=255,
-        blank=True,
-        verbose_name='آدرس کیف پول مبدا'
-    )
-    
-    tx_hash = models.CharField(
+    txn_id = models.CharField(
         max_length=255,
         unique=True,
+        verbose_name='Plisio Transaction ID'
+    )
+    
+    invoice_url = models.URLField(
+        max_length=500,
         blank=True,
-        verbose_name='Transaction Hash'
+        verbose_name='لینک صفحه پرداخت'
+    )
+    
+    wallet_hash = models.CharField(
+        max_length=255,
+        blank=True,
+        verbose_name='آدرس کیف پول'
+    )
+    
+    psys_cid = models.CharField(
+        max_length=20,
+        blank=True,
+        verbose_name='ارز دیجیتال (BTC, ETH, USDT, etc.)'
     )
     
     amount_crypto = models.DecimalField(
         max_digits=20,
         decimal_places=8,
-        verbose_name='مقدار رمزارز'
+        default=0,
+        verbose_name='مقدار ارز دیجیتال'
+    )
+    
+    tx_urls = models.JSONField(
+        default=list,
+        blank=True,
+        verbose_name='لینک‌های تراکنش بلاکچین'
     )
     
     confirmations = models.IntegerField(
@@ -408,14 +341,20 @@ class CryptoPayment(models.Model):
         verbose_name='تعداد تاییدیه'
     )
     
-    required_confirmations = models.IntegerField(
-        default=3,
+    expected_confirmations = models.IntegerField(
+        default=1,
         verbose_name='تاییدیه‌های مورد نیاز'
     )
     
+    verify_hash = models.CharField(
+        max_length=255,
+        blank=True,
+        verbose_name='Hash تایید'
+    )
+    
     class Meta:
-        verbose_name = 'پرداخت رمزارز'
-        verbose_name_plural = 'پرداخت‌های رمزارز'
+        verbose_name = 'پرداخت Plisio'
+        verbose_name_plural = 'پرداخت‌های Plisio'
 
 
 class Wallet(models.Model):
