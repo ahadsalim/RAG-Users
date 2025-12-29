@@ -38,6 +38,7 @@ class Command(BaseCommand):
             name='زرین‌پال',
             defaults={
                 'merchant_id': '',
+                'base_currency': irr_currency,  # ارز مبنا: ریال
                 'is_active': True,
                 'is_sandbox': True,  # حالت تست
                 'is_default': True,  # درگاه پیش‌فرض
@@ -50,6 +51,7 @@ class Command(BaseCommand):
             self.stdout.write(self.style.SUCCESS('✓ زرین‌پال ایجاد شد (پیش‌فرض، حالت تست)'))
         else:
             # به‌روزرسانی
+            zarinpal.base_currency = irr_currency
             zarinpal.is_active = True
             zarinpal.is_sandbox = True
             zarinpal.is_default = True
@@ -64,6 +66,7 @@ class Command(BaseCommand):
             defaults={
                 'merchant_id': 'MERCHANT_001',
                 'api_key': '',
+                'base_currency': irr_currency,  # ارز مبنا: ریال
                 'is_active': True,
                 'is_sandbox': True,  # حالت تست
                 'is_default': False,
@@ -75,6 +78,7 @@ class Command(BaseCommand):
             tejarat_test.supported_currencies.add(irr_currency)
             self.stdout.write(self.style.SUCCESS('✓ درگاه تست تجارت ایجاد شد (حالت تست)'))
         else:
+            tejarat_test.base_currency = irr_currency
             tejarat_test.is_active = True
             tejarat_test.is_sandbox = True
             tejarat_test.is_default = False
@@ -89,6 +93,7 @@ class Command(BaseCommand):
             name='Plisio',
             defaults={
                 'api_key': 'dd_ujqqgwkdaKp7IHHnRxFRDXvPajxKBYcOfZSA9XZBDpVwW_ELAyQRfZi407mLY',
+                'base_currency': usd_currency,  # ارز مبنا: دلار
                 'is_active': True,
                 'is_sandbox': False,  # حالت واقعی
                 'is_default': False,
@@ -100,6 +105,7 @@ class Command(BaseCommand):
             plisio.supported_currencies.add(usd_currency)
             self.stdout.write(self.style.SUCCESS('✓ Plisio ایجاد شد (فعال، حالت واقعی)'))
         else:
+            plisio.base_currency = usd_currency
             plisio.is_active = True
             plisio.is_sandbox = False
             plisio.is_default = False

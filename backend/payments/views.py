@@ -82,13 +82,26 @@ class TransactionViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_400_BAD_REQUEST
             )
         
+        # دریافت ارز کاربر و نرخ تبدیل
+        from finance.models import Currency
+        currency_code = data.get('currency', 'IRR')
+        try:
+            currency_obj = Currency.objects.get(code=currency_code)
+            exchange_rate = currency_obj.exchange_rate
+        except Currency.DoesNotExist:
+            return Response(
+                {'error': f'ارز {currency_code} یافت نشد'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
         # ایجاد تراکنش
         transaction = Transaction.objects.create(
             user=request.user,
             plan_id=plan_id,
             subscription_id=subscription_id,
             amount=amount,
-            currency=data.get('currency', 'IRR'),
+            currency=currency_code,
+            exchange_rate=exchange_rate,  # ذخیره نرخ تبدیل لحظه تراکنش
             gateway=gateway,
             description=description,
             discount_code=data.get('discount_code', ''),
@@ -587,8 +600,22 @@ class PaymentGatewayListView(APIView):
     permission_classes = [permissions.IsAuthenticated]
     
     def get(self, request):
-        """دریافت لیست درگاه‌های پرداخت فعال"""
-        gateways = PaymentGatewayModel.objects.filter(is_active=True).order_by('display_order')
+        """دریافت لیست درگاه‌های پرداخت فعال بر اساس ارز کاربر"""
+        from finance.models import Currency
+        
+        # دریافت ارز پیش‌فرض کاربر (از query param یا تنظیمات کاربر)
+        user_currency_code = request.query_params.get('currency', 'IRR')
+        
+        try:
+            user_currency = Currency.objects.get(code=user_currency_code)
+        except Currency.DoesNotExist:
+            user_currency = Currency.objects.get(code='IRR')  # پیش‌فرض
+        
+        # فیلتر درگاه‌ها بر اساس ارزهای پشتیبانی شده
+        gateways = PaymentGatewayModel.objects.filter(
+            is_active=True,
+            supported_currencies=user_currency
+        ).order_by('display_order')
         
         data = [{
             'id': g.id,

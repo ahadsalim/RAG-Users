@@ -209,6 +209,57 @@ class Transaction(models.Model):
     def get_final_amount(self):
         """محاسبه مبلغ نهایی با احتساب تخفیف و مالیات"""
         return self.amount - self.discount_amount + self.tax_amount
+    
+    def convert_to_currency(self, target_currency_code: str):
+        """
+        تبدیل مبلغ تراکنش به ارز مقصد
+        
+        Args:
+            target_currency_code: کد ارز مقصد (مثل 'USD', 'IRR')
+            
+        Returns:
+            Decimal: مبلغ تبدیل شده
+        """
+        from finance.models import Currency
+        from decimal import Decimal
+        
+        # اگر ارز یکسان است، همان مبلغ را برگردان
+        if self.currency == target_currency_code:
+            return self.amount
+        
+        # دریافت ارز مقصد
+        try:
+            target_currency = Currency.objects.get(code=target_currency_code)
+        except Currency.DoesNotExist:
+            raise ValueError(f"Currency {target_currency_code} not found")
+        
+        # تبدیل به ارز پایه (IRR) سپس به ارز مقصد
+        # مبلغ فعلی * نرخ تبدیل فعلی = مبلغ به IRR
+        amount_in_base = self.amount * self.exchange_rate
+        
+        # مبلغ به IRR / نرخ تبدیل ارز مقصد = مبلغ به ارز مقصد
+        converted_amount = amount_in_base / target_currency.exchange_rate
+        
+        # گرد کردن بر اساس decimal_places ارز مقصد
+        if target_currency.has_decimals:
+            decimal_places = target_currency.decimal_places
+        else:
+            decimal_places = 0
+        
+        quantize_value = Decimal('0.1') ** decimal_places
+        return converted_amount.quantize(quantize_value)
+    
+    def get_amount_in_gateway_currency(self, gateway_obj):
+        """
+        تبدیل مبلغ به ارز مبنای درگاه
+        
+        Args:
+            gateway_obj: شیء PaymentGateway از finance.models
+            
+        Returns:
+            Decimal: مبلغ به ارز مبنای درگاه
+        """
+        return self.convert_to_currency(gateway_obj.base_currency.code)
 
 
 class ZarinpalPayment(models.Model):

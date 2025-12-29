@@ -33,7 +33,16 @@ class ZarinpalService:
                        description: str = None, mobile: str = None, email: str = None) -> Dict[str, Any]:
         """ایجاد پرداخت در زرین‌پال"""
         
-        amount = int(transaction.amount)  # زرین‌پال مبلغ را به ریال می‌خواهد
+        from finance.models import PaymentGateway as PaymentGatewayModel
+        
+        # دریافت تنظیمات درگاه زرین‌پال
+        gateway = PaymentGatewayModel.objects.filter(name='زرین‌پال').first()
+        if not gateway:
+            raise ValueError("Gateway configuration for Zarinpal not found")
+        
+        # تبدیل مبلغ به ارز مبنای درگاه (ریال)
+        amount_in_gateway_currency = transaction.get_amount_in_gateway_currency(gateway)
+        amount = int(amount_in_gateway_currency)  # زرین‌پال مبلغ را به ریال می‌خواهد
         
         data = {
             'merchant_id': cls.MERCHANT_ID,

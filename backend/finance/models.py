@@ -127,6 +127,16 @@ class PaymentGateway(models.Model):
     is_sandbox = models.BooleanField(default=False, verbose_name=_('حالت تست'))
     is_default = models.BooleanField(default=False, verbose_name=_('درگاه پیش‌فرض'))
     
+    base_currency = models.ForeignKey(
+        Currency,
+        on_delete=models.PROTECT,
+        related_name='base_for_gateways',
+        null=True,
+        blank=True,
+        verbose_name=_('ارز مبنا'),
+        help_text=_('ارزی که درگاه پرداخت مبالغ را بر اساس آن دریافت می‌کند')
+    )
+    
     supported_currencies = models.ManyToManyField(
         Currency,
         related_name='payment_gateways',

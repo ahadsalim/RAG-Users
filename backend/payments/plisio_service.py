@@ -34,9 +34,16 @@ class PlisioService:
             دیکشنری حاوی نتیجه
         """
         try:
-            # تبدیل مبلغ به دلار (Plisio با USD کار می‌کند)
-            # فرض: مبلغ به تومان است، تبدیل به دلار
-            amount_usd = float(transaction.amount) / 60000  # تقریباً نرخ دلار
+            from finance.models import PaymentGateway as PaymentGatewayModel
+            
+            # دریافت تنظیمات درگاه Plisio
+            gateway = PaymentGatewayModel.objects.filter(name='Plisio').first()
+            if not gateway:
+                raise ValueError("Gateway configuration for Plisio not found")
+            
+            # تبدیل مبلغ به ارز مبنای درگاه (USD)
+            amount_in_gateway_currency = transaction.get_amount_in_gateway_currency(gateway)
+            amount_usd = float(amount_in_gateway_currency)
             
             # پارامترهای درخواست
             params = {

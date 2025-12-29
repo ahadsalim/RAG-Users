@@ -19,19 +19,19 @@ class TejaratTestService:
     
     @classmethod
     def create_payment(cls, transaction: Transaction, callback_url: str) -> Dict[str, Any]:
-        """
-        ایجاد درخواست پرداخت
+        """ایجاد پرداخت در درگاه تست تجارت"""
         
-        Args:
-            transaction: تراکنش
-            callback_url: آدرس بازگشت
-            
-        Returns:
-            دیکشنری حاوی نتیجه
-        """
         try:
-            # آماده‌سازی داده‌ها
-            amount = int(transaction.amount)  # تبدیل به ریال
+            from finance.models import PaymentGateway as PaymentGatewayModel
+            
+            # دریافت تنظیمات درگاه تست تجارت
+            gateway = PaymentGatewayModel.objects.filter(name='درگاه تست تجارت').first()
+            if not gateway:
+                raise ValueError("Gateway configuration for Tejarat Test not found")
+            
+            # تبدیل مبلغ به ارز مبنای درگاه
+            amount_in_gateway_currency = transaction.get_amount_in_gateway_currency(gateway)
+            amount = int(amount_in_gateway_currency)
             
             payload = {
                 'merchant_id': cls.MERCHANT_ID,
@@ -78,7 +78,7 @@ class TejaratTestService:
                     'success': False,
                     'error': result.get('message', 'خطا در ایجاد درخواست پرداخت')
                 }
-                
+        
         except requests.exceptions.RequestException as e:
             logger.error(f"Tejarat Test payment request error: {str(e)}")
             return {
