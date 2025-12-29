@@ -162,6 +162,8 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ isOpen, onClose }) => {
   // Show organization tab only for business users
   const isBusinessUser = user?.user_type === 'business';
   
+  console.log('User type:', user?.user_type, 'Is business user:', isBusinessUser);
+  
   const tabs = [
     { id: 'profile' as SettingsTab, label: 'پروفایل', icon: User },
     { id: 'subscription' as SettingsTab, label: 'اشتراک', icon: CreditCard },

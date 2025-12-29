@@ -58,6 +58,20 @@ export default function CheckoutPage() {
   const [error, setError] = useState<string | null>(null)
   const [financialSettings, setFinancialSettings] = useState<FinancialSettings | null>(null)
   const [siteSettings, setSiteSettings] = useState<SiteSettings | null>(null)
+  const [invoiceNumber, setInvoiceNumber] = useState<string>('')
+
+  // تولید شماره پیش‌فاکتور موقت
+  useEffect(() => {
+    const generateTempInvoiceNumber = () => {
+      const now = new Date()
+      const year = now.getFullYear()
+      const month = String(now.getMonth() + 1).padStart(2, '0')
+      const day = String(now.getDate()).padStart(2, '0')
+      const random = Math.floor(Math.random() * 10000).toString().padStart(4, '0')
+      return `PRE-${year}${month}${day}-${random}`
+    }
+    setInvoiceNumber(generateTempInvoiceNumber())
+  }, [])
 
   useEffect(() => {
     const fetchData = async () => {
@@ -167,6 +181,11 @@ export default function CheckoutPage() {
         { headers }
       )
 
+      // ذخیره شماره پیش‌فاکتور
+      if (response.data.reference_id) {
+        setInvoiceNumber(response.data.reference_id)
+      }
+
       if (response.data.payment_url) {
         window.location.href = response.data.payment_url
       } else {
@@ -250,7 +269,12 @@ export default function CheckoutPage() {
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm overflow-hidden mb-4">
           {/* Invoice Header */}
           <div className="bg-gradient-to-l from-blue-500 to-blue-600 px-4 py-3">
-            <h1 className="text-white font-medium text-sm">پیش‌فاکتور خرید اشتراک</h1>
+            <div className="flex items-center justify-between">
+              <h1 className="text-white font-medium text-sm">پیش‌فاکتور خرید اشتراک</h1>
+              {invoiceNumber && (
+                <span className="text-white/90 text-xs font-mono">#{invoiceNumber}</span>
+              )}
+            </div>
           </div>
           
           {/* Seller Info */}
