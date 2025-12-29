@@ -119,7 +119,6 @@ class PaymentGateway(models.Model):
     
     GATEWAY_TYPE_CHOICES = [
         ('zarinpal', 'زرین‌پال'),
-        ('tejarat_test', 'درگاه تست تجارت'),
         ('plisio', 'Plisio'),
         ('other', 'سایر'),
     ]
