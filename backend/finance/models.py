@@ -294,10 +294,11 @@ class Invoice(models.Model):
     )
     
     # اطلاعات مالیاتی
+    send_to_tax_system = models.BooleanField(default=True, verbose_name='ارسال به سامانه مالیاتی')
     tax_id = models.CharField(max_length=100, verbose_name='شناسه یکتای مالیاتی', blank=True)
     tax_serial = models.CharField(max_length=100, verbose_name='سریال مالیاتی', blank=True)
     sent_to_tax_at = models.DateTimeField(null=True, blank=True, verbose_name='تاریخ ارسال به مالیات')
-    tax_response = models.JSONField(null=True, blank=True, verbose_name='پاسخ سامانه مالیات')
+    tax_response = models.JSONField(null=True, blank=True, verbose_name='پاسخ سامانه مالیاتی')
     
     # تاریخ‌ها
     issue_date = models.DateTimeField(default=timezone.now, verbose_name='تاریخ صدور')

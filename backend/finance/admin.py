@@ -136,9 +136,9 @@ class InvoiceAdmin(admin.ModelAdmin):
     
     list_display = [
         'invoice_number', 'buyer_name', 'is_legal_buyer', 'total_display',
-        'status_badge', 'issue_date_jalali', 'tax_status'
+        'status_badge', 'issue_date_jalali', 'send_to_tax_system', 'tax_status'
     ]
-    list_filter = ['status', 'is_legal_buyer', 'invoice_type', 'issue_date']
+    list_filter = ['status', 'is_legal_buyer', 'invoice_type', 'send_to_tax_system', 'issue_date']
     search_fields = ['invoice_number', 'buyer_name', 'buyer_national_id']
     readonly_fields = ['invoice_number', 'issue_date_jalali', 'paid_at_jalali', 'currency_display', 'created_at', 'updated_at', 'tax_id', 'tax_serial', 'payment_info']
     date_hierarchy = 'issue_date'
@@ -164,7 +164,7 @@ class InvoiceAdmin(admin.ModelAdmin):
             'fields': ('currency_display', 'subtotal', 'tax_rate', 'tax_amount', 'discount', 'total')
         }),
         ('اطلاعات مالیاتی', {
-            'fields': ('tax_id', 'tax_serial', 'sent_to_tax_at', 'tax_response'),
+            'fields': ('send_to_tax_system', 'tax_id', 'tax_serial', 'sent_to_tax_at', 'tax_response'),
             'classes': ('collapse',)
         }),
         ('یادداشت', {
@@ -250,7 +250,7 @@ class InvoiceAdmin(admin.ModelAdmin):
         self._request = request
         return super().changeform_view(request, object_id, form_url, extra_context)
     
-    actions = ['send_to_tax', 'mark_as_paid']
+    actions = ['send_to_tax', 'mark_as_paid', 'enable_tax_sending', 'disable_tax_sending']
     
     def send_to_tax(self, request, queryset):
         # TODO: پیاده‌سازی ارسال به سامانه مالیات
@@ -261,6 +261,18 @@ class InvoiceAdmin(admin.ModelAdmin):
         queryset.update(status='paid')
         self.message_user(request, f'{queryset.count()} فاکتور پرداخت شده علامت‌گذاری شد')
     mark_as_paid.short_description = 'علامت‌گذاری به عنوان پرداخت شده'
+    
+    def enable_tax_sending(self, request, queryset):
+        """فعال کردن ارسال به سامانه مالیاتی"""
+        count = queryset.update(send_to_tax_system=True)
+        self.message_user(request, f'{count} فاکتور برای ارسال به سامانه مالیاتی فعال شد')
+    enable_tax_sending.short_description = 'فعال کردن ارسال به سامانه مالیاتی'
+    
+    def disable_tax_sending(self, request, queryset):
+        """غیرفعال کردن ارسال به سامانه مالیاتی"""
+        count = queryset.update(send_to_tax_system=False)
+        self.message_user(request, f'{count} فاکتور از ارسال به سامانه مالیاتی حذف شد')
+    disable_tax_sending.short_description = 'غیرفعال کردن ارسال به سامانه مالیاتی'
 
 
 @admin.register(TaxReport)
