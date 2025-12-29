@@ -92,7 +92,19 @@ export function ChatSidebar({
       }
       
       const data = await response.json()
-      const messages = data.results || data || []
+      console.log('API Response:', data)
+      
+      // بررسی فرمت‌های مختلف پاسخ
+      let messages = []
+      if (Array.isArray(data)) {
+        messages = data
+      } else if (data.results && Array.isArray(data.results)) {
+        messages = data.results
+      } else if (data.data && Array.isArray(data.data)) {
+        messages = data.data
+      }
+      
+      console.log('Extracted messages:', messages)
       
       // ساخت متن گفتگو
       let shareText = `گفتگو: ${conversation.title}\n\n`
@@ -108,6 +120,8 @@ export function ChatSidebar({
       
       shareText += `\n---\nتاریخ: ${new Date(conversation.updated_at).toLocaleDateString('fa-IR')}`
       
+      console.log('Share text:', shareText)
+      
       // استفاده از Web Share API
       if (navigator.share) {
         try {
@@ -116,6 +130,7 @@ export function ChatSidebar({
             text: shareText,
           })
         } catch (err) {
+          console.error('Share API error:', err)
         }
       } else {
         // Fallback: کپی به کلیپبورد
