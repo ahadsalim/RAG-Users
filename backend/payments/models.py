@@ -128,6 +128,7 @@ class Transaction(models.Model):
         max_length=50,
         unique=True,
         blank=True,
+        null=True,
         verbose_name='شماره فاکتور'
     )
     invoice_file = models.FileField(
