@@ -74,6 +74,27 @@ class Plan(models.Model):
         if base:
             return base.format_price(self.price)
         return f"{int(self.price):,}"
+    
+    def get_final_price(self):
+        """محاسبه قیمت نهایی با احتساب مالیات
+        
+        Returns:
+            Decimal: قیمت نهایی شامل مالیات
+        """
+        from finance.models import FinancialSettings
+        from decimal import Decimal
+        
+        # دریافت تنظیمات مالی
+        financial_settings = FinancialSettings.get_settings()
+        tax_rate = financial_settings.tax_rate if financial_settings else Decimal('10')
+        
+        # محاسبه مالیات
+        tax_amount = (self.price * tax_rate) / Decimal('100')
+        
+        # قیمت نهایی = قیمت پایه + مالیات
+        final_price = self.price + tax_amount
+        
+        return final_price
 
 
 class Subscription(models.Model):
