@@ -537,21 +537,23 @@ class PaymentGatewayListView(APIView):
     permission_classes = [permissions.IsAuthenticated]
     
     def get(self, request):
-        """دریافت لیست درگاه‌های پرداخت فعال بر اساس ارز کاربر"""
+        """دریافت لیست درگاه‌های پرداخت فعال بر اساس ارز پایه سیستم"""
         from finance.models import Currency
         
-        # دریافت ارز پیش‌فرض کاربر (از query param یا تنظیمات کاربر)
-        user_currency_code = request.query_params.get('currency', 'IRR')
+        # دریافت ارز پایه سیستم
+        base_currency = Currency.get_base_currency()
         
-        try:
-            user_currency = Currency.objects.get(code=user_currency_code)
-        except Currency.DoesNotExist:
-            user_currency = Currency.objects.get(code='IRR')  # پیش‌فرض
+        if not base_currency:
+            return Response(
+                {'error': 'ارز پایه سیستم تنظیم نشده است'},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
         
-        # فیلتر درگاه‌ها بر اساس ارزهای پشتیبانی شده
+        # فیلتر درگاه‌ها بر اساس ارز مبنای درگاه
+        # فقط درگاه‌هایی که ارز مبنایشان با ارز پایه سیستم یکسان است
         gateways = PaymentGatewayModel.objects.filter(
             is_active=True,
-            supported_currencies=user_currency
+            base_currency=base_currency
         ).order_by('display_order')
         
         data = [{
