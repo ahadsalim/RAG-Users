@@ -9,6 +9,7 @@ from .views import (
     InvoiceViewSet, UserInvoiceViewSet, TaxReportViewSet,
     FinancialDashboardView
 )
+from .admin_views import revenue_report_view
 
 router = DefaultRouter()
 router.register(r'invoices', InvoiceViewSet, basename='invoice')
@@ -25,5 +26,9 @@ urlpatterns = [
     path('settings/', FinancialSettingsView.as_view(), name='financial-settings'),
     path('settings/public/', FinancialSettingsPublicView.as_view(), name='financial-settings-public'),
     path('dashboard/', FinancialDashboardView.as_view(), name='financial-dashboard'),
+    
+    # Admin views
+    path('admin/revenue-report/', revenue_report_view, name='revenue-report'),
+    
     path('', include(router.urls)),
 ]

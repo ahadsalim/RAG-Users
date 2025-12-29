@@ -1,0 +1,23 @@
+{% extends "admin/index.html" %}
+{% load i18n static %}
+
+{% block content %}
+{{ block.super }}
+
+<div class="module" style="margin-top: 20px;">
+    <table>
+        <caption>
+            <a href="{% url 'revenue-report' %}" class="section" title="گزارش درآمد">
+                گزارش درآمد
+            </a>
+        </caption>
+        <tbody>
+            <tr>
+                <th scope="row">
+                    <a href="{% url 'revenue-report' %}">مشاهده گزارش درآمد هفتگی و ماهانه</a>
+                </th>
+            </tr>
+        </tbody>
+    </table>
+</div>
+{% endblock %}

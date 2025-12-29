@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import { ArrowRight, CreditCard, CheckCircle, AlertCircle, Loader2, Shield, Building2 } from 'lucide-react'
 import axios from 'axios'
 import Image from 'next/image'
+import { useSettings } from '@/contexts/SettingsContext'
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || ''
 
@@ -49,6 +50,7 @@ export default function CheckoutPage() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const planId = searchParams.get('plan')
+  const { userPreferredCurrency } = useSettings()
   
   const [plan, setPlan] = useState<Plan | null>(null)
   const [gateways, setGateways] = useState<PaymentGateway[]>([])
@@ -102,8 +104,12 @@ export default function CheckoutPage() {
         const planResponse = await axios.get(`${API_URL}/api/v1/subscriptions/plans/${planId}/`, { headers })
         setPlan(planResponse.data)
 
-        // Fetch payment gateways
-        const gatewaysResponse = await axios.get(`${API_URL}/api/v1/payments/gateways/`, { headers })
+        // Fetch payment gateways with user's preferred currency
+        const currencyParam = userPreferredCurrency?.code || 'USD'
+        const gatewaysResponse = await axios.get(
+          `${API_URL}/api/v1/payments/gateways/?currency=${currencyParam}`,
+          { headers }
+        )
         const activeGateways = gatewaysResponse.data.filter((g: PaymentGateway) => g.is_active)
         setGateways(activeGateways)
         
@@ -153,7 +159,7 @@ export default function CheckoutPage() {
     }
 
     fetchData()
-  }, [planId, router])
+  }, [planId, router, userPreferredCurrency])
 
   const handlePayment = async () => {
     if (!selectedGateway || !plan) return
@@ -177,6 +183,7 @@ export default function CheckoutPage() {
         {
           plan_id: plan.id,
           gateway_id: selectedGateway,
+          currency: userPreferredCurrency?.code || 'USD',
         },
         { headers }
       )
