@@ -123,6 +123,14 @@ class ZarinpalService:
             )
             result = response.json()
             
+            # بررسی ساختار پاسخ
+            if 'data' not in result:
+                logger.error(f"Zarinpal verify response missing 'data': {result}")
+                return {
+                    'success': False,
+                    'error': result.get('errors', {}).get('message', 'پاسخ نامعتبر از درگاه')
+                }
+            
             if result['data'].get('code') == 100:
                 # یافتن پرداخت
                 zarinpal_payment = ZarinpalPayment.objects.get(authority=authority)
@@ -149,15 +157,21 @@ class ZarinpalService:
                     'transaction': transaction
                 }
             else:
+                # لاگ کردن کد خطا برای دیباگ
+                error_code = result['data'].get('code', 'unknown')
+                error_message = result['data'].get('message', 'خطا در تایید پرداخت')
+                logger.error(f"Zarinpal verify failed - Code: {error_code}, Message: {error_message}")
+                
                 return {
                     'success': False,
-                    'error': result.get('errors', 'خطا در تایید پرداخت')
+                    'error': f"{error_message} (کد: {error_code})"
                 }
                 
         except Exception as e:
+            logger.error(f"Zarinpal verify exception: {e}", exc_info=True)
             return {
                 'success': False,
-                'error': str(e)
+                'error': f'خطا در ارتباط با درگاه پرداخت: {str(e)}'
             }
 
 

@@ -387,14 +387,17 @@ class ZarinpalCallbackView(APIView):
             if result['success']:
                 # فعال‌سازی اشتراک
                 if transaction.plan:
+                    # محاسبه تاریخ پایان بر اساس مدت زمان پلن
+                    duration_days = transaction.plan.duration_days
+                    end_date = timezone.now() + timezone.timedelta(days=duration_days)
+                    
                     subscription, created = Subscription.objects.get_or_create(
                         user=transaction.user,
+                        plan=transaction.plan,
                         defaults={
-                            'plan': transaction.plan,
                             'status': 'active',
-                            'start_date': timezone.now().date(),
-                            'end_date': timezone.now().date() + timezone.timedelta(days=30),
-                            'payment_method': transaction.gateway
+                            'start_date': timezone.now(),
+                            'end_date': end_date,
                         }
                     )
                     
