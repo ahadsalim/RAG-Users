@@ -5,6 +5,7 @@ from django.contrib import admin
 from django.utils.html import format_html
 from django.urls import reverse
 from django.utils.translation import gettext_lazy as _
+from core.utils.timezone_utils import format_datetime_jalali
 from .models import Currency, PaymentGateway, FinancialSettings, Invoice, InvoiceItem, TaxReport
 
 
@@ -135,29 +136,26 @@ class InvoiceAdmin(admin.ModelAdmin):
     
     list_display = [
         'invoice_number', 'buyer_name', 'is_legal_buyer', 'total_display',
-        'status_badge', 'issue_date', 'tax_status'
+        'status_badge', 'issue_date_jalali', 'tax_status'
     ]
     list_filter = ['status', 'is_legal_buyer', 'invoice_type', 'issue_date']
     search_fields = ['invoice_number', 'buyer_name', 'buyer_national_id']
-    readonly_fields = ['invoice_number', 'created_at', 'updated_at', 'tax_id', 'tax_serial']
+    readonly_fields = ['invoice_number', 'issue_date_jalali', 'paid_at_jalali', 'created_at', 'updated_at', 'tax_id', 'tax_serial', 'payment_info']
     date_hierarchy = 'issue_date'
     inlines = [InvoiceItemInline]
     
     fieldsets = (
         ('اطلاعات فاکتور', {
-            'fields': ('invoice_number', 'invoice_type', 'status', 'issue_date', 'due_date')
+            'fields': ('invoice_number', 'invoice_type', 'status', 'issue_date_jalali', 'payment_info', 'paid_at_jalali')
         }),
         ('اطلاعات خریدار', {
             'fields': (
                 'user', 'buyer_name', 'is_legal_buyer', 'buyer_national_id',
-                'buyer_economic_code', 'buyer_address', 'buyer_postal_code', 'buyer_phone'
+                'buyer_address', 'buyer_postal_code', 'buyer_phone'
             )
         }),
         ('مبالغ', {
-            'fields': ('subtotal', 'tax_rate', 'tax_amount', 'discount', 'total')
-        }),
-        ('پرداخت', {
-            'fields': ('payment', 'paid_at')
+            'fields': ('currency_display', 'subtotal', 'tax_rate', 'tax_amount', 'discount', 'total')
         }),
         ('اطلاعات مالیاتی', {
             'fields': ('tax_id', 'tax_serial', 'sent_to_tax_at', 'tax_response'),
@@ -169,8 +167,48 @@ class InvoiceAdmin(admin.ModelAdmin):
         }),
     )
     
+    def issue_date_jalali(self, obj):
+        """نمایش تاریخ صدور به شمسی"""
+        if obj.issue_date:
+            request = getattr(self, '_request', None)
+            user = request.user if request and hasattr(request, 'user') else None
+            return format_datetime_jalali(obj.issue_date, user)
+        return '-'
+    issue_date_jalali.short_description = 'تاریخ صدور'
+    
+    def paid_at_jalali(self, obj):
+        """نمایش تاریخ پرداخت به شمسی"""
+        if obj.paid_at:
+            request = getattr(self, '_request', None)
+            user = request.user if request and hasattr(request, 'user') else None
+            return format_datetime_jalali(obj.paid_at, user)
+        return '-'
+    paid_at_jalali.short_description = 'تاریخ پرداخت'
+    
+    def currency_display(self, obj):
+        """نمایش ارز بر اساس درگاه پرداخت"""
+        if obj.payment and obj.payment.currency:
+            return obj.payment.currency
+        return 'IRR'
+    currency_display.short_description = 'ارز'
+    
+    def payment_info(self, obj):
+        """نمایش اطلاعات پرداخت"""
+        if obj.payment:
+            gateway_name = obj.payment.get_gateway_display() if hasattr(obj.payment, 'get_gateway_display') else obj.payment.gateway
+            ref_id = obj.payment.reference_id or '-'
+            return format_html(
+                '<strong>درگاه:</strong> {} | <strong>کد رهگیری:</strong> {}',
+                gateway_name, ref_id
+            )
+        return '-'
+    payment_info.short_description = 'اطلاعات پرداخت'
+    
     def total_display(self, obj):
-        return f'{obj.total:,.0f} تومان'
+        currency = self.currency_display(obj)
+        if currency == 'IRR':
+            return f'{obj.total:,.0f} تومان'
+        return f'{obj.total:,.2f} {currency}'
     total_display.short_description = 'مبلغ کل'
     
     def status_badge(self, obj):
@@ -195,6 +233,16 @@ class InvoiceAdmin(admin.ModelAdmin):
             return format_html('<span style="color: green;">✓ ارسال شده</span>')
         return format_html('<span style="color: gray;">-</span>')
     tax_status.short_description = 'مالیات'
+    
+    def changelist_view(self, request, extra_context=None):
+        """ذخیره request برای استفاده در متدهای نمایش"""
+        self._request = request
+        return super().changelist_view(request, extra_context)
+    
+    def changeform_view(self, request, object_id=None, form_url='', extra_context=None):
+        """ذخیره request برای استفاده در متدهای نمایش"""
+        self._request = request
+        return super().changeform_view(request, object_id, form_url, extra_context)
     
     actions = ['send_to_tax', 'mark_as_paid']
     

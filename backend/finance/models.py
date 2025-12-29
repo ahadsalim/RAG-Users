@@ -268,7 +268,6 @@ class Invoice(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT, verbose_name='خریدار')
     buyer_name = models.CharField(max_length=255, verbose_name='نام خریدار')
     buyer_national_id = models.CharField(max_length=20, verbose_name='کد ملی/شناسه ملی', blank=True)
-    buyer_economic_code = models.CharField(max_length=20, verbose_name='کد اقتصادی خریدار', blank=True)
     buyer_address = models.TextField(verbose_name='آدرس خریدار', blank=True)
     buyer_postal_code = models.CharField(max_length=20, verbose_name='کد پستی خریدار', blank=True)
     buyer_phone = models.CharField(max_length=20, verbose_name='تلفن خریدار', blank=True)
@@ -302,7 +301,6 @@ class Invoice(models.Model):
     
     # تاریخ‌ها
     issue_date = models.DateTimeField(default=timezone.now, verbose_name='تاریخ صدور')
-    due_date = models.DateTimeField(null=True, blank=True, verbose_name='تاریخ سررسید')
     paid_at = models.DateTimeField(null=True, blank=True, verbose_name='تاریخ پرداخت')
     
     # یادداشت
