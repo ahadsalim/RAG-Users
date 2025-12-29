@@ -140,7 +140,7 @@ class InvoiceAdmin(admin.ModelAdmin):
     ]
     list_filter = ['status', 'is_legal_buyer', 'invoice_type', 'issue_date']
     search_fields = ['invoice_number', 'buyer_name', 'buyer_national_id']
-    readonly_fields = ['invoice_number', 'issue_date_jalali', 'paid_at_jalali', 'created_at', 'updated_at', 'tax_id', 'tax_serial', 'payment_info']
+    readonly_fields = ['invoice_number', 'issue_date_jalali', 'paid_at_jalali', 'currency_display', 'created_at', 'updated_at', 'tax_id', 'tax_serial', 'payment_info']
     date_hierarchy = 'issue_date'
     inlines = [InvoiceItemInline]
     
