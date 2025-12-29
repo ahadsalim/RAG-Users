@@ -90,6 +90,8 @@ class PaymentGatewayAdmin(admin.ModelAdmin):
 class FinancialSettingsAdmin(admin.ModelAdmin):
     """مدیریت تنظیمات مالی"""
     
+    change_list_template = 'admin/finance/financialsettings_changelist.html'
+    
     fieldsets = (
         ('اطلاعات مالیاتی', {
             'fields': (
@@ -121,6 +123,16 @@ class FinancialSettingsAdmin(admin.ModelAdmin):
     
     def has_delete_permission(self, request, obj=None):
         return False
+    
+    def get_urls(self):
+        from django.urls import path
+        from .admin_views import revenue_report_view
+        
+        urls = super().get_urls()
+        custom_urls = [
+            path('revenue-report/', self.admin_site.admin_view(revenue_report_view), name='finance-revenue-report'),
+        ]
+        return custom_urls + urls
 
 
 class InvoiceItemInline(admin.TabularInline):

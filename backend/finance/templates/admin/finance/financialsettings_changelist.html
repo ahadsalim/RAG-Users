@@ -1,0 +1,13 @@
+{% extends "admin/change_list.html" %}
+{% load i18n static %}
+
+{% block content %}
+<div style="margin-bottom: 20px; padding: 15px; background: #f8f9fa; border-radius: 5px;">
+    <h2 style="margin: 0 0 10px 0;">گزارشات مالی</h2>
+    <a href="{% url 'admin:finance-revenue-report' %}" class="button" style="background: #417690; color: white; padding: 10px 20px; text-decoration: none; border-radius: 4px; display: inline-block;">
+        📊 مشاهده گزارش درآمد
+    </a>
+</div>
+
+{{ block.super }}
+{% endblock %}
