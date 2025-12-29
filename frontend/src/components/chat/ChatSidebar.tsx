@@ -77,37 +77,58 @@ export function ChatSidebar({
   const handleShareConversation = async (e: React.MouseEvent, conversation: Conversation) => {
     e.stopPropagation()
     
-    // ساخت متن گفتگو
-    let shareText = `گفتگو: ${conversation.title}\n\n`
-    
-    if (conversation.messages && conversation.messages.length > 0) {
-      conversation.messages.forEach((msg, index) => {
-        const role = msg.role === 'user' ? '👤 کاربر' : '🤖 دستیار'
-        shareText += `${role}:\n${msg.content}\n\n`
+    try {
+      // بارگذاری پیام‌های گفتگو
+      const token = useAuthStore.getState().accessToken
+      const API_URL = process.env.NEXT_PUBLIC_API_URL || ''
+      const response = await fetch(`${API_URL}/api/v1/chat/conversations/${conversation.id}/messages/`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
       })
-    } else {
-      shareText += 'این گفتگو هنوز پیامی ندارد.\n'
-    }
-    
-    shareText += `\n---\nتاریخ: ${new Date(conversation.updated_at).toLocaleDateString('fa-IR')}`
-    
-    // استفاده از Web Share API
-    if (navigator.share) {
-      try {
-        await navigator.share({
-          title: conversation.title,
-          text: shareText,
+      
+      if (!response.ok) {
+        throw new Error('خطا در دریافت پیام‌ها')
+      }
+      
+      const data = await response.json()
+      const messages = data.results || data || []
+      
+      // ساخت متن گفتگو
+      let shareText = `گفتگو: ${conversation.title}\n\n`
+      
+      if (messages.length > 0) {
+        messages.forEach((msg: any) => {
+          const role = msg.role === 'user' ? '👤 کاربر' : '🤖 دستیار'
+          shareText += `${role}:\n${msg.content}\n\n`
         })
-      } catch (err) {
+      } else {
+        shareText += 'این گفتگو هنوز پیامی ندارد.\n'
       }
-    } else {
-      // Fallback: کپی به کلیپبورد
-      try {
-        await navigator.clipboard.writeText(shareText)
-        alert('متن گفتگو در کلیپبورد کپی شد')
-      } catch (err) {
-        alert('خطا در کپی متن')
+      
+      shareText += `\n---\nتاریخ: ${new Date(conversation.updated_at).toLocaleDateString('fa-IR')}`
+      
+      // استفاده از Web Share API
+      if (navigator.share) {
+        try {
+          await navigator.share({
+            title: conversation.title,
+            text: shareText,
+          })
+        } catch (err) {
+        }
+      } else {
+        // Fallback: کپی به کلیپبورد
+        try {
+          await navigator.clipboard.writeText(shareText)
+          alert('متن گفتگو در کلیپبورد کپی شد')
+        } catch (err) {
+          alert('خطا در کپی متن')
+        }
       }
+    } catch (err) {
+      alert('خطا در اشتراک‌گذاری گفتگو')
+      console.error('Share error:', err)
     }
     
     setOpenMenuId(null)
