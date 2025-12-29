@@ -198,13 +198,38 @@ class Transaction(models.Model):
         return f"TRX-{timestamp}-{random_str}"
     
     def generate_invoice_number(self):
-        """تولید شماره فاکتور"""
+        """تولید شماره فاکتور یکتا"""
+        from django.db import transaction as db_transaction
+        
         year = timezone.now().year
-        count = Transaction.objects.filter(
-            invoice_number__isnull=False,
-            created_at__year=year
-        ).count() + 1
-        return f"INV-{year}-{count:06d}"
+        max_attempts = 10
+        
+        for attempt in range(max_attempts):
+            # Get the latest invoice number for this year
+            with db_transaction.atomic():
+                last_invoice = Transaction.objects.filter(
+                    invoice_number__isnull=False,
+                    invoice_number__startswith=f"INV-{year}-"
+                ).order_by('-invoice_number').first()
+                
+                if last_invoice and last_invoice.invoice_number:
+                    # Extract the number from the last invoice
+                    try:
+                        last_num = int(last_invoice.invoice_number.split('-')[-1])
+                        count = last_num + 1
+                    except (ValueError, IndexError):
+                        count = 1
+                else:
+                    count = 1
+                
+                invoice_num = f"INV-{year}-{count:06d}"
+                
+                # Check if this number already exists
+                if not Transaction.objects.filter(invoice_number=invoice_num).exists():
+                    return invoice_num
+        
+        # Fallback: use UUID if we can't generate a unique number
+        return f"INV-{year}-{uuid.uuid4().hex[:8].upper()}"
     
     def get_final_amount(self):
         """محاسبه مبلغ نهایی با احتساب تخفیف و مالیات"""
