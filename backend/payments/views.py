@@ -11,7 +11,7 @@ import logging
 
 from .models import (
     Transaction, PaymentGateway as PaymentGatewayChoices, PaymentStatus,
-    ZarinpalPayment, StripePayment, CryptoPayment, Wallet
+    ZarinpalPayment, StripePayment, CryptoPayment, Wallet, TejaratTestPayment
 )
 from finance.models import PaymentGateway as PaymentGatewayModel
 from .serializers import (
@@ -23,6 +23,7 @@ from .serializers import (
 from .services import (
     ZarinpalService, StripeService, CryptoService, WalletService
 )
+from .tejarat_test_service import TejaratTestService
 from subscriptions.models import Subscription, Plan
 from accounts.models import AuditLog
 
@@ -96,13 +97,15 @@ class TransactionViewSet(viewsets.ModelViewSet):
         )
         
         # پردازش بر اساس درگاه
-        if gateway == PaymentGateway.ZARINPAL:
+        if gateway == PaymentGatewayChoices.ZARINPAL:
             result = self._process_zarinpal_payment(transaction, request)
-        elif gateway == PaymentGateway.STRIPE:
+        elif gateway == PaymentGatewayChoices.TEJARAT_TEST:
+            result = self._process_tejarat_test_payment(transaction, request)
+        elif gateway == PaymentGatewayChoices.STRIPE:
             result = self._process_stripe_payment(transaction, request)
-        elif gateway == PaymentGateway.CRYPTO:
+        elif gateway == PaymentGatewayChoices.CRYPTO:
             result = self._process_crypto_payment(transaction, data)
-        elif gateway == PaymentGateway.CREDIT:
+        elif gateway == PaymentGatewayChoices.CREDIT:
             result = self._process_wallet_payment(transaction)
         else:
             result = {
@@ -150,6 +153,18 @@ class TransactionViewSet(viewsets.ModelViewSet):
             callback_url=callback_url,
             mobile=request.user.phone_number,
             email=request.user.email
+        )
+    
+    def _process_tejarat_test_payment(self, transaction, request):
+        """پردازش پرداخت درگاه تست تجارت"""
+        
+        callback_url = request.build_absolute_uri(
+            reverse('payments:tejarat-test-callback')
+        )
+        
+        return TejaratTestService.create_payment(
+            transaction=transaction,
+            callback_url=callback_url
         )
     
     def _process_stripe_payment(self, transaction, request):
@@ -427,6 +442,66 @@ class ZarinpalCallbackView(APIView):
             return redirect(f"{settings.FRONTEND_URL}/payment/error?message=Payment not found")
         except Exception as e:
             logger.error(f"Zarinpal callback error: {e}")
+            return redirect(f"{settings.FRONTEND_URL}/payment/error?message=Internal error")
+
+
+class TejaratTestCallbackView(APIView):
+    """Callback برای درگاه تست تجارت"""
+    
+    permission_classes = []  # No authentication required for callback
+    
+    def get(self, request):
+        """پردازش callback درگاه تست تجارت"""
+        
+        token = request.GET.get('token')
+        status_param = request.GET.get('status')
+        
+        if not token:
+            return redirect(f"{settings.FRONTEND_URL}/payment/error?message=Token not provided")
+        
+        try:
+            # تایید پرداخت
+            result = TejaratTestService.verify_payment(token)
+            
+            if result['success']:
+                # یافتن تراکنش
+                tejarat_payment = TejaratTestPayment.objects.get(token=token)
+                transaction = tejarat_payment.transaction
+                
+                # فعال‌سازی اشتراک
+                if transaction.plan:
+                    subscription, created = Subscription.objects.get_or_create(
+                        user=transaction.user,
+                        defaults={
+                            'plan': transaction.plan,
+                            'status': 'active',
+                            'start_date': timezone.now().date(),
+                            'end_date': timezone.now().date() + timezone.timedelta(days=transaction.plan.duration_days),
+                            'payment_method': transaction.gateway
+                        }
+                    )
+                    
+                    if not created:
+                        subscription.renew()
+                    
+                    transaction.subscription = subscription
+                    transaction.save()
+                
+                return redirect(
+                    f"{settings.FRONTEND_URL}/payment/success?"
+                    f"tracking_code={result['tracking_code']}&"
+                    f"transaction_id={transaction.id}"
+                )
+            else:
+                return redirect(
+                    f"{settings.FRONTEND_URL}/payment/error?"
+                    f"message={result.get('error', 'Verification failed')}"
+                )
+                
+        except TejaratTestPayment.DoesNotExist:
+            return redirect(f"{settings.FRONTEND_URL}/payment/error?message=Payment not found")
+        except Exception as e:
+            logger.error(f"Tejarat Test callback error: {e}")
             return redirect(f"{settings.FRONTEND_URL}/payment/error?message=Internal error")
 
 

@@ -20,5 +20,6 @@ urlpatterns = [
     # Callbacks
     path('zarinpal/callback/', views.ZarinpalCallbackView.as_view(), name='zarinpal-callback'),
     path('zarinpal/wallet-callback/', views.ZarinpalCallbackView.as_view(), name='zarinpal-wallet-callback'),
+    path('tejarat-test/callback/', views.TejaratTestCallbackView.as_view(), name='tejarat-test-callback'),
     path('stripe/webhook/', views.StripeWebhookView.as_view(), name='stripe-webhook'),
 ]

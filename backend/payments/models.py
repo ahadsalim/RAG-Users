@@ -11,6 +11,7 @@ from subscriptions.models import Subscription, Plan
 class PaymentGateway(models.TextChoices):
     """انواع درگاه پرداخت"""
     ZARINPAL = 'zarinpal', 'زرین‌پال'
+    TEJARAT_TEST = 'tejarat_test', 'درگاه تست تجارت'
     STRIPE = 'stripe', 'Stripe'
     PAYPAL = 'paypal', 'PayPal'
     CRYPTO = 'crypto', 'Cryptocurrency'
@@ -307,6 +308,38 @@ class StripePayment(models.Model):
     class Meta:
         verbose_name = 'پرداخت Stripe'
         verbose_name_plural = 'پرداخت‌های Stripe'
+
+
+class TejaratTestPayment(models.Model):
+    """اطلاعات مختص پرداخت درگاه تست تجارت"""
+    
+    transaction = models.OneToOneField(
+        Transaction,
+        on_delete=models.CASCADE,
+        related_name='tejarat_test_payment'
+    )
+    
+    token = models.CharField(
+        max_length=255,
+        unique=True,
+        verbose_name='Token'
+    )
+    
+    card_number = models.CharField(
+        max_length=20,
+        blank=True,
+        verbose_name='شماره کارت'
+    )
+    
+    tracking_code = models.CharField(
+        max_length=100,
+        blank=True,
+        verbose_name='کد پیگیری'
+    )
+    
+    class Meta:
+        verbose_name = 'پرداخت تست تجارت'
+        verbose_name_plural = 'پرداخت‌های تست تجارت'
 
 
 class CryptoPayment(models.Model):
