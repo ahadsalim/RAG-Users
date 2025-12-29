@@ -151,6 +151,14 @@ class Subscription(models.Model):
         self.auto_renew = False
         self.save()
     
+    def renew(self):
+        """تمدید اشتراک"""
+        from datetime import timedelta
+        self.status = 'active'
+        self.start_date = timezone.now()
+        self.end_date = timezone.now() + timedelta(days=self.plan.duration_days)
+        self.save()
+    
     def can_query(self):
         """
         بررسی اینکه آیا کاربر می‌تواند query بفرستد
