@@ -144,6 +144,12 @@ class InvoiceAdmin(admin.ModelAdmin):
     date_hierarchy = 'issue_date'
     inlines = [InvoiceItemInline]
     
+    def formfield_for_dbfield(self, db_field, request, **kwargs):
+        """تنظیم ویژگی‌های فیلدها"""
+        if db_field.name == 'buyer_address':
+            kwargs['widget'] = admin.widgets.AdminTextareaWidget(attrs={'rows': 2, 'cols': 40})
+        return super().formfield_for_dbfield(db_field, request, **kwargs)
+    
     fieldsets = (
         ('اطلاعات فاکتور', {
             'fields': ('invoice_number', 'invoice_type', 'status', 'issue_date_jalali', 'payment_info', 'paid_at_jalali')

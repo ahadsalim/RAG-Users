@@ -130,7 +130,7 @@ export default function CheckoutPage() {
 
         // Fetch site settings
         try {
-          const siteResponse = await axios.get(`${API_URL}/api/v1/core/settings/`)
+          const siteResponse = await axios.get(`${API_URL}/api/v1/settings/`)
           setSiteSettings(siteResponse.data)
         } catch (e) {
           setSiteSettings({
@@ -252,11 +252,10 @@ export default function CheckoutPage() {
             </button>
             <div className="flex items-center gap-2">
               <Image 
-                src="/logo.svg" 
+                src="/logo.png" 
                 alt={siteSettings?.frontend_site_name || 'تجارت چت'} 
                 width={28} 
                 height={28}
-                className="dark:invert"
                 onError={(e) => { e.currentTarget.style.display = 'none' }}
               />
               <span className="font-bold text-gray-900 dark:text-white">{siteSettings?.frontend_site_name || 'تجارت چت'}</span>

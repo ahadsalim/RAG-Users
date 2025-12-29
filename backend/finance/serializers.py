@@ -43,8 +43,7 @@ class FinancialSettingsPublicSerializer(serializers.ModelSerializer):
         model = FinancialSettings
         fields = [
             'company_name', 'company_name_en', 'company_address',
-            'postal_code', 'phone', 'email', 'website',
-            'economic_code', 'national_id', 'tax_rate'
+            'postal_code', 'phone', 'national_id', 'tax_rate'
         ]
 
 
