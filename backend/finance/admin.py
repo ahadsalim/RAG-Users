@@ -140,18 +140,19 @@ class InvoiceAdmin(admin.ModelAdmin):
         'invoice_number', 'buyer_name', 'is_legal_buyer', 'total_display',
         'status_badge', 'issue_date_jalali', 'send_to_tax_system', 'tax_status'
     ]
-    list_filter = ['status', 'is_legal_buyer', 'invoice_type', 'send_to_tax_system']
+    list_filter = ['status', 'is_legal_buyer', 'send_to_tax_system']
     search_fields = ['invoice_number', 'buyer_name', 'buyer_national_id']
     readonly_fields = ['invoice_number', 'issue_date_jalali', 'paid_at_jalali', 'currency_display', 'created_at', 'updated_at', 'tax_id', 'tax_serial', 'payment_info']
     inlines = [InvoiceItemInline]
     
     def get_urls(self):
         from django.urls import path
-        from .admin_views import revenue_report_view
+        from .admin_views import current_revenue_report_view, date_range_revenue_report_view
         
         urls = super().get_urls()
         custom_urls = [
-            path('revenue-report/', self.admin_site.admin_view(revenue_report_view), name='finance-revenue-report'),
+            path('revenue-report/current/', self.admin_site.admin_view(current_revenue_report_view), name='finance-current-revenue-report'),
+            path('revenue-report/date-range/', self.admin_site.admin_view(date_range_revenue_report_view), name='finance-daterange-revenue-report'),
         ]
         return custom_urls + urls
     

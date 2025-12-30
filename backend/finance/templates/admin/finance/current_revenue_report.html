@@ -1,0 +1,188 @@
+{% extends "admin/base_site.html" %}
+{% load static %}
+{% load i18n %}
+
+{% block title %}گزارش درآمد جاری{% endblock %}
+
+{% block extrastyle %}
+<style>
+    .revenue-container {
+        padding: 20px;
+        max-width: 1400px;
+        margin: 0 auto;
+    }
+    
+    .chart-section {
+        background: white;
+        border-radius: 8px;
+        padding: 20px;
+        margin-bottom: 30px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    
+    .chart-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+        padding-bottom: 15px;
+        border-bottom: 2px solid #f0f0f0;
+    }
+    
+    .chart-title {
+        font-size: 18px;
+        font-weight: bold;
+        color: #333;
+    }
+    
+    .chart-total {
+        font-size: 16px;
+        color: #417690;
+        font-weight: bold;
+    }
+    
+    .chart-wrapper {
+        position: relative;
+        height: 400px;
+        margin-bottom: 20px;
+    }
+    
+    .back-button {
+        display: inline-block;
+        margin-bottom: 20px;
+        padding: 10px 20px;
+        background: #6c757d;
+        color: white;
+        text-decoration: none;
+        border-radius: 4px;
+    }
+    
+    .back-button:hover {
+        background: #5a6268;
+        color: white;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="revenue-container">
+    <a href="{% url 'admin:finance_invoice_changelist' %}" class="back-button">← بازگشت به لیست فاکتورها</a>
+    
+    <h1>گزارش درآمد جاری</h1>
+    
+    <!-- نمودار درآمد هفتگی -->
+    <div class="chart-section">
+        <div class="chart-header">
+            <h2 class="chart-title">درآمد هفته جاری (شروع از شنبه)</h2>
+            <span class="chart-total">مجموع: {{ week_total|floatformat:0 }} تومان</span>
+        </div>
+        <div class="chart-wrapper">
+            <canvas id="weeklyChart"></canvas>
+        </div>
+    </div>
+    
+    <!-- نمودار درآمد ماهانه -->
+    <div class="chart-section">
+        <div class="chart-header">
+            <h2 class="chart-title">درآمد ماه جاری ({{ current_month_name }})</h2>
+            <span class="chart-total">مجموع: {{ month_total|floatformat:0 }} تومان</span>
+        </div>
+        <div class="chart-wrapper">
+            <canvas id="monthlyChart"></canvas>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
+    // نمودار هفتگی
+    const weeklyCtx = document.getElementById('weeklyChart').getContext('2d');
+    new Chart(weeklyCtx, {
+        type: 'bar',
+        data: {
+            labels: {{ weekly_labels|safe }},
+            datasets: [{
+                label: 'درآمد (تومان)',
+                data: {{ weekly_data|safe }},
+                backgroundColor: 'rgba(65, 118, 144, 0.7)',
+                borderColor: 'rgba(65, 118, 144, 1)',
+                borderWidth: 2,
+                borderRadius: 6
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: false
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            return context.parsed.y.toLocaleString('fa-IR') + ' تومان';
+                        }
+                    }
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        callback: function(value) {
+                            return value.toLocaleString('fa-IR');
+                        }
+                    }
+                }
+            }
+        }
+    });
+    
+    // نمودار ماهانه
+    const monthlyCtx = document.getElementById('monthlyChart').getContext('2d');
+    new Chart(monthlyCtx, {
+        type: 'line',
+        data: {
+            labels: {{ monthly_labels|safe }},
+            datasets: [{
+                label: 'درآمد (تومان)',
+                data: {{ monthly_data|safe }},
+                backgroundColor: 'rgba(65, 118, 144, 0.1)',
+                borderColor: 'rgba(65, 118, 144, 1)',
+                borderWidth: 3,
+                fill: true,
+                tension: 0.4,
+                pointRadius: 4,
+                pointHoverRadius: 6,
+                pointBackgroundColor: 'rgba(65, 118, 144, 1)'
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: false
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            return context.parsed.y.toLocaleString('fa-IR') + ' تومان';
+                        }
+                    }
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        callback: function(value) {
+                            return value.toLocaleString('fa-IR');
+                        }
+                    }
+                }
+            }
+        }
+    });
+</script>
+{% endblock %}
