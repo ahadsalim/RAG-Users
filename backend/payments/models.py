@@ -73,7 +73,7 @@ class Transaction(models.Model):
         help_text='ISO 4217 currency code'
     )
     exchange_rate = models.DecimalField(
-        max_digits=10,
+        max_digits=15,
         decimal_places=4,
         default=1,
         verbose_name='نرخ تبدیل'

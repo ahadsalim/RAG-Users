@@ -218,6 +218,7 @@ export default function CheckoutPage() {
   const basePrice = Number(plan?.display_price ?? plan?.price) || 0
   const taxAmount = Math.round(basePrice * taxRate / 100)
   const totalPrice = basePrice + taxAmount
+  const currencySymbol = plan?.currency_symbol || 'تومان'
 
   if (loading) {
     return (
@@ -329,15 +330,15 @@ export default function CheckoutPage() {
               <div className="mt-3 pt-3 border-t border-gray-100 dark:border-gray-700 space-y-2">
                 <div className="flex justify-between text-xs">
                   <span className="text-gray-500">مبلغ پایه</span>
-                  <span className="text-gray-700 dark:text-gray-300">{formatPrice(basePrice)} تومان</span>
+                  <span className="text-gray-700 dark:text-gray-300">{formatPrice(basePrice)} {currencySymbol}</span>
                 </div>
                 <div className="flex justify-between text-xs">
                   <span className="text-gray-500">مالیات ارزش افزوده ({toPersianNumber(taxRate)}٪)</span>
-                  <span className="text-gray-700 dark:text-gray-300">{formatPrice(taxAmount)} تومان</span>
+                  <span className="text-gray-700 dark:text-gray-300">{formatPrice(taxAmount)} {currencySymbol}</span>
                 </div>
                 <div className="flex justify-between pt-2 border-t border-gray-200 dark:border-gray-600">
                   <span className="text-sm font-medium text-gray-900 dark:text-white">جمع کل</span>
-                  <span className="text-sm font-bold text-blue-600 dark:text-blue-400">{formatPrice(totalPrice)} تومان</span>
+                  <span className="text-sm font-bold text-blue-600 dark:text-blue-400">{formatPrice(totalPrice)} {currencySymbol}</span>
                 </div>
               </div>
             </div>
