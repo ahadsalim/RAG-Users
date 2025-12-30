@@ -255,7 +255,7 @@ SIMPLE_JWT = {
 # CORS Configuration
 CORS_ALLOWED_ORIGINS = config(
     'CORS_ALLOWED_ORIGINS',
-    default='http://localhost:3000,http://127.0.0.1:3000,https://tejarat.chat,http://tejarat.chat,https://admin.tejarat.chat',
+    default='http://localhost:3000,http://127.0.0.1:3000,https://tejarat.chat,http://tejarat.chat,https://www.tejarat.chat,http://www.tejarat.chat,https://admin.tejarat.chat',
     cast=Csv()
 )
 CORS_ALLOW_CREDENTIALS = True
