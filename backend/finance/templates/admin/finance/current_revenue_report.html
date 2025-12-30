@@ -47,6 +47,10 @@
         margin-bottom: 20px;
     }
     
+    .chart-wrapper.monthly {
+        height: 600px;
+    }
+    
     .back-button {
         display: inline-block;
         margin-bottom: 20px;
@@ -92,7 +96,7 @@
             <h2 class="chart-title">درآمد ماه جاری ({{ current_month_name }})</h2>
             <span class="chart-total">مجموع: {{ month_total|floatformat:0 }} تومان</span>
         </div>
-        <div class="chart-wrapper">
+        <div class="chart-wrapper monthly">
             <canvas id="monthlyChart"></canvas>
         </div>
     </div>
