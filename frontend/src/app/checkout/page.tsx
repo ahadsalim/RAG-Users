@@ -100,14 +100,17 @@ export default function CheckoutPage() {
 
         const headers = { Authorization: `Bearer ${token}` }
 
-        // Fetch plan details
-        const planResponse = await axios.get(`${API_URL}/api/v1/subscriptions/plans/${planId}/`, { headers })
+        // Fetch plan details with user's preferred currency
+        const currencyCode = userPreferredCurrency?.code || 'IRT'
+        const planResponse = await axios.get(
+          `${API_URL}/api/v1/subscriptions/plans/${planId}/?currency=${currencyCode}`,
+          { headers }
+        )
         setPlan(planResponse.data)
 
         // Fetch payment gateways with user's preferred currency
-        const currencyParam = userPreferredCurrency?.code || 'USD'
         const gatewaysResponse = await axios.get(
-          `${API_URL}/api/v1/payments/gateways/?currency=${currencyParam}`,
+          `${API_URL}/api/v1/payments/gateways/?currency=${currencyCode}`,
           { headers }
         )
         const activeGateways = gatewaysResponse.data.filter((g: PaymentGateway) => g.is_active)

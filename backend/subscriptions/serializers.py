@@ -16,6 +16,16 @@ class PlanSerializer(serializers.ModelSerializer):
         from finance.models import Currency
         
         request = self.context.get('request')
+        
+        # اولویت 1: ارز از query parameter (برای frontend که در localStorage ذخیره می‌کند)
+        if request and hasattr(request, 'query_params'):
+            currency_code = request.query_params.get('currency')
+            if currency_code:
+                currency = Currency.objects.filter(code=currency_code, is_active=True).first()
+                if currency:
+                    return currency
+        
+        # اولویت 2: ارز ذخیره شده در پروفایل کاربر
         if request and hasattr(request, 'user') and request.user.is_authenticated:
             if hasattr(request.user, 'preferred_currency') and request.user.preferred_currency:
                 return request.user.preferred_currency
