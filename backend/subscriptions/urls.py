@@ -8,6 +8,7 @@ router.register(r'subscriptions', views.SubscriptionViewSet, basename='subscript
 
 urlpatterns = [
     path('', include(router.urls)),
+    path('current/', views.SubscriptionViewSet.as_view({'get': 'current'}), name='subscription-current'),
     path('usage/', views.UsageView.as_view(), name='usage'),
     path('usage/stats/', views.UsageStatsView.as_view(), name='usage-stats'),
     path('reports/', views.UsageReportView.as_view(), name='usage-report'),

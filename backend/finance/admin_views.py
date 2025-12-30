@@ -107,9 +107,9 @@ def date_range_revenue_report_view(request):
     
     if date_from and date_to:
         try:
-            # تبدیل تاریخ شمسی به میلادی
-            from_parts = date_from.split('-')
-            to_parts = date_to.split('-')
+            # تبدیل تاریخ شمسی به میلادی - پشتیبانی از هر دو فرمت - و /
+            from_parts = date_from.replace('/', '-').split('-')
+            to_parts = date_to.replace('/', '-').split('-')
             
             from_jalali = jdatetime.date(int(from_parts[0]), int(from_parts[1]), int(from_parts[2]))
             to_jalali = jdatetime.date(int(to_parts[0]), int(to_parts[1]), int(to_parts[2]))

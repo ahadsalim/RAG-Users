@@ -17,14 +17,15 @@
         margin-bottom: 20px;
         padding: 10px 20px;
         background: #6c757d;
-        color: white;
+        color: white !important;
         text-decoration: none;
         border-radius: 4px;
     }
     
     .back-button:hover {
         background: #5a6268;
-        color: white;
+        color: white !important;
+        text-decoration: none;
     }
     
     .date-form-section {
@@ -183,16 +184,14 @@
         <h2 style="margin-bottom: 20px;">انتخاب بازه تاریخی (شمسی)</h2>
         <form method="get" class="date-form">
             <div class="form-group">
-                <label for="date_from">از تاریخ (مثال: 1403-10-01):</label>
-                <input type="text" id="date_from" name="date_from" value="{{ date_from|default:'' }}" placeholder="1403-10-01" required>
+                <label for="date_from">از تاریخ:</label>
+                <input type="text" id="date_from" name="date_from" value="{{ date_from|default:'' }}" placeholder="1404/10/01" required>
             </div>
             <div class="form-group">
-                <label for="date_to">تا تاریخ (مثال: 1403-10-30):</label>
-                <input type="text" id="date_to" name="date_to" value="{{ date_to|default:'' }}" placeholder="1403-10-30" required>
+                <label for="date_to">تا تاریخ:</label>
+                <input type="text" id="date_to" name="date_to" value="{{ date_to|default:'' }}" placeholder="1404/10/30" required>
             </div>
-            <div class="form-group">
-                <button type="submit" class="btn-submit">📊 نمایش گزارش</button>
-            </div>
+            <button type="submit" class="btn-submit">📊 نمایش گزارش</button>
         </form>
     </div>
     
