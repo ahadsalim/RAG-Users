@@ -215,7 +215,8 @@ export default function CheckoutPage() {
   const formatPrice = (price: number) => toPersianNumber(price.toLocaleString('en-US'))
   
   const taxRate = financialSettings?.tax_rate || 10
-  const basePrice = Number(plan?.display_price ?? plan?.price) || 0
+  // استفاده از display_price که قیمت تبدیل‌شده به ارز کاربر است
+  const basePrice = Number(plan?.display_price) || 0
   const taxAmount = Math.round(basePrice * taxRate / 100)
   const totalPrice = basePrice + taxAmount
   const currencySymbol = plan?.currency_symbol || 'تومان'
@@ -308,7 +309,7 @@ export default function CheckoutPage() {
               <table className="w-full text-xs">
                 <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
                   <tr>
-                    <td className="py-2 text-gray-500">شرح</td>
+                    <td className="py-2 text-gray-500">پلن اشتراک</td>
                     <td className="py-2 text-left font-medium text-gray-900 dark:text-white">{plan.name}</td>
                   </tr>
                   <tr>

@@ -74,8 +74,12 @@
     <!-- نمودار درآمد هفتگی -->
     <div class="chart-section">
         <div class="chart-header">
-            <h2 class="chart-title">درآمد هفته جاری (شروع از شنبه)</h2>
-            <span class="chart-total">مجموع: {{ week_total|floatformat:0 }} تومان</span>
+            <div>
+                <h2 class="chart-title">درآمد هفته جاری</h2>
+                <div style="font-size: 18px; color: #417690; font-weight: bold; margin-top: 8px;">
+                    مجموع: <span id="weekTotalFormatted"></span> تومان
+                </div>
+            </div>
         </div>
         <div class="chart-wrapper">
             <canvas id="weeklyChart"></canvas>
@@ -96,6 +100,10 @@
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <script>
+    // فرمت کردن عدد با ممیز جداکننده
+    const weekTotal = {{ week_total }};
+    document.getElementById('weekTotalFormatted').textContent = weekTotal.toLocaleString('fa-IR');
+    
     // نمودار هفتگی
     const weeklyCtx = document.getElementById('weeklyChart').getContext('2d');
     new Chart(weeklyCtx, {
