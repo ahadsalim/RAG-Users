@@ -6,7 +6,7 @@ from django.utils.html import format_html
 from django.urls import reverse
 from django.utils.translation import gettext_lazy as _
 from core.utils.timezone_utils import format_datetime_jalali
-from .models import Currency, PaymentGateway, FinancialSettings, Invoice, InvoiceItem, TaxReport, RevenueReport
+from .models import Currency, PaymentGateway, FinancialSettings, Invoice, InvoiceItem, TaxReport
 
 
 @admin.register(Currency)
@@ -134,15 +134,26 @@ class InvoiceItemInline(admin.TabularInline):
 class InvoiceAdmin(admin.ModelAdmin):
     """مدیریت فاکتورها"""
     
+    change_list_template = 'admin/finance/invoice_changelist.html'
+    
     list_display = [
         'invoice_number', 'buyer_name', 'is_legal_buyer', 'total_display',
         'status_badge', 'issue_date_jalali', 'send_to_tax_system', 'tax_status'
     ]
-    list_filter = ['status', 'is_legal_buyer', 'invoice_type', 'send_to_tax_system', 'issue_date']
+    list_filter = ['status', 'is_legal_buyer', 'invoice_type', 'send_to_tax_system']
     search_fields = ['invoice_number', 'buyer_name', 'buyer_national_id']
     readonly_fields = ['invoice_number', 'issue_date_jalali', 'paid_at_jalali', 'currency_display', 'created_at', 'updated_at', 'tax_id', 'tax_serial', 'payment_info']
-    date_hierarchy = 'issue_date'
     inlines = [InvoiceItemInline]
+    
+    def get_urls(self):
+        from django.urls import path
+        from .admin_views import revenue_report_view
+        
+        urls = super().get_urls()
+        custom_urls = [
+            path('revenue-report/', self.admin_site.admin_view(revenue_report_view), name='finance-revenue-report'),
+        ]
+        return custom_urls + urls
     
     def formfield_for_dbfield(self, db_field, request, **kwargs):
         """تنظیم ویژگی‌های فیلدها"""
@@ -273,24 +284,6 @@ class InvoiceAdmin(admin.ModelAdmin):
         count = queryset.update(send_to_tax_system=False)
         self.message_user(request, f'{count} فاکتور از ارسال به سامانه مالیاتی حذف شد')
     disable_tax_sending.short_description = 'غیرفعال کردن ارسال به سامانه مالیاتی'
-
-
-@admin.register(RevenueReport)
-class RevenueReportAdmin(admin.ModelAdmin):
-    """گزارش درآمد"""
-    
-    def has_add_permission(self, request):
-        return False
-    
-    def has_delete_permission(self, request, obj=None):
-        return False
-    
-    def has_change_permission(self, request, obj=None):
-        return False
-    
-    def changelist_view(self, request, extra_context=None):
-        from .admin_views import revenue_report_view
-        return revenue_report_view(request)
 
 
 @admin.register(TaxReport)

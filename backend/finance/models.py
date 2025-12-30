@@ -363,22 +363,6 @@ class InvoiceItem(models.Model):
         return f'{self.description} - {self.total}'
 
 
-class RevenueReport(models.Model):
-    """
-    مدل Proxy برای نمایش گزارش درآمد در پنل ادمین
-    این مدل فقط برای ایجاد منو در sidebar است و دیتا ذخیره نمی‌کند
-    """
-    class Meta:
-        managed = False
-        verbose_name = 'گزارش درآمد'
-        verbose_name_plural = 'گزارشات درآمد'
-        app_label = 'finance'
-        default_permissions = ()
-        permissions = [
-            ('view_revenue_report', 'Can view revenue report'),
-        ]
-
-
 class TaxReport(models.Model):
     """گزارش مالیاتی"""
     

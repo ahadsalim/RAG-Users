@@ -1,0 +1,13 @@
+{% extends "admin/change_list.html" %}
+{% load i18n static %}
+
+{% block content %}
+<div style="margin-bottom: 20px; padding: 15px; background: #f8f9fa; border-radius: 5px; display: flex; justify-content: space-between; align-items: center;">
+    <h2 style="margin: 0;">مدیریت فاکتورها</h2>
+    <a href="{% url 'admin:finance_invoice_changelist' %}revenue-report/" class="button" style="background: #417690; color: white; padding: 10px 20px; text-decoration: none; border-radius: 4px; display: inline-block;">
+        📊 گزارش درآمد
+    </a>
+</div>
+
+{{ block.super }}
+{% endblock %}
