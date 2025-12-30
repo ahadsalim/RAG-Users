@@ -20,6 +20,10 @@
         box-shadow: 0 2px 4px rgba(0,0,0,0.1);
     }
     
+    .chart-section.monthly {
+        max-width: 2100px;
+    }
+    
     .chart-header {
         display: flex;
         justify-content: space-between;
@@ -45,10 +49,6 @@
         position: relative;
         height: 400px;
         margin-bottom: 20px;
-    }
-    
-    .chart-wrapper.monthly {
-        height: 600px;
     }
     
     .back-button {
@@ -91,12 +91,12 @@
     </div>
     
     <!-- نمودار درآمد ماهانه -->
-    <div class="chart-section">
+    <div class="chart-section monthly">
         <div class="chart-header">
             <h2 class="chart-title">درآمد ماه جاری ({{ current_month_name }})</h2>
             <span class="chart-total">مجموع: {{ month_total|floatformat:0 }} تومان</span>
         </div>
-        <div class="chart-wrapper monthly">
+        <div class="chart-wrapper">
             <canvas id="monthlyChart"></canvas>
         </div>
     </div>
