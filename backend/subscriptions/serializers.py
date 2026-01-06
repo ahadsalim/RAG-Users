@@ -19,8 +19,14 @@ class PlanSerializer(serializers.ModelSerializer):
         request = self.context.get('request')
         
         # اولویت 1: ارز از query parameter (برای frontend که در localStorage ذخیره می‌کند)
-        if request and hasattr(request, 'query_params'):
-            currency_code = request.query_params.get('currency')
+        if request:
+            # پشتیبانی از هر دو query_params (DRF) و GET (Django)
+            currency_code = None
+            if hasattr(request, 'query_params'):
+                currency_code = request.query_params.get('currency')
+            elif hasattr(request, 'GET'):
+                currency_code = request.GET.get('currency')
+            
             if currency_code:
                 currency = Currency.objects.filter(code=currency_code, is_active=True).first()
                 if currency:

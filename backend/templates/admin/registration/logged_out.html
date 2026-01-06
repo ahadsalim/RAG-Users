@@ -1,0 +1,32 @@
+{% extends "admin/base_site.html" %}
+{% load i18n %}
+
+{% block breadcrumbs %}<div class="breadcrumbs"><a href="{% url 'admin:index' %}">{% trans 'Home' %}</a></div>{% endblock %}
+
+{% block content %}
+
+<div style="text-align: center; padding: 40px 20px; max-width: 600px; margin: 0 auto;">
+    <div style="margin-bottom: 30px;">
+        <svg width="100" height="100" viewBox="0 0 100 100" style="margin: 0 auto;">
+            <circle cx="50" cy="50" r="45" fill="none" stroke="#417690" stroke-width="3"/>
+            <path d="M 30 50 L 45 35 M 45 35 L 45 65 M 45 35 L 60 35 M 60 35 L 60 50 M 60 50 L 70 50" 
+                  stroke="#417690" stroke-width="3" fill="none" stroke-linecap="round"/>
+        </svg>
+    </div>
+    
+    <h2 style="color: #333; margin-bottom: 20px; font-size: 20px;">
+        خوش آمدید به پنل مدیریت مشاور هوشمند کسب و کار
+    </h2>
+    
+    <p style="color: #666; margin-bottom: 30px; font-size: 14px;">
+        از وقتی که برای استفاده از سیستم گذاشتید متشکریم.
+    </p>
+    
+    <a href="{% url 'admin:index' %}" 
+       style="display: inline-block; background: #417690; color: white; padding: 12px 30px; 
+              text-decoration: none; border-radius: 6px; font-size: 14px; font-weight: bold;">
+        ورود مجدد
+    </a>
+</div>
+
+{% endblock %}
