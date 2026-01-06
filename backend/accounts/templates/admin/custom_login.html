@@ -107,9 +107,12 @@
                 <input type="text" id="pass" name="password" placeholder="کد 5 رقمی" maxlength="5">
             </div>
             
-            <div class="btn-row">
-                <button type="button" id="btn-sms" class="btn btn-otp" onclick="handleOTP('sms')" style="flex: 1;">ارسال رمز با پیامک</button>
-                <button type="button" id="btn-bale" class="btn btn-primary" onclick="handleOTP('bale')" style="flex: 1;">ارسال رمز در بله</button>
+            <div class="btn-row" id="send-row">
+                <button type="button" id="btn-sms" class="btn btn-primary" onclick="handleOTP('sms')" style="flex: 1;">ارسال رمز با پیامک</button>
+                <button type="button" id="btn-bale" class="btn btn-otp" onclick="handleOTP('bale')" style="flex: 1;">ارسال رمز در بله</button>
+            </div>
+            <div class="btn-row" id="login-row" style="display: none;">
+                <button type="button" id="btn-login" class="btn btn-primary" onclick="handleOTP('verify')" style="width: 100%;">ورود</button>
             </div>
         </form>
     </div>
@@ -169,14 +172,10 @@
                     showMsg(data.message || 'کد ارسال شد', false);
                     otpMode = true;
                     document.getElementById('otp-row').style.display = 'flex';
+                    document.getElementById('send-row').style.display = 'none';
+                    document.getElementById('login-row').style.display = 'flex';
                     document.getElementById('pass').value = '';
                     document.getElementById('pass').focus();
-                    btnSms.textContent = 'ورود';
-                    btnBale.textContent = 'ورود';
-                    btnSms.disabled = false;
-                    btnBale.disabled = false;
-                    btnSms.onclick = function() { handleOTP('verify'); };
-                    btnBale.onclick = function() { handleOTP('verify'); };
                     startCooldown(120);
                 } else {
                     showMsg(data.error || 'خطا', true);
@@ -188,8 +187,10 @@
             })
             .catch(function() {
                 showMsg('خطا در ارتباط', true);
-                btn.textContent = 'ارسال رمز یکبارمصرف';
-                btn.disabled = false;
+                btnSms.textContent = 'ارسال رمز با پیامک';
+                btnBale.textContent = 'ارسال رمز در بله';
+                btnSms.disabled = false;
+                btnBale.disabled = false;
             });
         }
         
@@ -212,7 +213,8 @@
         {% if otp_sent %}
         otpMode = true;
         document.getElementById('otp-row').style.display = 'flex';
-        document.getElementById('btn-otp').textContent = 'ورود';
+        document.getElementById('send-row').style.display = 'none';
+        document.getElementById('login-row').style.display = 'flex';
         {% endif %}
     </script>
 </body>

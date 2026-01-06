@@ -17,6 +17,7 @@ interface Plan {
   display_price: number
   formatted_price: string
   currency_symbol: string
+  decimal_places: number
   duration_days: number
   max_queries_per_day: number
   max_queries_per_month: number
@@ -215,13 +216,29 @@ export default function CheckoutPage() {
     return String(num).replace(/\d/g, (d) => persianDigits[parseInt(d)])
   }
   
-  const formatPrice = (price: number) => toPersianNumber(price.toLocaleString('en-US'))
+  // تابع فرمت قیمت با رعایت تعداد ارقام اعشار ارز
+  const formatPrice = (price: number, decimals?: number) => {
+    const decimalPlaces = decimals !== undefined ? decimals : (plan?.decimal_places || 0)
+    const formatted = price.toFixed(decimalPlaces)
+    return toPersianNumber(formatted)
+  }
   
   const taxRate = financialSettings?.tax_rate || 10
+  const decimalPlaces = plan?.decimal_places || 0
+  
   // استفاده از display_price که قیمت تبدیل‌شده به ارز کاربر است
   const basePrice = Number(plan?.display_price) || 0
-  const taxAmount = Math.round(basePrice * taxRate / 100)
-  const totalPrice = basePrice + taxAmount
+  
+  // محاسبه مالیات با رعایت تعداد ارقام اعشار
+  const taxAmountRaw = basePrice * taxRate / 100
+  const taxAmount = decimalPlaces > 0 
+    ? parseFloat(taxAmountRaw.toFixed(decimalPlaces))
+    : Math.round(taxAmountRaw)
+  
+  const totalPrice = decimalPlaces > 0
+    ? parseFloat((basePrice + taxAmount).toFixed(decimalPlaces))
+    : Math.round(basePrice + taxAmount)
+  
   const currencySymbol = plan?.currency_symbol || 'تومان'
 
   if (loading) {

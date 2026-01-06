@@ -6,10 +6,11 @@ class PlanSerializer(serializers.ModelSerializer):
     formatted_price = serializers.SerializerMethodField()
     currency_symbol = serializers.SerializerMethodField()
     display_price = serializers.SerializerMethodField()
+    decimal_places = serializers.SerializerMethodField()
     
     class Meta:
         model = Plan
-        fields = ['id', 'name', 'description', 'price', 'formatted_price', 'currency_symbol', 'display_price', 'duration_days', 'max_queries_per_day', 'max_queries_per_month', 'features', 'is_active']
+        fields = ['id', 'name', 'description', 'price', 'formatted_price', 'currency_symbol', 'display_price', 'decimal_places', 'duration_days', 'max_queries_per_day', 'max_queries_per_month', 'features', 'is_active']
     
     def _get_user_currency(self):
         """دریافت ارز انتخابی کاربر یا تومان به عنوان پیش‌فرض"""
@@ -55,6 +56,11 @@ class PlanSerializer(serializers.ModelSerializer):
         if currency and not currency.is_base:
             return float(currency.convert_from_base(obj.price))
         return float(obj.price)
+    
+    def get_decimal_places(self, obj):
+        """تعداد ارقام اعشار ارز کاربر"""
+        currency = self._get_user_currency()
+        return currency.decimal_places if currency else 0
 
 
 class SubscriptionSerializer(serializers.ModelSerializer):
