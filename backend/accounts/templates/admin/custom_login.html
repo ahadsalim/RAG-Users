@@ -102,14 +102,13 @@
                        value="{{ phone_number|default:'' }}">
             </div>
             
-            <div class="form-row">
-                <label id="pass-label">رمز عبور</label>
-                <input type="password" id="pass" name="password" placeholder="رمز عبور">
+            <div class="form-row" id="otp-row" style="display: none;">
+                <label id="pass-label">رمز یکبارمصرف</label>
+                <input type="text" id="pass" name="password" placeholder="کد 5 رقمی" maxlength="5">
             </div>
             
             <div class="btn-row">
-                <button type="submit" id="btn-pass" class="btn btn-primary">ورود با رمز ثابت</button>
-                <button type="button" id="btn-otp" class="btn btn-otp" onclick="handleOTP()">ارسال رمز یکبارمصرف</button>
+                <button type="button" id="btn-otp" class="btn btn-otp" onclick="handleOTP()" style="width: 100%;">ارسال رمز یکبارمصرف</button>
             </div>
         </form>
     </div>
@@ -165,12 +164,10 @@
                 if (data.success) {
                     showMsg(data.message || 'کد ارسال شد', false);
                     otpMode = true;
-                    document.getElementById('pass-label').textContent = 'رمز یکبارمصرف';
-                    document.getElementById('pass').placeholder = 'کد 5 رقمی';
+                    document.getElementById('otp-row').style.display = 'flex';
                     document.getElementById('pass').value = '';
-                    document.getElementById('pass').type = 'text';
-                    document.getElementById('pass').maxLength = 5;
-                    btn.textContent = 'ورود با رمز یکبارمصرف';
+                    document.getElementById('pass').focus();
+                    btn.textContent = 'ورود';
                     btn.disabled = false;
                     startCooldown(120);
                 } else {
@@ -195,21 +192,7 @@
         }
         
         document.getElementById('login-form').addEventListener('submit', function(e) {
-            var step = document.getElementById('step-input').value;
-            if (step === 'login') {
-                var phone = document.getElementById('phone').value.trim();
-                var pass = document.getElementById('pass').value;
-                if (!phone || phone.length < 10) {
-                    e.preventDefault();
-                    showMsg('شماره موبایل معتبر وارد کنید', true);
-                    return;
-                }
-                if (!pass) {
-                    e.preventDefault();
-                    showMsg('رمز عبور را وارد کنید', true);
-                    return;
-                }
-            }
+            e.preventDefault();
         });
         
         document.getElementById('phone').focus();
@@ -218,11 +201,8 @@
         {% if message %}showMsg('{{ message|escapejs }}', false);{% endif %}
         {% if otp_sent %}
         otpMode = true;
-        document.getElementById('pass-label').textContent = 'رمز یکبارمصرف';
-        document.getElementById('pass').placeholder = 'کد 5 رقمی';
-        document.getElementById('pass').type = 'text';
-        document.getElementById('pass').maxLength = 5;
-        document.getElementById('btn-otp').textContent = 'ورود با رمز یکبارمصرف';
+        document.getElementById('otp-row').style.display = 'flex';
+        document.getElementById('btn-otp').textContent = 'ورود';
         {% endif %}
     </script>
 </body>
