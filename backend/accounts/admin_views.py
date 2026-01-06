@@ -12,7 +12,7 @@ from django.views import View
 from django.core.cache import cache
 from django.contrib import messages
 from django.http import JsonResponse
-from .utils import send_otp_sms
+from .utils import send_otp_sms, send_otp_bale
 
 logger = logging.getLogger(__name__)
 User = get_user_model()
@@ -99,6 +99,7 @@ class AdminLoginView(View):
     def handle_send_otp(self, request):
         """Send OTP to user's phone - Returns JSON for AJAX"""
         phone_number = self.normalize_phone(request.POST.get('phone_number', ''))
+        delivery_method = request.POST.get('delivery_method', 'sms')  # 'sms' or 'bale'
         
         if not phone_number or len(phone_number) < 10:
             return JsonResponse({
@@ -141,13 +142,26 @@ class AdminLoginView(View):
         # Store phone in session for verify step
         request.session['admin_login_phone'] = phone_number
         
-        # Send OTP
-        send_otp_sms(phone_number, otp_code)
-        logger.info(f"Admin OTP sent to {phone_number}")
+        # Send OTP based on delivery method
+        success = False
+        if delivery_method == 'bale':
+            success = send_otp_bale(phone_number, otp_code)
+            message = 'کد تأیید در بله ارسال شد' if success else 'خطا در ارسال کد در بله'
+        else:  # sms
+            success = send_otp_sms(phone_number, otp_code)
+            message = 'کد تأیید به شماره موبایل شما ارسال شد' if success else 'خطا در ارسال پیامک'
+        
+        logger.info(f"Admin OTP sent to {phone_number} via {delivery_method}")
+        
+        if not success:
+            return JsonResponse({
+                'success': False,
+                'error': message
+            })
         
         return JsonResponse({
             'success': True,
-            'message': 'کد تأیید به شماره موبایل شما ارسال شد'
+            'message': message
         })
     
     def handle_verify_otp(self, request):

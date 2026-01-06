@@ -108,7 +108,8 @@
             </div>
             
             <div class="btn-row">
-                <button type="button" id="btn-otp" class="btn btn-otp" onclick="handleOTP()" style="width: 100%;">ارسال رمز یکبارمصرف</button>
+                <button type="button" id="btn-sms" class="btn btn-otp" onclick="handleOTP('sms')" style="flex: 1;">ارسال رمز با پیامک</button>
+                <button type="button" id="btn-bale" class="btn btn-primary" onclick="handleOTP('bale')" style="flex: 1;">ارسال رمز در بله</button>
             </div>
         </form>
     </div>
@@ -125,9 +126,11 @@
             box.classList.remove('hidden');
         }
         
-        function handleOTP() {
+        function handleOTP(method) {
             const phone = document.getElementById('phone').value.trim();
-            const btn = document.getElementById('btn-otp');
+            const btnSms = document.getElementById('btn-sms');
+            const btnBale = document.getElementById('btn-bale');
+            const btn = method === 'sms' ? btnSms : btnBale;
             
             if (!phone || phone.length < 10) {
                 showMsg('شماره موبایل معتبر وارد کنید', true);
@@ -151,13 +154,14 @@
                 return;
             }
             
-            btn.disabled = true;
+            btnSms.disabled = true;
+            btnBale.disabled = true;
             btn.textContent = 'در حال ارسال...';
             
             fetch('', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'X-CSRFToken': csrf },
-                body: 'step=send_otp&phone_number=' + encodeURIComponent(phone)
+                body: 'step=send_otp&phone_number=' + encodeURIComponent(phone) + '&delivery_method=' + method
             })
             .then(function(r) { return r.json(); })
             .then(function(data) {
@@ -167,13 +171,19 @@
                     document.getElementById('otp-row').style.display = 'flex';
                     document.getElementById('pass').value = '';
                     document.getElementById('pass').focus();
-                    btn.textContent = 'ورود';
-                    btn.disabled = false;
+                    btnSms.textContent = 'ورود';
+                    btnBale.textContent = 'ورود';
+                    btnSms.disabled = false;
+                    btnBale.disabled = false;
+                    btnSms.onclick = function() { handleOTP('verify'); };
+                    btnBale.onclick = function() { handleOTP('verify'); };
                     startCooldown(120);
                 } else {
                     showMsg(data.error || 'خطا', true);
-                    btn.textContent = 'ارسال رمز یکبارمصرف';
-                    btn.disabled = false;
+                    btnSms.textContent = 'ارسال رمز با پیامک';
+                    btnBale.textContent = 'ارسال رمز در بله';
+                    btnSms.disabled = false;
+                    btnBale.disabled = false;
                 }
             })
             .catch(function() {
