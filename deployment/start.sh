@@ -206,9 +206,9 @@ print_header "Configuring UFW firewall"
 
 print_info "Applying firewall rules..."
 
-# Reset UFW to default
+# Reset UFW to default (no backups)
 ufw --force disable 2>/dev/null || true
-echo "y" | ufw --force reset 2>/dev/null || true
+echo "y" | ufw --force reset --no-backup 2>/dev/null || true
 
 # Default policies
 ufw default deny incoming
