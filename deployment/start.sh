@@ -359,7 +359,7 @@ if [ ! -f "$ENV_FILE" ]; then
         RABBITMQ_URL_SED=$(escape_sed_replacement "amqp://${RABBITMQ_USER}:${RABBITMQ_PASSWORD}@rabbitmq:5672//")
         REDIS_URL_SED=$(escape_sed_replacement "redis://:${REDIS_PASSWORD}@redis:6379/0")
         CACHE_URL_SED=$(escape_sed_replacement "redis://:${REDIS_PASSWORD}@redis:6379/1")
-        ALLOWED_HOSTS_SED=$(escape_sed_replacement "localhost,127.0.0.1,${DOMAIN_NAME}")
+        ALLOWED_HOSTS_SED=$(escape_sed_replacement "localhost,127.0.0.1,backend,${DOMAIN_NAME},www.${DOMAIN_NAME},admin.${DOMAIN_NAME}")
 
         # Update .env file with generated and provided values
         sed -i "s|DOMAIN=.*|DOMAIN=${DOMAIN_NAME_SED}|g" "$ENV_FILE"
@@ -545,7 +545,24 @@ if ! docker-compose up -d --no-deps backend; then
         # Don't exit - continue with other setup steps
     fi
 fi
-sleep 20
+
+# Wait for backend to be fully ready (migrate + collectstatic run inside the container command)
+print_info "Waiting for backend to be ready (this may take up to 90 seconds)..."
+BACKEND_READY=false
+for i in $(seq 1 18); do
+    if docker-compose exec -T backend python -c "import django" 2>/dev/null; then
+        BACKEND_READY=true
+        break
+    fi
+    sleep 5
+done
+
+if [ "$BACKEND_READY" = true ]; then
+    print_success "Backend is ready"
+else
+    print_warning "Backend may not be fully ready yet. Checking logs..."
+    docker-compose logs backend --tail=10 2>&1
+fi
 
 # Start Celery services
 print_info "Starting Celery worker and beat..."
@@ -559,7 +576,7 @@ if [ -n "$CELERY_VOLUME_PATH" ]; then
     print_success "Celery Beat permissions configured"
 fi
 
-# Run migrations
+# Run migrations (also runs inside container command, but run explicitly to ensure)
 print_info "Running database migrations..."
 if docker-compose exec -T backend python manage.py migrate --noinput 2>&1; then
     print_success "Database migrations completed"

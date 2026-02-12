@@ -292,7 +292,7 @@ class Command(BaseCommand):
                 'merchant_id': '',  # باید توسط ادمین تنظیم شود
                 'is_active': False,  # غیرفعال تا تنظیمات کامل شود
                 'is_default': True,
-                'commission_rate': Decimal('0'),
+                'commission_percentage': Decimal('0'),
                 'display_order': 1,
             }
         )
