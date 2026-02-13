@@ -7,7 +7,7 @@ import toast from 'react-hot-toast'
 import { useAuthStore } from '@/store/auth'
 import { SiteSubtitle } from '@/components/SiteName'
 
-const API_URL = typeof window !== 'undefined' ? (process.env.NEXT_PUBLIC_API_URL || 'https://admin.tejarat.chat') : 'https://admin.tejarat.chat'
+const API_URL = process.env.NEXT_PUBLIC_API_URL || ''
 
 export default function LoginPage() {
   const router = useRouter()

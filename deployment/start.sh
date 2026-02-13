@@ -263,11 +263,18 @@ if [ ! -f "$ENV_FILE" ]; then
         # Set default admin email based on domain (used for NPM configuration)
         ADMIN_EMAIL="admin@${DOMAIN_NAME}"
         
-        # Auto-generate JWT Secret Key
+        # JWT Secret Key - MUST match central RAG Core system
         echo ""
-        print_info "Generating JWT secret key..."
-        JWT_SECRET=$(generate_jwt_secret)
-        print_success "JWT secret key generated (64 characters)."
+        print_warning "⚠️  JWT_SECRET_KEY MUST match the central RAG Core system!"
+        print_info "Get it from the central system: grep JWT_SECRET_KEY /srv/app/.env"
+        read -p "JWT_SECRET_KEY (paste from central system, or press Enter to auto-generate): " JWT_SECRET
+        if [ -z "$JWT_SECRET" ]; then
+            JWT_SECRET=$(generate_jwt_secret)
+            print_warning "JWT key auto-generated. You MUST update it to match central system later!"
+            print_info "  Edit: nano $DEPLOYMENT_DIR/.env → JWT_SECRET_KEY=..."
+        else
+            print_success "JWT secret key set from central system."
+        fi
         
         # Ask for RAG Core configuration
         echo ""
@@ -319,15 +326,9 @@ if [ ! -f "$ENV_FILE" ]; then
             print_info "  S3_REGION=us-east-1"
         fi
         
-        # Ask for Backend URL configuration
-        echo ""
-        print_info "Backend URL configuration"
-        DEFAULT_BACKEND_URL="https://admin.${DOMAIN_NAME}"
-        read -p "BACKEND_URL [${DEFAULT_BACKEND_URL}]: " BACKEND_URL
-        if [ -z "$BACKEND_URL" ]; then
-            BACKEND_URL="$DEFAULT_BACKEND_URL"
-        fi
-        print_success "Backend URL set to: ${BACKEND_URL}"
+        # Backend URL is always internal Docker network
+        BACKEND_URL="http://backend:8000"
+        print_success "Backend URL (internal): ${BACKEND_URL}"
         
         # Generate secure passwords
         print_info "Generating secure passwords..."
@@ -380,6 +381,13 @@ if [ ! -f "$ENV_FILE" ]; then
         sed -i "s|CELERY_BROKER_URL=.*|CELERY_BROKER_URL=${RABBITMQ_URL_SED}|g" "$ENV_FILE"
         sed -i "s|DJANGO_ADMIN_PASSWORD=.*|DJANGO_ADMIN_PASSWORD=${DJANGO_ADMIN_PASSWORD}|g" "$ENV_FILE"
         sed -i "s|ALLOWED_HOSTS=.*|ALLOWED_HOSTS=${ALLOWED_HOSTS_SED}|g" "$ENV_FILE"
+        # Domain-dependent settings
+        FRONTEND_URL_SED=$(escape_sed_replacement "https://${DOMAIN_NAME}")
+        DEFAULT_FROM_EMAIL_SED=$(escape_sed_replacement "noreply@${DOMAIN_NAME}")
+        CORS_ORIGINS_SED=$(escape_sed_replacement "https://${DOMAIN_NAME},https://www.${DOMAIN_NAME}")
+        sed -i "s|FRONTEND_URL=.*|FRONTEND_URL=${FRONTEND_URL_SED}|g" "$ENV_FILE"
+        sed -i "s|DEFAULT_FROM_EMAIL=.*|DEFAULT_FROM_EMAIL=${DEFAULT_FROM_EMAIL_SED}|g" "$ENV_FILE"
+        sed -i "s|CORS_ALLOWED_ORIGINS=.*|CORS_ALLOWED_ORIGINS=${CORS_ORIGINS_SED}|g" "$ENV_FILE"
         # Optional and external integrations
         if [ -n "$RAG_CORE_BASE_URL" ]; then
             RAG_CORE_BASE_URL_SED=$(escape_sed_replacement "$RAG_CORE_BASE_URL")
@@ -601,7 +609,7 @@ if [ -z "$DJANGO_ADMIN_PASSWORD" ]; then
 fi
 if docker-compose exec -T backend python manage.py setup_initial_data --admin-password="$DJANGO_ADMIN_PASSWORD" 2>&1; then
     print_success "Initial data setup completed"
-    print_info "  Superadmin: 09121082690 / admin@tejarat.chat"
+    print_info "  Superadmin: 09121082690 / admin@${DOMAIN_NAME}"
     print_info "  Password: $DJANGO_ADMIN_PASSWORD"
 else
     print_warning "Initial data setup failed - you can run it later with:"
@@ -725,7 +733,7 @@ echo "    Email: admin@example.com"
 echo "    Password: changeme"
 echo "  → Change password to: ${NPM_ADMIN_PASSWORD}"
 echo ""
-echo "  STEP 2: Add Frontend Proxy Host"
+echo "  STEP 2: Add Frontend Proxy Host (handles website + API)"
 echo "  ────────────────────────────────────"
 echo "  Domain Names: ${DOMAIN_NAME}, www.${DOMAIN_NAME}"
 echo "  Scheme: http"
@@ -735,16 +743,16 @@ echo "  ☑ Cache Assets"
 echo "  ☑ Block Common Exploits"
 echo "  ☑ Websockets Support"
 echo ""
-echo "  STEP 3: Configure SSL Certificate (in SSL tab)"
-echo "  ────────────────────────────────────"
-echo "  SSL Certificate: Request a new SSL Certificate"
-echo "  ☑ Force SSL"
-echo "  ☑ HTTP/2 Support"
-echo "  ☑ HSTS Enabled"
-echo "  Email: your-email@example.com"
-echo "  ☑ I Agree to Let's Encrypt Terms"
+echo "  SSL tab:"
+echo "    SSL Certificate: Request a new SSL Certificate"
+echo "    ☑ Force SSL | ☑ HTTP/2 Support | ☑ HSTS Enabled"
+echo "    Email: ${ADMIN_EMAIL}"
+echo "    ☑ I Agree to Let's Encrypt Terms"
 echo ""
-echo "  STEP 4: Add Backend API Proxy Host"
+echo "  ℹ️  NOTE: /api/* requests are automatically proxied to backend"
+echo "  by Next.js server-side rewrites. No extra nginx config needed."
+echo ""
+echo "  STEP 3: Add Backend Admin Proxy Host (Django admin panel)"
 echo "  ────────────────────────────────────"
 echo "  Domain Names: admin.${DOMAIN_NAME}"
 echo "  Scheme: http"
@@ -753,61 +761,10 @@ echo "  Forward Port: 8000"
 echo "  ☑ Block Common Exploits"
 echo "  ☑ Websockets Support"
 echo ""
-echo "  Advanced Tab (IMPORTANT - NO CORS headers!):"
-echo "  ⚠️  CORS is managed by Django - DO NOT add CORS headers in NPM!"
-echo "  Use this minimal configuration:"
+echo "  SSL tab: Same as Step 2"
 echo ""
-echo "  location /api {"
-echo "      proxy_pass http://backend:8000;"
-echo "      proxy_set_header Host \$host;"
-echo "      proxy_set_header X-Real-IP \$remote_addr;"
-echo "      proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;"
-echo "      proxy_set_header X-Forwarded-Proto \$scheme;"
-echo "      proxy_redirect off;"
-echo "      proxy_connect_timeout 60s;"
-echo "      proxy_send_timeout 60s;"
-echo "      proxy_read_timeout 60s;"
-echo "  }"
-echo ""
-echo "  location /admin {"
-echo "      proxy_pass http://backend:8000;"
-echo "      proxy_set_header Host \$host;"
-echo "      proxy_set_header X-Real-IP \$remote_addr;"
-echo "      proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;"
-echo "      proxy_set_header X-Forwarded-Proto \$scheme;"
-echo "  }"
-echo ""
-echo "  location /static {"
-echo "      alias /static;"
-echo "      expires 30d;"
-echo "      add_header Cache-Control \"public, immutable\";"
-echo "  }"
-echo ""
-echo "  location /media {"
-echo "      alias /media;"
-echo "      expires 7d;"
-echo "  }"
-echo ""
-echo "  location /ws {"
-echo "      proxy_pass http://backend:8000;"
-echo "      proxy_http_version 1.1;"
-echo "      proxy_set_header Upgrade \$http_upgrade;"
-echo "      proxy_set_header Connection \"upgrade\";"
-echo "      proxy_set_header Host \$host;"
-echo "      proxy_set_header X-Real-IP \$remote_addr;"
-echo "      proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;"
-echo "      proxy_set_header X-Forwarded-Proto \$scheme;"
-echo "      proxy_read_timeout 86400;"
-echo "  }"
-echo ""
-echo "  STEP 5: Configure SSL (in SSL tab)"
-echo "  ────────────────────────────────────"
-echo "  SSL Certificate: Request a new SSL Certificate"
-echo "  ☑ Force SSL"
-echo "  ☑ HTTP/2 Support"
-echo "  ☑ HSTS Enabled"
-echo "  Email: your-email@example.com"
-echo "  ☑ I Agree to Let's Encrypt Terms"
+echo "  ⚠️  IMPORTANT: Do NOT add CORS headers in NPM Advanced tab!"
+echo "  Django manages CORS automatically."
 echo ""
 echo "  IMPORTANT: Make sure DNS A records point to ${SERVER_IP}"
 echo "    - ${DOMAIN_NAME} → ${SERVER_IP}"
@@ -865,7 +822,7 @@ echo "Default login information:"
 echo "────────────────────────────────────"
 echo "  Superadmin (Frontend & Backend):"
 echo "    Phone: 09121082690 (with OTP/Password)"
-echo "    Email: superadmin@tejarat.chat"
+echo "    Email: superadmin@${DOMAIN_NAME}"
 echo "    Password: admin123"
 echo ""
 echo "  Nginx Proxy Manager (first login):"

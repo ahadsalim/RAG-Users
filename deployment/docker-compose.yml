@@ -140,11 +140,11 @@ services:
       # OTP Configuration
       OTP_EXPIRE_SECONDS: ${OTP_EXPIRE_SECONDS:-120}
       # S3/MinIO
-      S3_ENDPOINT_URL: ${S3_ENDPOINT_URL:-https://s3.tejarat.chat}
+      S3_ENDPOINT_URL: ${S3_ENDPOINT_URL:-http://10.10.10.50:9000}
       S3_ACCESS_KEY_ID: ${S3_ACCESS_KEY_ID}
       S3_SECRET_ACCESS_KEY: ${S3_SECRET_ACCESS_KEY}
       S3_TEMP_BUCKET: ${S3_TEMP_BUCKET:-temp-userfile}
-      S3_USE_SSL: ${S3_USE_SSL:-true}
+      S3_USE_SSL: ${S3_USE_SSL:-false}
       S3_REGION: ${S3_REGION:-us-east-1}
     volumes:
       - ../backend:/app
@@ -189,12 +189,12 @@ services:
       RAG_CORE_BASE_URL: ${RAG_CORE_BASE_URL}
       RAG_CORE_API_KEY: ${RAG_CORE_API_KEY}
       # S3/MinIO
-      S3_ENDPOINT_URL: ${S3_ENDPOINT_URL:-https://s3.tejarat.chat}
+      S3_ENDPOINT_URL: ${S3_ENDPOINT_URL:-http://10.10.10.50:9000}
       S3_ACCESS_KEY_ID: ${S3_ACCESS_KEY_ID}
       S3_SECRET_ACCESS_KEY: ${S3_SECRET_ACCESS_KEY}
       S3_TEMP_BUCKET: ${S3_TEMP_BUCKET:-temp-userfile}
       S3_REGION: ${S3_REGION:-us-east-1}
-      S3_USE_SSL: ${S3_USE_SSL:-true}
+      S3_USE_SSL: ${S3_USE_SSL:-false}
     volumes:
       - ../backend:/app
     networks:
@@ -229,12 +229,12 @@ services:
       RAG_CORE_BASE_URL: ${RAG_CORE_BASE_URL}
       RAG_CORE_API_KEY: ${RAG_CORE_API_KEY}
       # S3/MinIO
-      S3_ENDPOINT_URL: ${S3_ENDPOINT_URL:-https://s3.tejarat.chat}
+      S3_ENDPOINT_URL: ${S3_ENDPOINT_URL:-http://10.10.10.50:9000}
       S3_ACCESS_KEY_ID: ${S3_ACCESS_KEY_ID}
       S3_SECRET_ACCESS_KEY: ${S3_SECRET_ACCESS_KEY}
       S3_TEMP_BUCKET: ${S3_TEMP_BUCKET:-temp-userfile}
       S3_REGION: ${S3_REGION:-us-east-1}
-      S3_USE_SSL: ${S3_USE_SSL:-true}
+      S3_USE_SSL: ${S3_USE_SSL:-false}
     volumes:
       - ../backend:/app
       - celerybeat_schedule:/app/schedule
@@ -247,13 +247,17 @@ services:
     build:
       context: ../frontend
       dockerfile: ../deployment/Dockerfile.frontend
+      args:
+        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-}
+        NEXT_PUBLIC_WS_URL: ${NEXT_PUBLIC_WS_URL:-}
+        BACKEND_URL: ${BACKEND_URL:-http://backend:8000}
     container_name: app_frontend
     restart: unless-stopped
     depends_on:
       - backend
     environment:
-      NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:8000}
-      NEXT_PUBLIC_WS_URL: ${NEXT_PUBLIC_WS_URL:-ws://localhost:8000}
+      NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-}
+      NEXT_PUBLIC_WS_URL: ${NEXT_PUBLIC_WS_URL:-}
       BACKEND_URL: ${BACKEND_URL:-http://backend:8000}
     expose:
       - "3000"  # Only exposed to docker network, not host

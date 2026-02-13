@@ -6,7 +6,7 @@ import Link from 'next/link'
 import toast from 'react-hot-toast'
 import { SiteSubtitle } from '@/components/SiteName'
 
-const API_URL = typeof window !== 'undefined' ? (process.env.NEXT_PUBLIC_API_URL || 'https://admin.tejarat.chat') : 'https://admin.tejarat.chat'
+const API_URL = process.env.NEXT_PUBLIC_API_URL || ''
 
 export default function ForgotPasswordPage() {
   const router = useRouter()

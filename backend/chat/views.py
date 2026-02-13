@@ -682,9 +682,10 @@ class HealthCheckView(APIView):
     """Check connection status to Core RAG system."""
     permission_classes = [permissions.IsAuthenticated]
     
-    async def get(self, request):
+    def get(self, request):
         """Check if Core RAG is available."""
-        result = await core_service.health_check()
+        from asgiref.sync import async_to_sync
+        result = async_to_sync(core_service.health_check)()
         
         status_code = status.HTTP_200_OK if result['status'] == 'connected' else status.HTTP_503_SERVICE_UNAVAILABLE
         

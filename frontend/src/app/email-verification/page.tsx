@@ -5,7 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import toast, { Toaster } from 'react-hot-toast'
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://admin.tejarat.chat'
+const API_URL = process.env.NEXT_PUBLIC_API_URL || ''
 
 export default function VerifyEmailPage() {
   const router = useRouter()

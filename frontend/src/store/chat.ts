@@ -28,7 +28,7 @@ interface ChatState {
   updateMessage: (messageId: string, updates: Partial<Message>) => void
 }
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'
+const API_URL = process.env.NEXT_PUBLIC_API_URL || ''
 
 export const useChatStore = create<ChatState>((set, get) => ({
   conversations: [],
