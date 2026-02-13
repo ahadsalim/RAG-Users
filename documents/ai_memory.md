@@ -990,4 +990,42 @@ sudo systemctl restart cron
 
 - **Website**: https://tejarat.chat
 - **Admin**: https://admin.tejarat.chat
-- **Core RAG**: https://core.tejarat.chat
+- **Core RAG**: http://10.10.10.20:7001 (شبکه داخلی DMZ)
+
+---
+
+## اصلاحات معماری Frontend (2026-02-13)
+
+### مشکل اصلی
+Frontend از `NEXT_PUBLIC_API_URL=https://admin.tejarat.chat` برای API calls استفاده می‌کرد.
+این باعث می‌شد:
+1. Client-side: Browser درخواست‌ها را به domain خارجی بفرستد بجای relative path
+2. Server-side: Next.js rewrite سعی کند DNS resolve کند و `EAI_AGAIN` بدهد
+3. API routes: `send-otp` و `verify-otp` هم به domain خارجی وصل شوند
+
+### راه‌حل: معماری Relative Path
+- `NEXT_PUBLIC_API_URL` خالی است - client از relative path (`/api/...`) استفاده می‌کند
+- `BACKEND_URL=http://backend:8000` - server-side rewrite به Docker internal
+- Nginx: `www.tejarat.chat` به `frontend:3000` (Next.js خودش `/api/*` را proxy می‌کند)
+
+### فایل‌های اصلاح شده
+- `frontend/next.config.js` - حذف env block، rewrite از BACKEND_URL
+- `frontend/src/store/chat.ts` - fallback به '' بجای localhost
+- `frontend/src/app/api/auth/send-otp/route.ts` - fallback به localhost
+- `frontend/src/app/api/auth/verify-otp/route.ts` - fallback به localhost
+- `frontend/src/app/auth/login/page.tsx` - fallback به ''
+- `frontend/src/app/auth/register/page.tsx` - fallback به ''
+- `frontend/src/app/auth/forgot-password/page.tsx` - fallback به ''
+- `frontend/src/app/auth/reset-password/page.tsx` - fallback به ''
+- `frontend/src/app/email-verification/page.tsx` - fallback به ''
+- `deployment/Dockerfile.frontend` - ARG NEXT_PUBLIC_API_URL خالی + ARG BACKEND_URL
+- `deployment/docker-compose.yml` - build args + frontend env
+- `deployment/.env` - NEXT_PUBLIC_API_URL خالی
+- `deployment/start.sh` - JWT prompt، FRONTEND_URL/CORS auto-set، NPM guidance ساده
+- `backend/chat/views.py` - HealthCheckView از async به sync
+
+### نکات مهم برای نصب مجدد
+- فایل `/srv/INSTALL_INFO.txt` شامل همه اطلاعات لازم برای نصب مجدد
+- `JWT_SECRET_KEY` باید با سیستم مرکزی یکی باشد (start.sh الان می‌پرسد)
+- `RAG_CORE_BASE_URL=http://10.10.10.20:7001` (IP داخلی DMZ)
+- CORS headers را هرگز در NPM اضافه نکنید (Django مدیریت می‌کند)
