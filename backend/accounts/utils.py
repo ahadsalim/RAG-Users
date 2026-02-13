@@ -146,7 +146,7 @@ def send_otp_bale(phone_number, otp_code):
         return False
 
 
-def send_otp_sms(phone_number, otp_code):
+def send_otp_sms(phone_number, otp_code, template_name=None):
     """Send OTP via SMS using Kavenegar Verify API"""
     import requests
     from decouple import config
@@ -154,7 +154,8 @@ def send_otp_sms(phone_number, otp_code):
     try:
         # Get Kavenegar API key
         api_key = config('KAVENEGAR_API_KEY', default=None)
-        template_name = 'otp'  # نام الگوی تعریف شده در کاوه نگار
+        if template_name is None:
+            template_name = getattr(settings, 'KAVENEGAR_OTP_TEMPLATE', 'otp')
         
         if not api_key or api_key == 'your-kavenegar-api-key':
             logger.warning("Kavenegar API key not configured - logging OTP instead")

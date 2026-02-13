@@ -50,7 +50,7 @@ class CoreAPIService:
         Returns:
             پاسخ شامل answer, file_analysis, conversation_id و غیره
         """
-        url = f"{self.base_url}/api/v1/query/"
+        url = f"{self.base_url}/api/v1/query"
         
         # ساخت payload مطابق با API سیستم مرکزی
         payload = {
@@ -71,7 +71,7 @@ class CoreAPIService:
             payload["enable_web_search"] = enable_web_search
         
         try:
-            async with httpx.AsyncClient(timeout=self.timeout) as client:
+            async with httpx.AsyncClient(timeout=self.timeout, follow_redirects=True) as client:
                 response = await client.post(
                     url,
                     json=payload,
@@ -108,7 +108,7 @@ class CoreAPIService:
         params = {"limit": limit, "offset": offset}
         
         try:
-            async with httpx.AsyncClient(timeout=30) as client:
+            async with httpx.AsyncClient(timeout=30, follow_redirects=True) as client:
                 response = await client.get(
                     url,
                     params=params,
@@ -144,7 +144,7 @@ class CoreAPIService:
         params = {"limit": limit, "offset": offset}
         
         try:
-            async with httpx.AsyncClient(timeout=30) as client:
+            async with httpx.AsyncClient(timeout=30, follow_redirects=True) as client:
                 response = await client.get(
                     url,
                     params=params,
@@ -175,7 +175,7 @@ class CoreAPIService:
         url = f"{self.base_url}/api/v1/users/conversations/{conversation_id}"
         
         try:
-            async with httpx.AsyncClient(timeout=30) as client:
+            async with httpx.AsyncClient(timeout=30, follow_redirects=True) as client:
                 response = await client.delete(
                     url,
                     headers=self._get_headers(token),
@@ -218,7 +218,7 @@ class CoreAPIService:
             payload["feedback_text"] = feedback_text
         
         try:
-            async with httpx.AsyncClient(timeout=30) as client:
+            async with httpx.AsyncClient(timeout=30, follow_redirects=True) as client:
                 response = await client.post(
                     url,
                     json=payload,
@@ -244,7 +244,7 @@ class CoreAPIService:
         url = f"{self.base_url}/api/v1/users/profile"
         
         try:
-            async with httpx.AsyncClient(timeout=30) as client:
+            async with httpx.AsyncClient(timeout=30, follow_redirects=True) as client:
                 response = await client.get(
                     url,
                     headers=self._get_headers(token),
@@ -274,7 +274,7 @@ class CoreAPIService:
         url = f"{self.base_url}/api/v1/users/conversations/{conversation_id}"
         
         try:
-            async with httpx.AsyncClient(timeout=30) as client:
+            async with httpx.AsyncClient(timeout=30, follow_redirects=True) as client:
                 response = await client.delete(
                     url,
                     headers=self._get_headers(token),
@@ -302,8 +302,8 @@ class CoreAPIService:
             Dict with status and details
         """
         try:
-            async with httpx.AsyncClient(timeout=5.0) as client:
-                response = await client.get(f"{self.base_url}/health/")
+            async with httpx.AsyncClient(timeout=5.0, follow_redirects=True) as client:
+                response = await client.get(f"{self.base_url}/health")
                 
                 if response.status_code == 200:
                     return {

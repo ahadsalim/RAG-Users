@@ -4,6 +4,7 @@ Moved from admin_panel app
 """
 import random
 import logging
+from django.conf import settings
 from django.contrib.admin.sites import AdminSite
 from django.contrib.auth import login, authenticate
 from django.contrib.auth import get_user_model
@@ -148,7 +149,8 @@ class AdminLoginView(View):
             success = send_otp_bale(phone_number, otp_code)
             message = 'کد تأیید در بله ارسال شد' if success else 'خطا در ارسال کد در بله'
         else:  # sms
-            success = send_otp_sms(phone_number, otp_code)
+            admin_template = getattr(settings, 'KAVENEGAR_ADMIN_OTP_TEMPLATE', 'otpadmin')
+            success = send_otp_sms(phone_number, otp_code, template_name=admin_template)
             message = 'کد تأیید به شماره موبایل شما ارسال شد' if success else 'خطا در ارسال پیامک'
         
         logger.info(f"Admin OTP sent to {phone_number} via {delivery_method}")

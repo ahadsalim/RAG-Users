@@ -412,6 +412,8 @@ BALE_PASSWORD = config('BALE_PASSWORD', default='')
 
 # OTP Configuration
 OTP_EXPIRE_SECONDS = config('OTP_EXPIRE_SECONDS', default=120, cast=int)
+KAVENEGAR_OTP_TEMPLATE = config('KAVENEGAR_OTP_TEMPLATE', default='otp')
+KAVENEGAR_ADMIN_OTP_TEMPLATE = config('KAVENEGAR_ADMIN_OTP_TEMPLATE', default='otpadmin')
 
 # ===========================
 # Core RAG API Configuration (deprecated - use RAG_CORE_BASE_URL instead)

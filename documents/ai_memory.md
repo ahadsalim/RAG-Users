@@ -897,7 +897,96 @@ sudo systemctl restart cron
 
 ---
 
-## 📞 اطلاعات تماس
+## � اتصال به سیستم مرکزی RAG Core — تجربیات و نکات مهم
+
+> آخرین به‌روزرسانی: 2026-02-13
+
+### قانون طلایی
+- **سیستم مرکزی (RAG Core) مرجع اصلی است** — هرگز تنظیمات سیستم مرکزی را تغییر ندهید
+- سیستم‌های دیگر (بکند/فرانت) باید خودشان را با سیستم مرکزی هماهنگ کنند
+- تغییر سیستم مرکزی باعث بهم ریختن بقیه سیستم‌ها می‌شود
+
+### معماری شبکه
+| سرور | IP | نقش |
+|------|-----|------|
+| RAG Core (مرکزی) | `10.10.10.20:7001` | سیستم هوش مصنوعی و RAG |
+| Backend/Frontend | `10.10.10.30` | بکند Django + فرانت Next.js |
+| MinIO/S3 | `10.10.10.50:9000` | ذخیره‌سازی فایل |
+
+### JWT_SECRET_KEY — هماهنگی بین سیستم‌ها
+- **مرجع**: کلید JWT سیستم مرکزی (`/srv/.env` روی `10.10.10.20`)
+- **این سیستم**: باید همان کلید در `/srv/deployment/.env` خط `JWT_SECRET_KEY` باشد
+- Backend از `djangorestframework-simplejwt` استفاده می‌کند (`SIMPLE_JWT.SIGNING_KEY`)
+- RAG Core از `python-jose` استفاده می‌کند (`settings.jwt_secret_key`)
+- **هر دو باید کلید یکسان داشته باشند** وگرنه خطای 401 از RAG Core دریافت می‌شود
+- تنظیمات simplejwt در `backend/core/settings.py`:
+  - `USER_ID_CLAIM = 'sub'` (سازگار با RAG Core)
+  - `TOKEN_TYPE_CLAIM = 'type'` (سازگار با RAG Core)
+
+### مشکلات رایج اتصال و راه‌حل‌ها
+
+#### 1. خطای "زمان پردازش تمام شد" (Timeout)
+- **علت معمول**: JWT_SECRET_KEY ناهماهنگ → RAG Core پاسخ 401 می‌دهد → backend timeout به کاربر
+- **تشخیص**: تست مستقیم از داخل container:
+  ```bash
+  docker exec app_backend python -c "
+  import os; os.environ.setdefault('DJANGO_SETTINGS_MODULE','core.settings')
+  os.environ['DJANGO_ALLOW_ASYNC_UNSAFE']='true'
+  import django; django.setup()
+  import httpx, asyncio
+  from django.conf import settings as s
+  from rest_framework_simplejwt.tokens import RefreshToken
+  from accounts.models import User
+  async def t():
+      u=User.objects.first(); tk=str(RefreshToken.for_user(u).access_token)
+      async with httpx.AsyncClient(timeout=30,follow_redirects=True) as c:
+          r=await c.post(f'{s.RAG_CORE_BASE_URL}/api/v1/query',json={'query':'سلام','language':'fa'},headers={'Authorization':f'Bearer {tk}','Content-Type':'application/json'})
+          print(f'{r.status_code}: {r.text[:300]}')
+  asyncio.run(t())
+  "
+  ```
+- **رفع**: کلید JWT این سیستم را با سیستم مرکزی یکسان کنید
+
+#### 2. خطای "Invalid host header" (400)
+- **علت**: `TrustedHostMiddleware` در RAG Core — IP سرور بکند در لیست allowed hosts نیست
+- **رفع**: در سیستم مرکزی `/srv/app/main.py` → IP های داخلی شبکه به `allowed_hosts` اضافه شود
+- **فایل**: `/srv/app/main.py` خط ~101
+
+#### 3. خطای 307 Redirect
+- **علت**: FastAPI trailing slash redirect — URL بدون `/` به URL با `/` redirect می‌شود
+- **رفع**: در `backend/chat/core_service.py` → `follow_redirects=True` به همه `httpx.AsyncClient` ها اضافه شود
+- **یا**: trailing slash از URL ها حذف شود (FastAPI بدون آن کار می‌کند)
+
+#### 4. خطای `AttributeError: 'Settings' object has no attribute 'llm_fallback_api_key'`
+- **علت**: بعد از refactor LLM به سیستم LLM1/LLM2، property های backward compatibility فراموش شده بود
+- **رفع**: در سیستم مرکزی `/srv/app/config/settings.py` → property های `llm_fallback_api_key`, `llm_fallback_base_url`, `llm_fallback_model` اضافه شد که به `llm1_fallback_*` map می‌کنند
+
+### تنظیمات مهم `core_service.py`
+- فایل: `backend/chat/core_service.py`
+- **همیشه** `follow_redirects=True` در `httpx.AsyncClient` باشد
+- `RAG_CORE_BASE_URL` باید با پورت `7001` باشد (نه 80)
+- URL query: `{base_url}/api/v1/query` (بدون trailing slash)
+- URL health: `{base_url}/health` (بدون trailing slash)
+
+### تغییر تنظیمات بعد از ویرایش `.env`
+- `docker restart app_backend` کافی **نیست** — env variables قدیمی cache می‌شوند
+- باید container را recreate کنید:
+  ```bash
+  cd /srv/deployment && docker compose up -d backend
+  ```
+
+### تنظیمات production سیستم مرکزی
+- `ENVIRONMENT="production"`, `DEBUG=false`, `RELOAD=false`
+- بعد از `RELOAD=false`، تغییرات کد خودکار اعمال نمی‌شوند — باید container ریستارت شود:
+  ```bash
+  # روی سرور مرکزی (10.10.10.20):
+  docker stop core-api && docker rm core-api
+  cd /srv/deployment/docker && docker compose up -d --no-build core-api
+  ```
+
+---
+
+## �📞 اطلاعات تماس
 
 - **Website**: https://tejarat.chat
 - **Admin**: https://admin.tejarat.chat
