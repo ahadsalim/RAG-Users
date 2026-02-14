@@ -60,36 +60,8 @@ class QueryView(APIView):
         data = serializer.validated_data
         user = request.user
         
-        # بررسی اشتراک کاربر (شخصی یا سازمانی)
-        active_subscription = user.get_active_subscription()
-        
-        if not user.is_superuser:
-            if not active_subscription:
-                return Response(
-                    {
-                        'error': 'شما اشتراک فعالی ندارید',
-                        'code': 'NO_ACTIVE_SUBSCRIPTION',
-                        'plans_url': '/api/v1/plans/'
-                    },
-                    status=status.HTTP_403_FORBIDDEN
-                )
-            
-            # بررسی محدودیت روزانه و ماهانه
-            can_query, message = active_subscription.can_query()
-            if not can_query:
-                return Response(
-                    {
-                        'error': message,
-                        'code': 'QUOTA_EXCEEDED',
-                        'usage': {
-                            'daily_used': active_subscription.queries_used_today,
-                            'daily_limit': active_subscription.plan.max_queries_per_day,
-                            'monthly_used': active_subscription.queries_used_month,
-                            'monthly_limit': active_subscription.plan.max_queries_per_month,
-                        }
-                    },
-                    status=status.HTTP_429_TOO_MANY_REQUESTS
-                )
+        # اشتراک توسط SubscriptionMiddleware بررسی و ست شده
+        active_subscription = getattr(request, 'subscription', None) or user.get_active_subscription()
         
         # دریافت یا ایجاد conversation
         conversation_id = data.get('conversation_id')
@@ -205,59 +177,22 @@ class QueryView(APIView):
             
             assistant_message.save()
             
-            # به‌روزرسانی آمار conversation - فقط پیام‌های کاربر
-            conversation.message_count = conversation.messages.filter(role='user').count()
-            conversation.token_usage = conversation.messages.aggregate(
-                total=Count('tokens')
-            )['total'] or 0
-            conversation.last_message_at = timezone.now()
-            conversation.save()
-            
-            # ثبت در audit log
-            AuditLog.objects.create(
-                user=user,
-                action='chat_query',
-                details={
+            # به‌روزرسانی آمار و ثبت audit log در پس‌زمینه (Celery)
+            from chat.tasks import log_audit, update_conversation_stats
+            update_conversation_stats.delay(str(conversation.id))
+            log_audit.delay(
+                str(user.id),
+                'chat_query',
+                {
                     'conversation_id': str(conversation.id),
                     'query_length': len(data['query']),
                     'tokens_used': assistant_message.tokens
                 },
-                ip_address=request.META.get('REMOTE_ADDR'),
-                user_agent=request.META.get('HTTP_USER_AGENT', '')
+                request.META.get('REMOTE_ADDR'),
+                request.META.get('HTTP_USER_AGENT', '')
             )
             
-            # به‌روزرسانی مصرف اشتراک
-            if 'active_subscription' in locals() and active_subscription:
-                from subscriptions.usage import UsageService
-                import re
-                
-                # استخراج توکن‌های ورودی و خروجی از پاسخ
-                input_tokens = response.get('input_tokens', 0)
-                output_tokens = response.get('output_tokens', 0)
-                
-                # اگر توکن‌ها در پاسخ نبودند، از متن DEBUG استخراج کن
-                if not input_tokens or not output_tokens:
-                    answer_text = response.get('answer', '')
-                    input_match = re.search(r'توکن ورودی[:\s]*`?(\d+)`?', answer_text)
-                    output_match = re.search(r'توکن خروجی[:\s]*`?(\d+)`?', answer_text)
-                    if input_match:
-                        input_tokens = int(input_match.group(1))
-                    if output_match:
-                        output_tokens = int(output_match.group(1))
-                
-                UsageService.log_usage(
-                    user=user,
-                    action_type='query',
-                    input_tokens=input_tokens,
-                    output_tokens=output_tokens,
-                    subscription=active_subscription,
-                    metadata={
-                        'conversation_id': str(conversation.id),
-                        'message_id': str(assistant_message.id),
-                    },
-                    ip_address=request.META.get('REMOTE_ADDR'),
-                    user_agent=request.META.get('HTTP_USER_AGENT', '')
-                )
+            # ثبت مصرف توسط SubscriptionMiddleware انجام می‌شود (بعد از response 200)
             
             # آماده‌سازی پاسخ - مطابق با API سیستم مرکزی
             response_data = {

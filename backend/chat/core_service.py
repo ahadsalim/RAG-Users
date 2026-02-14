@@ -50,7 +50,7 @@ class CoreAPIService:
         Returns:
             پاسخ شامل answer, file_analysis, conversation_id و غیره
         """
-        url = f"{self.base_url}/api/v1/query"
+        url = f"{self.base_url}/api/v1/query/"
         
         # ساخت payload مطابق با API سیستم مرکزی
         payload = {
@@ -104,7 +104,7 @@ class CoreAPIService:
         Returns:
             List of conversations
         """
-        url = f"{self.base_url}/api/v1/users/conversations"
+        url = f"{self.base_url}/api/v1/users/conversations/"
         params = {"limit": limit, "offset": offset}
         
         try:
@@ -140,7 +140,7 @@ class CoreAPIService:
         Returns:
             List of messages
         """
-        url = f"{self.base_url}/api/v1/users/conversations/{conversation_id}/messages"
+        url = f"{self.base_url}/api/v1/users/conversations/{conversation_id}/messages/"
         params = {"limit": limit, "offset": offset}
         
         try:
@@ -172,7 +172,7 @@ class CoreAPIService:
         Returns:
             True if successful
         """
-        url = f"{self.base_url}/api/v1/users/conversations/{conversation_id}"
+        url = f"{self.base_url}/api/v1/users/conversations/{conversation_id}/"
         
         try:
             async with httpx.AsyncClient(timeout=30, follow_redirects=True) as client:
@@ -206,7 +206,7 @@ class CoreAPIService:
         Returns:
             True if successful
         """
-        url = f"{self.base_url}/api/v1/query/feedback"
+        url = f"{self.base_url}/api/v1/query/feedback/"
         
         payload = {
             "message_id": message_id,
@@ -241,7 +241,7 @@ class CoreAPIService:
         Returns:
             User profile data
         """
-        url = f"{self.base_url}/api/v1/users/profile"
+        url = f"{self.base_url}/api/v1/users/profile/"
         
         try:
             async with httpx.AsyncClient(timeout=30, follow_redirects=True) as client:
@@ -271,7 +271,7 @@ class CoreAPIService:
         Returns:
             True if deletion was successful, False otherwise
         """
-        url = f"{self.base_url}/api/v1/users/conversations/{conversation_id}"
+        url = f"{self.base_url}/api/v1/users/conversations/{conversation_id}/"
         
         try:
             async with httpx.AsyncClient(timeout=30, follow_redirects=True) as client:

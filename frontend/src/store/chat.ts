@@ -243,13 +243,30 @@ export const useChatStore = create<ChatState>((set, get) => ({
         isLoading: false,
       }))
       
-      // Reload conversations to update sidebar
-      try {
-        const response = await axiosInstance.get(`${API_URL}/api/v1/chat/conversations/`)
-        set({ conversations: response.data.results || response.data })
-      } catch (err) {
-        console.error('Failed to reload conversations:', err)
-      }
+      // Update conversation in sidebar locally (avoid full reload)
+      set(state => {
+        const convId = response.data.conversation_id
+        const existingIndex = state.conversations.findIndex(c => c.id === convId)
+        if (existingIndex >= 0) {
+          const updated = [...state.conversations]
+          updated[existingIndex] = {
+            ...updated[existingIndex],
+            last_message_at: new Date().toISOString(),
+          }
+          return { conversations: updated }
+        } else {
+          // New conversation — add to top
+          const newConv: Conversation = {
+            id: convId,
+            title: content.slice(0, 50) + (content.length > 50 ? '...' : ''),
+            message_count: 1,
+            last_message_at: new Date().toISOString(),
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+          } as Conversation
+          return { conversations: [newConv, ...state.conversations] }
+        }
+      })
     } catch (error: any) {
       // تشخیص نوع خطا
       let errorMessage = 'خطا در ارسال پیام'
