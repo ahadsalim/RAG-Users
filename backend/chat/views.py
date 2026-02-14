@@ -178,19 +178,37 @@ class QueryView(APIView):
             assistant_message.save()
             
             # به‌روزرسانی آمار و ثبت audit log در پس‌زمینه (Celery)
-            from chat.tasks import log_audit, update_conversation_stats
-            update_conversation_stats.delay(str(conversation.id))
-            log_audit.delay(
-                str(user.id),
-                'chat_query',
-                {
-                    'conversation_id': str(conversation.id),
-                    'query_length': len(data['query']),
-                    'tokens_used': assistant_message.tokens
-                },
-                request.META.get('REMOTE_ADDR'),
-                request.META.get('HTTP_USER_AGENT', '')
-            )
+            try:
+                from chat.tasks import log_audit, update_conversation_stats
+                update_conversation_stats.delay(str(conversation.id))
+                log_audit.delay(
+                    str(user.id),
+                    'chat_query',
+                    {
+                        'conversation_id': str(conversation.id),
+                        'query_length': len(data['query']),
+                        'tokens_used': assistant_message.tokens
+                    },
+                    request.META.get('REMOTE_ADDR'),
+                    request.META.get('HTTP_USER_AGENT', '')
+                )
+            except Exception as celery_err:
+                logger.warning(f"Celery dispatch failed, running sync: {celery_err}")
+                # Fallback: اجرای همزمان
+                conversation.message_count = conversation.messages.filter(role='user').count()
+                conversation.last_message_at = timezone.now()
+                conversation.save(update_fields=['message_count', 'last_message_at'])
+                AuditLog.objects.create(
+                    user=user,
+                    action='chat_query',
+                    details={
+                        'conversation_id': str(conversation.id),
+                        'query_length': len(data['query']),
+                        'tokens_used': assistant_message.tokens
+                    },
+                    ip_address=request.META.get('REMOTE_ADDR', '0.0.0.0'),
+                    user_agent=request.META.get('HTTP_USER_AGENT', '')
+                )
             
             # ثبت مصرف توسط SubscriptionMiddleware انجام می‌شود (بعد از response 200)
             
