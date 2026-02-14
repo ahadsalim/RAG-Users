@@ -158,7 +158,7 @@ services:
       sh -c "
         python manage.py migrate --noinput &&
         python manage.py collectstatic --noinput &&
-        daphne -b 0.0.0.0 -p 8000 core.asgi:application
+        daphne -b 0.0.0.0 -p 8000 -t 120 --application-close-timeout 130 core.asgi:application
       "
 
   # Celery Worker

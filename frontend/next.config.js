@@ -2,6 +2,9 @@
 const nextConfig = {
   reactStrictMode: true,
   swcMinify: true,
+  experimental: {
+    proxyTimeout: 120000,
+  },
   images: {
     domains: ['localhost', 'core.app.ir', 'www.tejarat.chat', 'tejarat.chat'],
   },
