@@ -13,7 +13,7 @@ import { Message, Conversation } from '@/types/chat'
 
 export default function ChatPage() {
   const router = useRouter()
-  const { isAuthenticated, user, isLoading: authLoading } = useAuthStore()
+  const { isAuthenticated, user, isLoading: authLoading, accessToken } = useAuthStore()
   const store = useChatStore()
   
   // Extract with fallback
@@ -35,18 +35,17 @@ export default function ChatPage() {
   }, [])
   
   // Core RAG connection status
-  const [isConnected, setIsConnected] = useState(true)
+  const [isConnected, setIsConnected] = useState(false)
   const [connectionMessage, setConnectionMessage] = useState('')
   
   // Check Core RAG health periodically
   useEffect(() => {
+    if (!accessToken) return
+    
     const checkHealth = async () => {
       try {
-        const token = localStorage.getItem('access_token')
-        if (!token) return
-        
         const response = await fetch('/api/v1/chat/health/', {
-          headers: { 'Authorization': `Bearer ${token}` }
+          headers: { 'Authorization': `Bearer ${accessToken}` }
         })
         
         if (response.ok) {
@@ -68,7 +67,7 @@ export default function ChatPage() {
     const interval = setInterval(checkHealth, 30000)
     
     return () => clearInterval(interval)
-  }, [])
+  }, [accessToken])
 
   // Scroll to bottom when new messages arrive
   useEffect(() => {
