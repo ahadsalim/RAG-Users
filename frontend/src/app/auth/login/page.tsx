@@ -8,6 +8,7 @@ import { useAuthStore } from '@/store/auth'
 import { SiteSubtitle } from '@/components/SiteName'
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || ''
+const BALE_ENABLED = process.env.NEXT_PUBLIC_BALE_ENABLED === 'true'
 
 export default function LoginPage() {
   const router = useRouter()
@@ -42,7 +43,7 @@ export default function LoginPage() {
   const [otpCode, setOtpCode] = useState('')
   const [otpSent, setOtpSent] = useState(false)
   const [isLoadingOtp, setIsLoadingOtp] = useState(false)
-  const [otpMethod, setOtpMethod] = useState<'sms' | 'bale'>('bale') // Default to Bale
+  const [otpMethod, setOtpMethod] = useState<'sms' | 'bale'>(BALE_ENABLED ? 'bale' : 'sms')
   const [otpTimer, setOtpTimer] = useState(0)
   const [canResend, setCanResend] = useState(true)
   
@@ -196,15 +197,19 @@ export default function LoginPage() {
   const styles = {
     container: {
       minHeight: '100vh',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
       background: theme === 'light' 
         ? 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'
         : 'linear-gradient(135deg, #1a202c 0%, #2d3748 100%)',
-      padding: '20px',
       direction: 'rtl' as const,
-      transition: 'all 0.5s ease'
+      transition: 'all 0.5s ease',
+      overflowY: 'auto' as const
+    },
+    loginSection: {
+      minHeight: '100vh',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      padding: '20px'
     },
     card: {
       width: '100%',
@@ -512,7 +517,8 @@ export default function LoginPage() {
         }
       `}</style>
       <div style={styles.container}>
-      <div style={styles.card}>
+        <div style={styles.loginSection}>
+          <div style={styles.card}>
         <div style={styles.header}>
           {/* Logo */}
           <div style={styles.logoContainer}>
@@ -686,7 +692,7 @@ export default function LoginPage() {
               </div>
             </div>
 
-            {!otpSent && (
+            {!otpSent && BALE_ENABLED && (
               <div style={styles.inputGroup}>
                 <label style={styles.label}>روش ارسال کد</label>
                 <div style={styles.methodSelector}>
@@ -852,8 +858,100 @@ export default function LoginPage() {
             </div>
           </div>
         </div>
+        </div>
+        </div>
+
+        {/* Landing Page Sections */}
+        <div style={{
+          background: theme === 'light' ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.2)',
+          padding: '60px 20px',
+          backdropFilter: 'blur(10px)'
+        }}>
+          <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
+            <h2 style={{
+              textAlign: 'center',
+              fontSize: '32px',
+              fontWeight: 'bold',
+              color: '#fff',
+              marginBottom: '40px'
+            }}>
+              ویژگی‌های سامانه
+            </h2>
+            
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
+              gap: '30px',
+              marginBottom: '60px'
+            }}>
+              {[
+                { icon: '🤖', title: 'هوش مصنوعی پیشرفته', desc: 'پاسخگویی دقیق و سریع به سوالات حقوقی و کسب‌وکار' },
+                { icon: '📚', title: 'پایگاه دانش جامع', desc: 'دسترسی به قوانین، مقررات و اسناد حقوقی ایران' },
+                { icon: '⚡', title: 'پردازش سریع', desc: 'دریافت پاسخ در کمتر از چند ثانیه' },
+                { icon: '🔒', title: 'امنیت بالا', desc: 'حفاظت کامل از اطلاعات و حریم خصوصی شما' },
+                { icon: '💼', title: 'مشاوره تخصصی', desc: 'پاسخ‌های تخصصی برای مسائل حقوقی و کسب‌وکار' },
+                { icon: '📊', title: 'گزارش‌گیری', desc: 'ذخیره و مدیریت تاریخچه گفتگوها' }
+              ].map((feature, idx) => (
+                <div key={idx} style={{
+                  background: theme === 'light' ? 'rgba(255, 255, 255, 0.15)' : 'rgba(255, 255, 255, 0.05)',
+                  padding: '30px',
+                  borderRadius: '12px',
+                  textAlign: 'center',
+                  border: '1px solid rgba(255, 255, 255, 0.2)',
+                  transition: 'transform 0.3s ease'
+                }}>
+                  <div style={{ fontSize: '48px', marginBottom: '15px' }}>{feature.icon}</div>
+                  <h3 style={{ fontSize: '20px', fontWeight: 'bold', color: '#fff', marginBottom: '10px' }}>
+                    {feature.title}
+                  </h3>
+                  <p style={{ fontSize: '14px', color: 'rgba(255, 255, 255, 0.8)', lineHeight: '1.6' }}>
+                    {feature.desc}
+                  </p>
+                </div>
+              ))}
+            </div>
+
+            <div style={{
+              textAlign: 'center',
+              padding: '40px 20px',
+              background: theme === 'light' ? 'rgba(255, 255, 255, 0.15)' : 'rgba(255, 255, 255, 0.05)',
+              borderRadius: '12px',
+              border: '1px solid rgba(255, 255, 255, 0.2)'
+            }}>
+              <h3 style={{ fontSize: '24px', fontWeight: 'bold', color: '#fff', marginBottom: '15px' }}>
+                آماده شروع هستید؟
+              </h3>
+              <p style={{ fontSize: '16px', color: 'rgba(255, 255, 255, 0.9)', marginBottom: '20px' }}>
+                پس از ورود و استفاده رایگان، می‌توانید لیست قیمت پلن‌های اشتراک را مشاهده کنید
+              </p>
+              <button
+                onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+                style={{
+                  background: 'linear-gradient(135deg, #48bb78 0%, #38a169 100%)',
+                  color: '#fff',
+                  padding: '12px 40px',
+                  borderRadius: '8px',
+                  border: 'none',
+                  fontSize: '16px',
+                  fontWeight: 'bold',
+                  cursor: 'pointer',
+                  transition: 'all 0.3s ease'
+                }}
+                onMouseOver={(e) => {
+                  e.currentTarget.style.transform = 'translateY(-2px)'
+                  e.currentTarget.style.boxShadow = '0 10px 20px rgba(0,0,0,0.3)'
+                }}
+                onMouseOut={(e) => {
+                  e.currentTarget.style.transform = 'translateY(0)'
+                  e.currentTarget.style.boxShadow = 'none'
+                }}
+              >
+                بازگشت به بالا و ورود
+              </button>
+            </div>
+          </div>
+        </div>
       </div>
-    </div>
     </>
   )
 }

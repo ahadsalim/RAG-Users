@@ -250,6 +250,7 @@ services:
       args:
         NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-}
         NEXT_PUBLIC_WS_URL: ${NEXT_PUBLIC_WS_URL:-}
+        NEXT_PUBLIC_BALE_ENABLED: ${BALE_ENABLED:-false}
         BACKEND_URL: ${BACKEND_URL:-http://backend:8000}
     container_name: app_frontend
     restart: unless-stopped
@@ -258,6 +259,7 @@ services:
     environment:
       NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-}
       NEXT_PUBLIC_WS_URL: ${NEXT_PUBLIC_WS_URL:-}
+      NEXT_PUBLIC_BALE_ENABLED: ${BALE_ENABLED:-false}
       BACKEND_URL: ${BACKEND_URL:-http://backend:8000}
     expose:
       - "3000"  # Only exposed to docker network, not host
