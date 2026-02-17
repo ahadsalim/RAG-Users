@@ -623,6 +623,39 @@ docker-compose up -d frontend nginx_proxy_manager
 print_success "All services have been started."
 
 # ============================================
+# Step 9.3: Deploy Monitoring Services
+# ============================================
+print_header "Deploying monitoring services"
+
+if [ -f "${DEPLOYMENT_DIR}/monitoring.yml" ]; then
+    print_info "Starting monitoring exporters..."
+    docker-compose -f "${DEPLOYMENT_DIR}/monitoring.yml" up -d 2>&1 || print_warning "Monitoring services failed to start"
+    sleep 5
+    
+    # Verify exporters
+    EXPORTERS_OK=true
+    curl -s http://localhost:9100/metrics > /dev/null 2>&1 || EXPORTERS_OK=false
+    curl -s http://localhost:8080/metrics > /dev/null 2>&1 || EXPORTERS_OK=false
+    curl -s http://localhost:9187/metrics > /dev/null 2>&1 || EXPORTERS_OK=false
+    curl -s http://localhost:9121/metrics > /dev/null 2>&1 || EXPORTERS_OK=false
+    curl -s http://localhost:9419/metrics > /dev/null 2>&1 || EXPORTERS_OK=false
+    
+    if [ "$EXPORTERS_OK" = true ]; then
+        print_success "Monitoring exporters deployed successfully"
+        print_info "  Node Exporter:       http://localhost:9100/metrics"
+        print_info "  cAdvisor:            http://localhost:8080/metrics"
+        print_info "  PostgreSQL Exporter: http://localhost:9187/metrics"
+        print_info "  Redis Exporter:      http://localhost:9121/metrics"
+        print_info "  RabbitMQ Exporter:   http://localhost:9419/metrics"
+        print_info "  Promtail:            Shipping logs to Loki (10.10.10.40:3100)"
+    else
+        print_warning "Some monitoring exporters may not be responding yet"
+    fi
+else
+    print_info "Monitoring configuration not found, skipping monitoring setup"
+fi
+
+# ============================================
 # Step 9.4: Apply Critical Frontend/Backend Fixes
 # ============================================
 print_header "Applying critical fixes from deployment history"
