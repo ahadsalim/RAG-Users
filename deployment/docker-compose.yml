@@ -329,22 +329,108 @@ services:
       timeout: 10s
       retries: 3
 
-  # cAdvisor - Container Monitoring for Prometheus
+  # ============================================
+  # Monitoring Exporters
+  # ============================================
+
+  # Node Exporter - System metrics
+  node_exporter:
+    image: prom/node-exporter:v1.7.0
+    container_name: monitoring_node_exporter
+    restart: unless-stopped
+    command:
+      - '--path.procfs=/host/proc'
+      - '--path.rootfs=/rootfs'
+      - '--path.sysfs=/host/sys'
+      - '--collector.filesystem.mount-points-exclude=^/(sys|proc|dev|host|etc)($$|/)'
+    volumes:
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /:/rootfs:ro
+    ports:
+      - "9100:9100"
+    network_mode: host
+
+  # cAdvisor - Container metrics
   cadvisor:
     image: gcr.io/cadvisor/cadvisor:latest
-    container_name: app_cadvisor
+    container_name: monitoring_cadvisor
     restart: unless-stopped
-    ports:
-      - "8080:8080"
+    privileged: true
+    devices:
+      - /dev/kmsg
     volumes:
       - /:/rootfs:ro
       - /var/run:/var/run:ro
       - /sys:/sys:ro
       - /var/lib/docker/:/var/lib/docker:ro
       - /dev/disk/:/dev/disk:ro
-    privileged: true
-    devices:
-      - /dev/kmsg
+    ports:
+      - "8080:8080"
+    networks:
+      - app_network
+
+  # PostgreSQL Exporter
+  postgres_exporter:
+    image: prometheuscommunity/postgres-exporter:v0.15.0
+    container_name: monitoring_postgres_exporter
+    restart: unless-stopped
+    environment:
+      DATA_SOURCE_NAME: "postgresql://${DB_USER:-app_user}:${DB_PASSWORD}@postgres:5432/${DB_NAME:-app_db}?sslmode=disable"
+    ports:
+      - "9187:9187"
+    networks:
+      - app_network
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  # Redis Exporter
+  redis_exporter:
+    image: oliver006/redis_exporter:v1.55.0
+    container_name: monitoring_redis_exporter
+    restart: unless-stopped
+    environment:
+      REDIS_ADDR: "redis:6379"
+      REDIS_PASSWORD: "${REDIS_PASSWORD:-}"
+    ports:
+      - "9121:9121"
+    networks:
+      - app_network
+    depends_on:
+      redis:
+        condition: service_healthy
+
+  # RabbitMQ Exporter
+  rabbitmq_exporter:
+    image: kbudde/rabbitmq-exporter:latest
+    container_name: monitoring_rabbitmq_exporter
+    restart: unless-stopped
+    environment:
+      RABBIT_URL: "http://rabbitmq:15672"
+      RABBIT_USER: "${RABBITMQ_USER:-app}"
+      RABBIT_PASSWORD: "${RABBITMQ_PASSWORD}"
+      PUBLISH_PORT: "9419"
+      OUTPUT_FORMAT: "JSON"
+      RABBIT_CAPABILITIES: "bert,no_sort"
+    ports:
+      - "9419:9419"
+    networks:
+      - app_network
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+
+  # Promtail - Log shipper to Loki
+  promtail:
+    image: grafana/promtail:2.9.3
+    container_name: monitoring_promtail
+    restart: unless-stopped
+    volumes:
+      - /var/log:/var/log:ro
+      - /var/lib/docker/containers:/var/lib/docker/containers:ro
+      - ./promtail-config.yml:/etc/promtail/config.yml:ro
+    command: -config.file=/etc/promtail/config.yml
     networks:
       - app_network
 
