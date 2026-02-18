@@ -290,6 +290,19 @@ if [ -z "$LAN_SUBNET" ] && [ -z "$DMZ_SUBNET" ]; then
     ufw allow 81/tcp comment 'NPM Admin Panel - RESTRICT THIS!'
 fi
 
+# Allow Prometheus server (10.10.10.40) to access monitoring exporters
+print_info "Configuring monitoring exporters access for Prometheus server..."
+PROMETHEUS_SERVER="10.10.10.40"
+
+ufw allow from "$PROMETHEUS_SERVER" to any port 9100 proto tcp comment 'Prometheus Node Exporter'
+ufw allow from "$PROMETHEUS_SERVER" to any port 8080 proto tcp comment 'Prometheus cAdvisor'
+ufw allow from "$PROMETHEUS_SERVER" to any port 9187 proto tcp comment 'Prometheus PostgreSQL'
+ufw allow from "$PROMETHEUS_SERVER" to any port 9121 proto tcp comment 'Prometheus Redis'
+ufw allow from "$PROMETHEUS_SERVER" to any port 9419 proto tcp comment 'Prometheus RabbitMQ'
+ufw allow from "$PROMETHEUS_SERVER" to any port 9080 proto tcp comment 'Promtail'
+
+print_success "Monitoring ports configured for Prometheus server ($PROMETHEUS_SERVER)"
+
 # Configure DOCKER-USER iptables chain to prevent Docker bypassing UFW
 print_info "Configuring DOCKER-USER iptables chain..."
 
