@@ -31,6 +31,13 @@ services:
       --appendonly yes 
       --maxmemory 256mb 
       --maxmemory-policy allkeys-lru
+      --protected-mode yes
+      --rename-command SLAVEOF \"\"
+      --rename-command REPLICAOF \"\"
+      --rename-command CONFIG \"\"
+      --rename-command DEBUG \"\"
+      --rename-command FLUSHDB \"\"
+      --rename-command FLUSHALL \"\"
       $$([ -n \"$$REDIS_PASSWORD\" ] && echo \"--requirepass $$REDIS_PASSWORD\" || echo \"\")"
     environment:
       REDIS_PASSWORD: ${REDIS_PASSWORD:-}
@@ -348,7 +355,7 @@ services:
       - /sys:/host/sys:ro
       - /:/rootfs:ro
     ports:
-      - "9100:9100"
+      - "127.0.0.1:9100:9100"
     network_mode: host
 
   # cAdvisor - Container metrics
@@ -366,7 +373,7 @@ services:
       - /var/lib/docker/:/var/lib/docker:ro
       - /dev/disk/:/dev/disk:ro
     ports:
-      - "8080:8080"
+      - "127.0.0.1:8080:8080"
     networks:
       - app_network
 
@@ -378,7 +385,7 @@ services:
     environment:
       DATA_SOURCE_NAME: "postgresql://${DB_USER:-app_user}:${DB_PASSWORD}@postgres:5432/${DB_NAME:-app_db}?sslmode=disable"
     ports:
-      - "9187:9187"
+      - "127.0.0.1:9187:9187"
     networks:
       - app_network
     depends_on:
@@ -394,7 +401,7 @@ services:
       REDIS_ADDR: "redis:6379"
       REDIS_PASSWORD: "${REDIS_PASSWORD:-}"
     ports:
-      - "9121:9121"
+      - "127.0.0.1:9121:9121"
     networks:
       - app_network
     depends_on:
@@ -414,7 +421,7 @@ services:
       OUTPUT_FORMAT: "JSON"
       RABBIT_CAPABILITIES: "bert,no_sort"
     ports:
-      - "9419:9419"
+      - "127.0.0.1:9419:9419"
     networks:
       - app_network
     depends_on:
