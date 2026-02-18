@@ -355,7 +355,7 @@ services:
       - /sys:/host/sys:ro
       - /:/rootfs:ro
     ports:
-      - "127.0.0.1:9100:9100"
+      - "9100:9100"
     network_mode: host
 
   # cAdvisor - Container metrics
@@ -373,7 +373,9 @@ services:
       - /var/lib/docker/:/var/lib/docker:ro
       - /dev/disk/:/dev/disk:ro
     ports:
-      - "127.0.0.1:8080:8080"
+      - "8080:8080"
+    command:
+      - '--listen_ip=0.0.0.0'
     networks:
       - app_network
 
@@ -384,8 +386,9 @@ services:
     restart: unless-stopped
     environment:
       DATA_SOURCE_NAME: "postgresql://${DB_USER:-app_user}:${DB_PASSWORD}@postgres:5432/${DB_NAME:-app_db}?sslmode=disable"
+      PG_EXPORTER_WEB_LISTEN_ADDRESS: "0.0.0.0:9187"
     ports:
-      - "127.0.0.1:9187:9187"
+      - "9187:9187"
     networks:
       - app_network
     depends_on:
@@ -400,8 +403,9 @@ services:
     environment:
       REDIS_ADDR: "redis:6379"
       REDIS_PASSWORD: "${REDIS_PASSWORD:-}"
+      REDIS_EXPORTER_WEB_LISTEN_ADDRESS: "0.0.0.0:9121"
     ports:
-      - "127.0.0.1:9121:9121"
+      - "9121:9121"
     networks:
       - app_network
     depends_on:
@@ -418,10 +422,11 @@ services:
       RABBIT_USER: "${RABBITMQ_USER:-app}"
       RABBIT_PASSWORD: "${RABBITMQ_PASSWORD}"
       PUBLISH_PORT: "9419"
+      PUBLISH_ADDR: "0.0.0.0"
       OUTPUT_FORMAT: "JSON"
       RABBIT_CAPABILITIES: "bert,no_sort"
     ports:
-      - "127.0.0.1:9419:9419"
+      - "9419:9419"
     networks:
       - app_network
     depends_on:
