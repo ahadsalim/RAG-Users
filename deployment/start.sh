@@ -241,6 +241,24 @@ if ! command -v docker &> /dev/null; then
     apt-get update -qq
     apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
     
+    # Configure Docker daemon for cache server
+    print_info "Configuring Docker daemon for cache server..."
+    
+    cat > /etc/docker/daemon.json << 'DOCKER_DAEMON_JSON'
+{
+  "registry-mirrors": ["http://10.10.10.111:5001"],
+  "insecure-registries": [
+    "10.10.10.111:5001",
+    "10.10.10.111:5002",
+    "10.10.10.111:5003",
+    "10.10.10.111:5004",
+    "10.10.10.111:5005"
+  ]
+}
+DOCKER_DAEMON_JSON
+    
+    print_success "Docker daemon configured for cache server"
+    
     # Start Docker
     systemctl start docker
     systemctl enable docker
@@ -251,6 +269,29 @@ if ! command -v docker &> /dev/null; then
     print_success "Docker installed."
 else
     print_success "Docker is already installed ($(docker --version))."
+    
+    # Configure Docker daemon for cache server even if Docker is already installed
+    if [ ! -f /etc/docker/daemon.json ]; then
+        print_info "Configuring Docker daemon for cache server..."
+        
+        cat > /etc/docker/daemon.json << 'DOCKER_DAEMON_JSON'
+{
+  "registry-mirrors": ["http://10.10.10.111:5001"],
+  "insecure-registries": [
+    "10.10.10.111:5001",
+    "10.10.10.111:5002",
+    "10.10.10.111:5003",
+    "10.10.10.111:5004",
+    "10.10.10.111:5005"
+  ]
+}
+DOCKER_DAEMON_JSON
+        
+        systemctl restart docker
+        print_success "Docker daemon configured for cache server"
+    else
+        print_success "Docker daemon.json already exists"
+    fi
 fi
 
 # ============================================
