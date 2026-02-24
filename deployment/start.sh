@@ -382,7 +382,7 @@ print_success "DOCKER-USER iptables chain configured in /etc/ufw/after.rules"
 # Create systemd service to persist DOCKER-USER rules after Docker restart
 print_info "Creating systemd service for persistent DOCKER-USER rules..."
 
-cat > /etc/systemd/system/docker-user-iptables.service << SYSTEMD_SERVICE
+cat > /etc/systemd/system/docker-user-iptables.service << 'SYSTEMD_SERVICE'
 [Unit]
 Description=Docker DOCKER-USER iptables rules
 After=docker.service
@@ -392,32 +392,11 @@ PartOf=docker.service
 [Service]
 Type=oneshot
 RemainAfterExit=yes
-ExecStart=/bin/bash -c '\
-  iptables -F DOCKER-USER && \
-  iptables -A DOCKER-USER -m conntrack --ctstate ESTABLISHED,RELATED -j RETURN && \
-  iptables -A DOCKER-USER -s 172.16.0.0/12 -j RETURN && \
-SYSTEMD_SERVICE
-
-# Add LAN subnet to systemd service if detected
-if [ -n "$LAN_SUBNET" ]; then
-    echo "  iptables -A DOCKER-USER -s $LAN_SUBNET -j RETURN && \\" >> /etc/systemd/system/docker-user-iptables.service
-fi
-
-# Add DMZ subnet to systemd service if detected
-if [ -n "$DMZ_SUBNET" ]; then
-    echo "  iptables -A DOCKER-USER -s $DMZ_SUBNET -j RETURN && \\" >> /etc/systemd/system/docker-user-iptables.service
-fi
-
-# Complete systemd service
-cat >> /etc/systemd/system/docker-user-iptables.service << 'SYSTEMD_SERVICE_END'
-  iptables -A DOCKER-USER -s 127.0.0.0/8 -j RETURN && \
-  iptables -A DOCKER-USER -p tcp --dport 80 -j RETURN && \
-  iptables -A DOCKER-USER -p tcp --dport 443 -j RETURN && \
-  iptables -A DOCKER-USER -j DROP'
+ExecStart=/bin/bash -c 'iptables -F DOCKER-USER && iptables -A DOCKER-USER -m conntrack --ctstate ESTABLISHED,RELATED -j RETURN && iptables -A DOCKER-USER -s 172.16.0.0/12 -j RETURN && iptables -A DOCKER-USER -s 127.0.0.0/8 -j RETURN && iptables -A DOCKER-USER -p tcp --dport 80 -j RETURN && iptables -A DOCKER-USER -p tcp --dport 443 -j RETURN && iptables -A DOCKER-USER -j DROP'
 
 [Install]
 WantedBy=multi-user.target
-SYSTEMD_SERVICE_END
+SYSTEMD_SERVICE
 
 # Enable and start the service
 systemctl daemon-reload
