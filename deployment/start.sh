@@ -225,8 +225,8 @@ if ! command -v docker &> /dev/null; then
     mkdir -p /etc/apt/keyrings
     
     # Try to get GPG key from cache server first, fallback to internet
-    if curl -fsSL http://10.10.10.111/keys/docker.gpg -o /etc/apt/keyrings/docker.gpg 2>/dev/null; then
-        print_success "Docker GPG key downloaded from cache server"
+    if curl -fsSL http://10.10.10.111/keys/docker.gpg 2>/dev/null | gpg --dearmor -o /etc/apt/keyrings/docker.gpg; then
+        print_success "Docker GPG key downloaded from cache server and converted to binary format"
     else
         print_warning "Cache server unavailable, downloading GPG key from internet..."
         curl -fsSL https://download.docker.com/linux/$ID/gpg | gpg --dearmor -o /etc/apt/keyrings/docker.gpg
