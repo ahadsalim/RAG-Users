@@ -1,8 +1,12 @@
 # Frontend Dockerfile
-FROM node:20-alpine
+FROM 10.10.10.111:5001/library/node:20-alpine
 
 # Install dependencies
-RUN apk add --no-cache libc6-compat
+# Configure Alpine repositories to use cache server
+RUN echo "http://10.10.10.111:3143/alpine/v3.19/main" > /etc/apk/repositories && \
+    echo "http://10.10.10.111:3143/alpine/v3.19/community" >> /etc/apk/repositories && \
+    apk update && \
+    apk add --no-cache libc6-compat
 
 WORKDIR /app
 
@@ -11,11 +15,14 @@ COPY package*.json ./
 COPY yarn.lock* ./
 COPY pnpm-lock.yaml* ./
 
+# Configure npm to use cache server
+RUN npm config set registry http://10.10.10.111:4873
+
 # Install dependencies based on lockfile
 RUN \
-  if [ -f yarn.lock ]; then yarn install --frozen-lockfile; \
+  if [ -f yarn.lock ]; then yarn config set registry http://10.10.10.111:4873 && yarn install --frozen-lockfile; \
   elif [ -f package-lock.json ]; then npm ci; \
-  elif [ -f pnpm-lock.yaml ]; then corepack enable pnpm && pnpm i --frozen-lockfile; \
+  elif [ -f pnpm-lock.yaml ]; then corepack enable pnpm && pnpm config set registry http://10.10.10.111:4873 && pnpm i --frozen-lockfile; \
   else npm install; \
   fi
 

@@ -1,7 +1,7 @@
 services:
   # PostgreSQL Database
   postgres:
-    image: postgres:16-alpine
+    image: 10.10.10.111:5001/library/postgres:16-alpine
     container_name: app_postgres
     restart: unless-stopped
     environment:
@@ -23,7 +23,7 @@ services:
 
   # Redis Cache & Session Store
   redis:
-    image: redis:7-alpine
+    image: 10.10.10.111:5001/library/redis:7-alpine
     container_name: app_redis
     restart: unless-stopped
     command: >
@@ -62,7 +62,7 @@ services:
 
   # RabbitMQ Message Broker
   rabbitmq:
-    image: rabbitmq:3-management-alpine
+    image: 10.10.10.111:5001/library/rabbitmq:3-management-alpine
     container_name: app_rabbitmq
     restart: unless-stopped
     environment:
@@ -281,7 +281,7 @@ services:
 
   # Nginx Proxy Manager Database
   npm_db:
-    image: mariadb:10.11
+    image: 10.10.10.111:5001/library/mariadb:10.11
     container_name: app_npm_db
     restart: unless-stopped
     environment:
@@ -302,7 +302,7 @@ services:
 
   # Nginx Proxy Manager
   nginx_proxy_manager:
-    image: jc21/nginx-proxy-manager:latest
+    image: 10.10.10.111:5001/jc21/nginx-proxy-manager:latest
     container_name: app_npm
     restart: unless-stopped
     depends_on:
@@ -342,7 +342,7 @@ services:
 
   # Node Exporter - System metrics
   node_exporter:
-    image: prom/node-exporter:v1.7.0
+    image: 10.10.10.111:5001/prom/node-exporter:v1.7.0
     container_name: monitoring_node_exporter
     restart: unless-stopped
     command:
@@ -360,7 +360,7 @@ services:
 
   # cAdvisor - Container metrics
   cadvisor:
-    image: gcr.io/cadvisor/cadvisor:latest
+    image: 10.10.10.111:5001/zcube/cadvisor:latest
     container_name: monitoring_cadvisor
     restart: unless-stopped
     privileged: true
@@ -381,7 +381,7 @@ services:
 
   # PostgreSQL Exporter
   postgres_exporter:
-    image: prometheuscommunity/postgres-exporter:v0.15.0
+    image: 10.10.10.111:5003/prometheuscommunity/postgres-exporter:v0.15.0
     container_name: monitoring_postgres_exporter
     restart: unless-stopped
     environment:
@@ -397,7 +397,7 @@ services:
 
   # Redis Exporter
   redis_exporter:
-    image: oliver006/redis_exporter:v1.55.0
+    image: 10.10.10.111:5001/oliver006/redis_exporter:v1.55.0
     container_name: monitoring_redis_exporter
     restart: unless-stopped
     environment:
@@ -414,7 +414,7 @@ services:
 
   # RabbitMQ Exporter
   rabbitmq_exporter:
-    image: kbudde/rabbitmq-exporter:latest
+    image: 10.10.10.111:5001/kbudde/rabbitmq-exporter:latest
     container_name: monitoring_rabbitmq_exporter
     restart: unless-stopped
     environment:
@@ -435,7 +435,7 @@ services:
 
   # Promtail - Log shipper to Loki
   promtail:
-    image: grafana/promtail:2.9.3
+    image: 10.10.10.111:5001/grafana/promtail:2.9.3
     container_name: monitoring_promtail
     restart: unless-stopped
     volumes:

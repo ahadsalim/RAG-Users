@@ -1,5 +1,9 @@
 # Backend Dockerfile
-FROM python:3.11-slim
+FROM 10.10.10.111:5001/library/python:3.11-slim
+
+# Configure apt to use cache server
+RUN echo 'Acquire::http::Proxy "http://10.10.10.111:3142";' > /etc/apt/apt.conf.d/00proxy && \
+    echo 'Acquire::https::Proxy "http://10.10.10.111:3144";' >> /etc/apt/apt.conf.d/00proxy
 
 # Install system dependencies
 RUN apt-get update && apt-get install -y \
@@ -20,9 +24,15 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
 
 # Install Python dependencies
 COPY requirements.txt .
-RUN pip install --upgrade pip setuptools && \
-    pip install -r requirements.txt && \
-    pip install gunicorn daphne
+RUN pip install --upgrade pip setuptools \
+      --index-url http://10.10.10.111:3141/root/pypi/+simple/ \
+      --trusted-host 10.10.10.111 && \
+    pip install -r requirements.txt \
+      --index-url http://10.10.10.111:3141/root/pypi/+simple/ \
+      --trusted-host 10.10.10.111 && \
+    pip install gunicorn daphne \
+      --index-url http://10.10.10.111:3141/root/pypi/+simple/ \
+      --trusted-host 10.10.10.111
 
 # Copy project
 COPY . .

@@ -155,6 +155,27 @@ fi
 print_success "Operating system: $PRETTY_NAME"
 
 # ============================================
+# Step 0: Configure APT to use Cache Server
+# ============================================
+print_header "Configuring APT cache server"
+
+# Check if cache server is reachable
+if ping -c 1 -W 2 10.10.10.111 &> /dev/null; then
+    print_info "Cache server (10.10.10.111) is reachable. Configuring APT proxy..."
+    
+    # Configure apt to use cache server
+    echo 'Acquire::http::Proxy "http://10.10.10.111:3142";' > /etc/apt/apt.conf.d/00proxy
+    echo 'Acquire::https::Proxy "http://10.10.10.111:3144";' >> /etc/apt/apt.conf.d/00proxy
+    
+    print_success "APT configured to use cache server (10.10.10.111)"
+else
+    print_warning "Cache server (10.10.10.111) is not reachable. Using direct internet connection."
+    print_warning "If you're in an air-gapped environment, please check network connectivity to cache server."
+    # Remove proxy config if exists
+    rm -f /etc/apt/apt.conf.d/00proxy
+fi
+
+# ============================================
 # Step 1: System Update
 # ============================================
 print_header "System update"
@@ -202,7 +223,14 @@ if ! command -v docker &> /dev/null; then
     
     # Add Docker's official GPG key
     mkdir -p /etc/apt/keyrings
-    curl -fsSL https://download.docker.com/linux/$ID/gpg | gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+    
+    # Try to get GPG key from cache server first, fallback to internet
+    if curl -fsSL http://10.10.10.111/keys/docker.gpg -o /etc/apt/keyrings/docker.gpg 2>/dev/null; then
+        print_success "Docker GPG key downloaded from cache server"
+    else
+        print_warning "Cache server unavailable, downloading GPG key from internet..."
+        curl -fsSL https://download.docker.com/linux/$ID/gpg | gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+    fi
     
     # Set up repository
     echo \
