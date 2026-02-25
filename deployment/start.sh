@@ -263,6 +263,11 @@ DOCKER_DAEMON_JSON
     systemctl start docker
     systemctl enable docker
     
+    # Restart Docker to apply daemon.json configuration
+    print_info "Restarting Docker to apply insecure-registries configuration..."
+    systemctl restart docker
+    sleep 2
+    
     # Add current user to docker group
     usermod -aG docker $SUDO_USER 2>/dev/null || true
     
