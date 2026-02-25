@@ -14,6 +14,13 @@ RUN wget http://10.10.10.111/npm-offline/node_modules.tar.gz && \
     tar -xzf node_modules.tar.gz && \
     rm node_modules.tar.gz
 
+# Download Inter fonts from cache server
+RUN mkdir -p public/fonts/inter && \
+    cd public/fonts/inter && \
+    wget http://10.10.10.111/fonts/inter/UcC73FwrK3iLTeHuS_nVMrMxCp50SjIa25L7W0Q5n-wU.woff2 && \
+    wget http://10.10.10.111/fonts/inter/UcC73FwrK3iLTeHuS_nVMrMxCp50SjIa2pL7W0Q5n-wU.woff2 && \
+    wget http://10.10.10.111/fonts/inter/UcC73FwrK3iLTeHuS_nVMrMxCp50SjIa2ZL7W0Q5n-wU.woff2
+
 # Copy package files
 COPY package.json package-lock.json* ./
 
