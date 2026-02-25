@@ -18,7 +18,7 @@ CACHE_SERVER = 10.10.10.111
 | gcr.io mirror | `:5004` | images از `gcr.io` |
 | k8s mirror | `:5005` | images از `registry.k8s.io` |
 | PyPI (devpi) | `:3141` | Python packages |
-| npm (verdaccio) | `:4873` | Node.js packages |
+| npm offline cache | `:80/npm-offline/` | Node.js packages (offline) |
 | apt cache (HTTP) | `:3142` | Ubuntu/Debian apt packages (فقط HTTP) |
 | apt cache (HTTPS) | `:3144` | Ubuntu/Debian apt packages (HTTP + HTTPS tunneling) |
 | apk cache | `:3143` | Alpine Linux apk packages |
@@ -301,24 +301,75 @@ RUN apt-get update && apt-get install -y --no-install-recommends wget && \
 
 ---
 
-## مرحله ۵ — پیکربندی npm
+## مرحله ۵ — استفاده از npm offline cache
 
-```bash
-# دائمی
-npm config set registry http://10.10.10.111:4873
+**⚠️ توجه مهم:** به دلیل مشکلات corruption در verdaccio، از **npm offline cache** استفاده می‌کنیم.
 
-# یا فایل .npmrc در root پروژه
-echo "registry=http://10.10.10.111:4873" > .npmrc
-```
-
-در Dockerfile:
+### روش استفاده در Dockerfile:
 
 ```dockerfile
-FROM 10.10.10.111:5001/library/node:20-alpine
-RUN npm config set registry http://10.10.10.111:4873
-COPY package*.json ./
-RUN npm ci
+FROM node:20-alpine
+
+# Alpine repositories
+RUN echo "http://10.10.10.111:3143/alpine/v3.19/main" > /etc/apk/repositories && \
+    echo "http://10.10.10.111:3143/alpine/v3.19/community" >> /etc/apk/repositories && \
+    apk update && \
+    apk add --no-cache libc6-compat
+
+WORKDIR /app
+
+# دانلود npm offline cache (تمام packages از قبل دانلود شده)
+RUN wget -q http://10.10.10.111/npm-offline/node_modules.tar.gz && \
+    tar -xzf node_modules.tar.gz && \
+    rm node_modules.tar.gz
+
+# کپی package files
+COPY package.json package-lock.json* ./
+
+# بررسی که packages موجود هستند
+RUN ls node_modules/ | wc -l
+
+# کپی کد و build
+COPY . .
+
+# Build application
+RUN npm run build
+
+CMD ["npm", "run", "start"]
 ```
+
+### packages موجود در npm offline cache:
+
+**Core Next.js:**
+- next@14.0.3, react@18.2.0, react-dom@18.2.0
+- typescript@5.3.2, @types/node@20.10.0, @types/react@18.2.39, @types/react-dom@18.2.17
+
+**Styling:**
+- tailwindcss@3.3.6, autoprefixer@10.4.16, postcss@8.4.32
+- @tailwindcss/forms@0.5.11, @tailwindcss/typography@0.5.19
+- tailwind-merge@2.6.1, clsx@2.1.1
+
+**UI Components:**
+- @headlessui/react@1.7.19, @heroicons/react@2.2.0
+- lucide-react@0.294.0, framer-motion@10.18.0
+
+**Data & State:**
+- @tanstack/react-query@5.90.21, @tanstack/react-virtual@3.13.19
+- zustand@4.5.7, axios@1.13.5
+
+**Forms & Utilities:**
+- react-hook-form@7.71.2, react-hot-toast@2.6.0
+- react-intersection-observer@9.16.0, react-markdown@9.1.0
+- remark-gfm@4.0.1, recharts@2.15.4
+
+**Other:**
+- next-auth@4.24.13, next-themes@0.2.1, socket.io-client@4.8.3
+- eslint@8.54.0, eslint-config-next@14.0.3
+- date-fns@2.30.0, date-fns-jalali@2.30.0-0, highlight.js@11.11.1
+
+**مجموع:** 549 packages + dependencies (133MB compressed)
+
+**دانلود:** `http://10.10.10.111/npm-offline/node_modules.tar.gz`
 
 ---
 
@@ -328,7 +379,7 @@ RUN npm ci
 |-------|---------------|-----------------|
 | **Docker images** | ✅ از کش سرو می‌شود | ❌ خطای `not found` — باید به سرور کش اطلاع داده شود |
 | **pip packages** | ✅ از کش سرو می‌شود | ✅ اگر اینترنت داشته باشد خودش می‌رود می‌گیرد |
-| **npm packages** | ✅ از کش سرو می‌شود | ✅ اگر اینترنت داشته باشد خودش می‌رود می‌گیرد |
+| **npm offline cache** | ✅ تمام packages موجود است | ❌ باید package جدید به کش اضافه شود |
 | **apt packages** | ✅ از کش سرو می‌شود | ✅ اگر اینترنت داشته باشد خودش می‌رود می‌گیرد |
 
 **Docker image نداشت؟** روی سرور کش (`10.10.10.111`) اجرا کن:
@@ -360,6 +411,11 @@ pip install requests \
   --index-url http://10.10.10.111:3141/root/pypi/+simple/ \
   --trusted-host 10.10.10.111
 
+# npm offline cache
+wget -q http://10.10.10.111/npm-offline/node_modules.tar.gz && \
+  tar -tzf node_modules.tar.gz | head -5 && \
+  rm node_modules.tar.gz
+
 # apt
 sudo apt-get update && sudo apt-get install -y curl
 
@@ -388,6 +444,62 @@ nano /srv/deployment/cache-manager.sh warmup-images
 ```bash
 sudo bash /srv/deployment/cache-manager.sh
 ```
+
+---
+
+## اگر npm package جدیدی نیاز داشتی
+
+npm offline cache یک فایل ثابت است. برای اضافه کردن package جدید:
+
+**روی سرور کش (`10.10.10.111`) اجرا کن:**
+```bash
+sudo bash /srv/deployment/cache-manager.sh add-npm <package@version>
+```
+
+**مثال:**
+```bash
+# اضافه کردن یک package
+sudo bash /srv/deployment/cache-manager.sh add-npm lodash@4.17.21
+
+# اضافه کردن چند package
+sudo bash /srv/deployment/cache-manager.sh add-npm "axios@1.6.0 moment@2.29.4"
+```
+
+یا از منوی تعاملی:
+```bash
+sudo bash /srv/deployment/cache-manager.sh
+# گزینه 4 را انتخاب کن → npm packages را وارد کن
+```
+
+**نکته:** بعد از اضافه کردن package، سرور کاربران باید دوباره build بزند تا package جدید را دریافت کند.
+
+---
+
+## اگر npm package جدیدی نیاز داشتی
+
+npm offline cache یک فایل ثابت است. برای اضافه کردن package جدید:
+
+**روی سرور کش (`10.10.10.111`) اجرا کن:**
+```bash
+sudo bash /srv/deployment/cache-manager.sh add-npm <package@version>
+```
+
+**مثال:**
+```bash
+# اضافه کردن یک package
+sudo bash /srv/deployment/cache-manager.sh add-npm lodash@4.17.21
+
+# اضافه کردن چند package
+sudo bash /srv/deployment/cache-manager.sh add-npm "axios@1.6.0 moment@2.29.4"
+```
+
+یا از منوی تعاملی:
+```bash
+sudo bash /srv/deployment/cache-manager.sh
+# گزینه 4 را انتخاب کن → npm packages را وارد کن
+```
+
+**نکته:** بعد از اضافه کردن package، سرور کاربران باید دوباره build بزند تا package جدید را دریافت کند.
 
 ---
 

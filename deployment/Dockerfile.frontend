@@ -9,16 +9,13 @@ RUN echo "http://10.10.10.111:3143/alpine/v3.19/main" > /etc/apk/repositories &&
 
 WORKDIR /app
 
+# Download npm offline cache (pre-downloaded node_modules)
+RUN wget -q http://10.10.10.111/npm-offline/node_modules.tar.gz && \
+    tar -xzf node_modules.tar.gz && \
+    rm node_modules.tar.gz
+
 # Copy package files
 COPY package.json package-lock.json* ./
-
-# Configure npm to use cache server and install dependencies
-RUN npm config set registry http://10.10.10.111:4873 && \
-    if [ -f package-lock.json ]; then \
-        npm ci --prefer-offline --no-audit; \
-    else \
-        npm install --prefer-offline --no-audit; \
-    fi
 
 # Copy application code
 COPY . .
