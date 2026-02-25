@@ -1029,3 +1029,206 @@ Frontend از `NEXT_PUBLIC_API_URL=https://admin.tejarat.chat` برای API call
 - `JWT_SECRET_KEY` باید با سیستم مرکزی یکی باشد (start.sh الان می‌پرسد)
 - `RAG_CORE_BASE_URL=http://10.10.10.20:7001` (IP داخلی DMZ)
 - CORS headers را هرگز در NPM اضافه نکنید (Django مدیریت می‌کند)
+
+---
+
+## 🔒 سرور کش آفلاین (Offline Cache Server)
+
+> **آخرین به‌روزرسانی**: 2026-02-25  
+> **مهم**: این پروژه برای نصب در محیط‌های بدون اینترنت (air-gapped) طراحی شده است.
+
+### IP و پورت‌های سرور کش
+**IP سرور کش**: `10.10.10.111`
+
+| سرویس | پورت | توضیحات |
+|-------|------|---------||
+| Docker Hub mirror | `:5001` | Registry mirror برای `docker.io` |
+| ghcr.io mirror | `:5002` | Registry mirror برای GitHub Container Registry |
+| quay.io mirror | `:5003` | Registry mirror برای Quay.io |
+| gcr.io mirror | `:5004` | Registry mirror برای Google Container Registry |
+| k8s mirror | `:5005` | Registry mirror برای Kubernetes images |
+| PyPI (devpi) | `:3141` | Python package index |
+| npm offline cache | `/npm-offline/` | Pre-downloaded `node_modules.tar.gz` (133MB) |
+| apt cache (HTTP) | `:3142` | Ubuntu/Debian packages (HTTP) |
+| apt cache (HTTPS) | `:3144` | Ubuntu/Debian packages (HTTPS) |
+| apk cache | `:3143` | Alpine Linux packages |
+| GPG Keys | `:80` | Docker GPG keys و status page |
+| Offline PyPI packages | `/pypi-offline/` | Large Python packages |
+| HuggingFace Models | `/models/` | Pre-downloaded AI models |
+| Inter fonts | `/fonts/inter/` | Inter font files (3 variants) |
+
+### تنظیمات خودکار در start.sh
+اسکریپت `deployment/start.sh` به طور خودکار موارد زیر را تنظیم می‌کند:
+
+1. **APT Cache**: اگر سرور کش در دسترس باشد، APT را برای استفاده از proxy پیکربندی می‌کند
+2. **Docker daemon.json**: Registry mirrors و insecure-registries را تنظیم می‌کند
+3. **Docker GPG Key**: ابتدا از سرور کش دانلود می‌کند، در صورت عدم دسترسی از اینترنت
+4. **Restart Docker**: بعد از تنظیم daemon.json، Docker را restart می‌کند تا تنظیمات اعمال شود
+5. **Verification**: بررسی می‌کند که insecure-registries اعمال شده باشد
+
+### Dockerfiles و Cache Server
+
+#### Backend Dockerfile (`deployment/Dockerfile.backend`)
+```dockerfile
+# APT proxy configuration
+RUN echo 'Acquire::http::Proxy "http://10.10.10.111:3142";' > /etc/apt/apt.conf.d/00proxy && \
+    echo 'Acquire::https::Proxy "http://10.10.10.111:3144";' >> /etc/apt/apt.conf.d/00proxy
+
+# PyPI configuration
+RUN pip install --upgrade pip setuptools \
+    --index-url http://10.10.10.111:3141/root/pypi/+simple/ \
+    --trusted-host 10.10.10.111
+```
+
+#### Frontend Dockerfile (`deployment/Dockerfile.frontend`)
+```dockerfile
+# Alpine repositories
+RUN echo "http://10.10.10.111:3143/alpine/v3.19/main" > /etc/apk/repositories && \
+    echo "http://10.10.10.111:3143/alpine/v3.19/community" >> /etc/apk/repositories
+
+# npm offline cache (pre-downloaded node_modules)
+RUN wget http://10.10.10.111/npm-offline/node_modules.tar.gz && \
+    tar -xzf node_modules.tar.gz && \
+    rm node_modules.tar.gz
+
+# Inter fonts (offline) - جلوگیری از اتصال به fonts.gstatic.com
+RUN mkdir -p public/fonts/inter && \
+    cd public/fonts/inter && \
+    wget http://10.10.10.111/fonts/inter/UcC73FwrK3iLTeHuS_nVMrMxCp50SjIa25L7W0Q5n-wU.woff2 && \
+    wget http://10.10.10.111/fonts/inter/UcC73FwrK3iLTeHuS_nVMrMxCp50SjIa2pL7W0Q5n-wU.woff2 && \
+    wget http://10.10.10.111/fonts/inter/UcC73FwrK3iLTeHuS_nVMrMxCp50SjIa2ZL7W0Q5n-wU.woff2
+```
+
+### قوانین مهم برای توسعه‌دهندگان
+
+#### 1. اضافه کردن پکیج Python جدید
+```bash
+# قبل از اضافه کردن به requirements.txt:
+# ✅ به تیم سرور کش اطلاع دهید تا پکیج را در devpi cache کنند
+# ✅ نام و نسخه دقیق پکیج را مشخص کنید
+# مثال: requests==2.31.0
+
+# بعد از cache شدن:
+echo "requests==2.31.0" >> backend/requirements.txt
+docker compose build backend
+```
+
+#### 2. اضافه کردن پکیج npm جدید
+```bash
+# قبل از npm install:
+# ✅ به تیم سرور کش اطلاع دهید
+# ✅ آنها باید node_modules.tar.gz را دوباره بسازند (با npm install)
+# ✅ فایل جدید را در /srv/data/npm-offline/ سرور کش قرار دهند
+
+# بعد از آماده شدن:
+cd /srv/deployment
+docker compose build --no-cache frontend
+```
+
+#### 3. استفاده از Docker Image جدید
+```yaml
+# در docker-compose.yml:
+# ✅ صحیح - همیشه از prefix سرور کش استفاده کنید:
+image: 10.10.10.111:5001/library/postgres:16-alpine
+
+# ❌ غلط - بدون prefix:
+image: postgres:16-alpine
+
+# برای registries دیگر:
+# - ghcr.io → 10.10.10.111:5002/
+# - quay.io → 10.10.10.111:5003/
+# - gcr.io → 10.10.10.111:5004/
+# - k8s.gcr.io → 10.10.10.111:5005/
+```
+
+#### 4. استفاده از فونت‌های خارجی
+```typescript
+// ❌ غلط - اتصال به اینترنت در build time:
+import { Inter } from 'next/font/google'
+
+// ✅ صحیح - استفاده از فونت‌های لوکال:
+// 1. فونت‌ها را از سرور کش در Dockerfile دانلود کنید
+// 2. در globals.css با @font-face استفاده کنید
+// 3. یا از فونت‌های موجود مثل Vazirmatn استفاده کنید
+```
+
+#### 5. جلوگیری از اتصال به اینترنت در Build
+```dockerfile
+# ❌ مثال‌های غلط:
+RUN wget https://fonts.gstatic.com/...
+RUN curl https://github.com/...
+RUN npm install  # بدون offline cache
+
+# ✅ مثال‌های صحیح:
+RUN wget http://10.10.10.111/fonts/...
+RUN wget http://10.10.10.111/npm-offline/node_modules.tar.gz
+```
+
+### تست نصب آفلاین
+
+قبل از deploy در محیط production (بدون اینترنت):
+
+```bash
+# 1. سرور تست را از اینترنت قطع کنید
+sudo iptables -A OUTPUT -p tcp --dport 80 -j REJECT
+sudo iptables -A OUTPUT -p tcp --dport 443 -j REJECT
+
+# 2. اجرای اسکریپت نصب
+cd /srv/deployment
+sudo ./start.sh
+
+# 3. بررسی لاگ‌ها برای timeout یا connection error
+docker compose logs -f
+
+# 4. بازگرداندن اتصال اینترنت
+sudo iptables -F OUTPUT
+```
+
+### نصب سرور جدید (بدون اینترنت)
+
+```bash
+# پیش‌نیاز: دسترسی به سرور کش (10.10.10.111) و Git repository
+
+# 1. Clone repository
+git clone git@github.com:ahadsalim/RAG-Users.git /srv
+
+# 2. اجرای اسکریپت نصب
+cd /srv/deployment
+sudo ./start.sh
+
+# اسکریپت به طور خودکار:
+# ✅ سرور کش را تشخیص می‌دهد
+# ✅ Docker daemon را پیکربندی می‌کند
+# ✅ تمام images را از cache server می‌کشد
+# ✅ Services را build و deploy می‌کند
+# ✅ داده‌های اولیه را ایجاد می‌کند
+```
+
+### مشکلات رایج و راه‌حل
+
+#### خطا: "http: server gave HTTP response to HTTPS client"
+**علت**: Docker daemon تنظیمات insecure-registries را نخوانده  
+**راه‌حل**:
+```bash
+sudo systemctl restart docker
+# یا اجرای مجدد start.sh که خودش restart می‌کند
+```
+
+#### خطا: "tar: invalid magic" در npm offline cache
+**علت**: فایل node_modules.tar.gz ناقص دانلود شده (wget -q مشکل داشت)  
+**راه‌حل**: از `wget` بدون `-q` استفاده کنید (در Dockerfile.frontend اصلاح شده)
+
+#### خطا: timeout در build فرانت‌اند (139 ثانیه)
+**علت**: Next.js سعی می‌کند به Google Fonts متصل شود  
+**راه‌حل**: حذف `import { Inter } from 'next/font/google'` از layout.tsx (انجام شده)
+
+#### خطا: daemon.json موجود است اما اعمال نشده
+**علت**: Docker restart نشده بعد از ایجاد daemon.json  
+**راه‌حل**: start.sh اکنون خودکار بررسی و restart می‌کند
+
+### مستندات مرتبط
+- `CLIENT-SETUP.md` - راهنمای کامل تنظیم سرور برای استفاده آفلاین
+- `deployment/start.sh` - اسکریپت نصب خودکار
+- `deployment/Dockerfile.backend` - Dockerfile بکند با تنظیمات cache
+- `deployment/Dockerfile.frontend` - Dockerfile فرانت با npm offline cache
+- `deployment/docker-compose.yml` - تنظیمات registry mirrors
