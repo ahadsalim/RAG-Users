@@ -161,10 +161,16 @@ services:
     image: 10.10.10.111:5001/minio/minio:latest
 
   node-exporter:
-    image: 10.10.10.111:5003/prometheus/node-exporter:latest
+    image: 10.10.10.111:5003/prometheus/node-exporter:v1.7.0
+    # یا: 10.10.10.111:5003/prometheus/node-exporter:latest
 
   postgres-exporter:
-    image: 10.10.10.111:5003/prometheuscommunity/postgres-exporter:latest
+    image: 10.10.10.111:5003/prometheuscommunity/postgres-exporter:v0.15.0
+    # یا: 10.10.10.111:5003/prometheuscommunity/postgres-exporter:latest
+
+  redis-exporter:
+    image: 10.10.10.111:5003/oliver006/redis_exporter:v1.55.0
+    # یا: 10.10.10.111:5001/oliver006/redis_exporter:v1.55.0
 
   cadvisor:
     image: 10.10.10.111:5001/zcube/cadvisor:latest
@@ -237,25 +243,61 @@ pip install sentence-transformers==5.2.3 \
   --find-links ~/offline-packages/pypi-offline/
 ```
 
-در Dockerfile:
+**در Dockerfile (روش 1: نصب مستقیم از URL):**
 
 ```dockerfile
 FROM 10.10.10.111:5001/library/python:3.11-slim
 
-# کپی فایل‌های wheel به container
-COPY offline-packages/pypi-offline /tmp/pypi-offline
-
-# نصب از فایل‌های local
-RUN pip install --no-cache-dir \
-    --no-index \
-    --find-links /tmp/pypi-offline/ \
-    sentence-transformers==5.2.3
+# نصب مستقیم از سرور کش
+RUN pip install --no-cache-dir --no-index \
+    --find-links http://10.10.10.111/pypi-offline/ \
+    -r requirements-offline.txt
 ```
 
-**لیست packages آفلاین موجود:**
-- `sentence-transformers==5.2.3` + همه dependencies (66 packages، ~4GB)
-- شامل: `torch==2.10.0`, `transformers==5.2.0`, `numpy`, `scipy`, `scikit-learn`, `Pillow`, `nltk` و تمام CUDA packages
-- دانلود: `http://10.10.10.111/pypi-offline/`
+**در Dockerfile (روش 2: دانلود در build time):**
+
+```dockerfile
+FROM 10.10.10.111:5001/library/python:3.11-slim
+
+# دانلود packages در build time
+RUN apt-get update && apt-get install -y --no-install-recommends wget && \
+    mkdir -p /tmp/pypi-offline && \
+    cd /tmp/pypi-offline && \
+    wget -r -np -nH --cut-dirs=1 -R "index.html*" -A "*.whl,*.tar.gz" \
+        http://10.10.10.111/pypi-offline/ && \
+    pip install --no-cache-dir --no-index \
+        --find-links /tmp/pypi-offline/ \
+        -r /app/requirements-offline.txt && \
+    apt-get remove -y wget && apt-get autoremove -y && \
+    rm -rf /tmp/pypi-offline /var/lib/apt/lists/*
+```
+
+**لیست کامل packages آفلاین موجود:**
+
+**ML/AI Libraries:**
+- torch==2.10.0 (874MB، Python 3.11، manylinux_2_28)
+- sentence-transformers==5.2.3 + 2.3.1
+- transformers==5.2.0 + 4.57.6
+- scikit-learn==1.8.0
+- scipy==1.17.0
+- numpy==2.4.2
+
+**CUDA Libraries (15 پکیج، ~3.1GB):**
+- nvidia-cublas-cu12, nvidia-cudnn-cu12, nvidia-cufft-cu12
+- nvidia-cusolver-cu12, nvidia-cusparse-cu12, nvidia-cusparselt-cu12
+- nvidia-nccl-cu12, nvidia-nvjitlink-cu12, nvidia-nvshmem-cu12
+- nvidia-cuda-runtime-cu12, nvidia-cuda-nvrtc-cu12, nvidia-cuda-cupti-cu12
+- nvidia-curand-cu12, nvidia-cufile-cu12, nvidia-nvtx-cu12
+- triton==3.6.0
+
+**Utilities:**
+- huggingface_hub==1.4.1, tokenizers==0.22.2
+- Pillow==12.1.1, nltk==3.9.2
+- sympy==1.14.0, networkx==3.6.1
+- jinja2==3.1.6, fsspec==2026.2.0, filelock==3.24.3
+
+**دانلود:** `http://10.10.10.111/pypi-offline/`
+**مجموع:** 69 فایل، ~4GB
 
 ---
 
@@ -417,7 +459,7 @@ curl -s http://10.10.10.111:5003/v2/_catalog   # quay.io
 - `10.10.10.111:5001/prom/prometheus:latest`
 - `10.10.10.111:5001/prom/alertmanager:latest`
 - `10.10.10.111:5001/prom/blackbox-exporter:latest`
-- `10.10.10.111:5001/prom/node-exporter:latest`
+- `10.10.10.111:5001/prom/node-exporter:latest` (فقط latest - برای v1.7.0 از quay.io استفاده کنید)
 - `10.10.10.111:5001/oliver006/redis_exporter:latest`
 - `10.10.10.111:5001/oliver006/redis_exporter:v1.55.0`
 - `10.10.10.111:5001/kbudde/rabbitmq-exporter:latest`
@@ -517,26 +559,65 @@ pip install <package> \
 
 **URL:** `http://10.10.10.111/pypi-offline/`
 
-**Packages موجود:**
-- `sentence-transformers==5.2.3` + همه dependencies (66 packages، ~4GB)
-  - شامل: torch==2.10.0, transformers==5.2.0, numpy, scipy, scikit-learn, Pillow, nltk و CUDA packages
-- `sentence-transformers==2.3.1` + همه dependencies (نسخه قدیمی، برای سازگاری)
+**Packages موجود (69 فایل، ~4GB):**
+- `torch==2.10.0` (874MB) + تمام CUDA dependencies:
+  - nvidia-cublas-cu12==12.8.4.1 (567MB)
+  - nvidia-cudnn-cu12==9.10.2.21 (675MB)
+  - nvidia-cufft-cu12==11.3.3.83 (185MB)
+  - nvidia-cusolver-cu12==11.7.3.90 (256MB)
+  - nvidia-cusparse-cu12==12.5.8.93 (275MB)
+  - nvidia-cusparselt-cu12==0.7.1 (274MB)
+  - nvidia-nccl-cu12==2.27.5 (308MB)
+  - nvidia-nvjitlink-cu12==12.8.93 (38MB)
+  - nvidia-nvshmem-cu12==3.4.5 (133MB)
+  - nvidia-cuda-runtime-cu12, nvidia-cuda-nvrtc-cu12, nvidia-cuda-cupti-cu12
+  - nvidia-curand-cu12, nvidia-cufile-cu12, nvidia-nvtx-cu12
+  - triton==3.6.0 (180MB)
+- `sentence-transformers==5.2.3` + `sentence-transformers==2.3.1`
+- `transformers==5.2.0` + `transformers==4.57.6`
+- `scikit-learn==1.8.0` (9.1MB)
+- `scipy==1.17.0` (35MB)
+- `numpy==2.4.2` (16MB)
+- `Pillow==12.1.1` (7MB)
+- `nltk==3.9.2`, `sympy==1.14.0`, `networkx==3.6.1`
+- `huggingface_hub==1.4.1`, `tokenizers==0.22.2`
+- `jinja2==3.1.6`, `fsspec==2026.2.0`, `filelock==3.24.3`
+- `typing-extensions==4.15.0`, `packaging==26.0`
+- و 40+ پکیج دیگر
+
+**نکته مهم:** همه فایل‌ها برای Python 3.11 (`cp311`) و Debian/Ubuntu (`manylinux_2_27` یا `manylinux_2_28`) سازگار هستند.
 
 **نحوه استفاده:**
+
+**روش 1: نصب مستقیم از URL (بدون دانلود)**
+```bash
+pip install --no-cache-dir --no-index \
+  --find-links http://10.10.10.111/pypi-offline/ \
+  torch==2.10.0 sentence-transformers==5.2.3
+```
+
+**روش 2: دانلود و نصب آفلاین**
 ```bash
 # دانلود
 mkdir -p ~/offline-packages
-wget -r -np -nH --cut-dirs=1 -R "index.html*" http://10.10.10.111/pypi-offline/
+cd ~/offline-packages
+wget -r -np -nH --cut-dirs=1 -R "index.html*" -A "*.whl,*.tar.gz" \
+  http://10.10.10.111/pypi-offline/
 
-# نصب نسخه جدید
-pip install sentence-transformers==5.2.3 \
-  --no-index \
-  --find-links ~/offline-packages/pypi-offline/
+# نصب
+pip install --no-cache-dir --no-index \
+  --find-links ~/offline-packages/pypi-offline/ \
+  torch==2.10.0 sentence-transformers==5.2.3
+```
 
-# یا نسخه قدیمی
-pip install sentence-transformers==2.3.1 \
-  --no-index \
-  --find-links ~/offline-packages/pypi-offline/
+**روش 3: در Dockerfile**
+```dockerfile
+FROM 10.10.10.111:5001/library/python:3.11-slim
+
+# نصب مستقیم از URL
+RUN pip install --no-cache-dir --no-index \
+    --find-links http://10.10.10.111/pypi-offline/ \
+    -r requirements-offline.txt
 ```
 
 **افزودن package جدید به offline:**
