@@ -276,8 +276,11 @@ else
     print_success "Docker is already installed ($(docker --version))."
     
     # Configure Docker daemon for cache server even if Docker is already installed
+    DAEMON_JSON_NEEDS_UPDATE=false
+    
     if [ ! -f /etc/docker/daemon.json ]; then
         print_info "Configuring Docker daemon for cache server..."
+        DAEMON_JSON_NEEDS_UPDATE=true
         
         cat > /etc/docker/daemon.json << 'DOCKER_DAEMON_JSON'
 {
@@ -292,10 +295,25 @@ else
 }
 DOCKER_DAEMON_JSON
         
-        systemctl restart docker
-        print_success "Docker daemon configured for cache server"
+        print_success "Docker daemon.json created"
     else
-        print_success "Docker daemon.json already exists"
+        print_info "Docker daemon.json already exists, verifying configuration..."
+        
+        # Check if insecure-registries are configured
+        if ! docker info 2>/dev/null | grep -q "10.10.10.111:5001"; then
+            print_warning "Insecure registries not applied, will restart Docker..."
+            DAEMON_JSON_NEEDS_UPDATE=true
+        else
+            print_success "Docker daemon.json is correctly configured"
+        fi
+    fi
+    
+    # Always restart Docker if daemon.json was created or needs update
+    if [ "$DAEMON_JSON_NEEDS_UPDATE" = true ]; then
+        print_info "Restarting Docker to apply configuration..."
+        systemctl restart docker
+        sleep 2
+        print_success "Docker restarted and configuration applied"
     fi
 fi
 
