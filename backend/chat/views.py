@@ -122,10 +122,11 @@ class QueryView(APIView):
             file_attachments = None
             if 'file_attachments' in data and data['file_attachments']:
                 # فایل‌ها قبلاً آپلود شده‌اند و object_key دارند
+                # Core RAG API انتظار minio_url دارد، پس object_key را به minio_url تبدیل می‌کنیم
                 file_attachments = [
                     {
                         'filename': f['filename'],
-                        'object_key': f['object_key'],  # object_key از MinIO
+                        'minio_url': f['object_key'],  # Core RAG انتظار minio_url دارد
                         'file_type': f['file_type'],
                         'size_bytes': f.get('size_bytes')
                     }
