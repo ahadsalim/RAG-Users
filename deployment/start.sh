@@ -19,6 +19,13 @@
 #   - Added troubleshooting section
 # ============================================
 
+# Check for --part2 flag
+PART2_MODE=false
+if [ "$1" = "--part2" ]; then
+    PART2_MODE=true
+    print_info "Running Part 2 of installation..."
+fi
+
 # Exit only on critical errors, continue on non-critical ones
 set -e
 
@@ -91,9 +98,9 @@ generate_jwt_secret() {
     tr -dc 'A-Za-z0-9' < /dev/urandom | head -c 64
 }
 
-# Escape values for safe use in sed replacement (handles '&' and other special chars)
+# Escape values for safe use in sed replacement (handles special characters)
 escape_sed_replacement() {
-    printf '%s' "$1" | sed 's/[&]/\\&/g'
+    printf '%s' "$1" | sed 's/[&/\]/\\&/g'
 }
 
 # Detect network interfaces and subnets
@@ -120,7 +127,12 @@ detect_networks() {
     fi
     
     # Try to detect DMZ (additional private network, different from LAN)
-    DMZ_IP=$(ip -4 addr show | grep -oP '(?<=inet\s)\d+(\.\d+){3}' | grep -E '^(192\.168\.|10\.|172\.(1[6-9]|2[0-9]|3[0-1])\.)' | grep -v "^$(echo $LAN_IP | sed 's/\.[0-9]*$/\.')" | head -1)
+    if [ -n "$LAN_IP" ]; then
+        LAN_BASE=${LAN_IP%.*}  # Safer than sed for extracting base IP
+        DMZ_IP=$(ip -4 addr show | grep -oP '(?<=inet\s)\d+(\.\d+){3}' | grep -E '^(192\.168\.|10\.|172\.(1[6-9]|2[0-9]|3[0-1])\.)' | grep -v "^${LAN_BASE}\." | head -1)
+    else
+        DMZ_IP=$(ip -4 addr show | grep -oP '(?<=inet\s)\d+(\.\d+){3}' | grep -E '^(192\.168\.|10\.|172\.(1[6-9]|2[0-9]|3[0-1])\.)' | head -2 | tail -1)
+    fi
     if [ -n "$DMZ_IP" ]; then
         DMZ_SUBNET=$(echo "$DMZ_IP" | sed 's/\.[0-9]*$/\.0\/24/')
         print_success "DMZ detected: $DMZ_SUBNET (IP: $DMZ_IP)"
@@ -135,152 +147,123 @@ detect_networks() {
 # ============================================
 # Pre-flight checks
 # ============================================
-print_header "Pre-flight checks"
+if [ "$PART2_MODE" = false ]; then
+    print_header "Pre-flight checks"
 
-# Check if running as root
-if [ "$EUID" -ne 0 ]; then 
-    print_critical_error "Please run this script as root (use sudo)."
+    # Check if running as root
+    if [ "$EUID" -ne 0 ]; then 
+        print_critical_error "Please run this script as root (use sudo)."
+    fi
+
+    # Check OS
+    if [ ! -f /etc/os-release ]; then
+        print_critical_error "Unsupported operating system."
+    fi
+
+    source /etc/os-release
+    if [[ "$ID" != "ubuntu" ]] && [[ "$ID" != "debian" ]]; then
+        print_critical_error "This script is designed only for Ubuntu/Debian."
+    fi
+
+    print_success "Operating system: $PRETTY_NAME"
 fi
-
-# Check OS
-if [ ! -f /etc/os-release ]; then
-    print_critical_error "Unsupported operating system."
-fi
-
-source /etc/os-release
-if [[ "$ID" != "ubuntu" ]] && [[ "$ID" != "debian" ]]; then
-    print_critical_error "This script is designed only for Ubuntu/Debian."
-fi
-
-print_success "Operating system: $PRETTY_NAME"
 
 # ============================================
 # Step 0: Configure APT to use Cache Server
 # ============================================
-print_header "Configuring APT cache server"
+if [ "$PART2_MODE" = false ]; then
+    print_header "Configuring APT cache server"
 
-# Check if cache server is reachable
-if ping -c 1 -W 2 10.10.10.111 &> /dev/null; then
-    print_info "Cache server (10.10.10.111) is reachable. Configuring APT proxy..."
-    
-    # Configure apt to use cache server
-    echo 'Acquire::http::Proxy "http://10.10.10.111:3142";' > /etc/apt/apt.conf.d/00proxy
-    echo 'Acquire::https::Proxy "http://10.10.10.111:3144";' >> /etc/apt/apt.conf.d/00proxy
-    
-    print_success "APT configured to use cache server (10.10.10.111)"
-else
-    print_warning "Cache server (10.10.10.111) is not reachable. Using direct internet connection."
-    print_warning "If you're in an air-gapped environment, please check network connectivity to cache server."
-    # Remove proxy config if exists
-    rm -f /etc/apt/apt.conf.d/00proxy
+    # Check if cache server is reachable
+    if ping -c 1 -W 2 10.10.10.111 &> /dev/null; then
+        print_info "Cache server (10.10.10.111) is reachable. Configuring APT proxy..."
+        
+        # Configure apt to use cache server
+        echo 'Acquire::http::Proxy "http://10.10.10.111:3142";' > /etc/apt/apt.conf.d/00proxy
+        echo 'Acquire::https::Proxy "http://10.10.10.111:3144";' >> /etc/apt/apt.conf.d/00proxy
+        
+        print_success "APT configured to use cache server (10.10.10.111)"
+    else
+        print_warning "Cache server (10.10.10.111) is not reachable. Using direct internet connection."
+        print_warning "If you're in an air-gapped environment, please check network connectivity to cache server."
+        # Remove proxy config if exists
+        rm -f /etc/apt/apt.conf.d/00proxy
+    fi
 fi
 
 # ============================================
 # Step 1: System Update
 # ============================================
-print_header "System update"
+if [ "$PART2_MODE" = false ]; then
+    print_header "System update"
 
-apt-get update -qq
-apt-get upgrade -y -qq
-print_success "System updated successfully."
+    apt-get update -qq
+    apt-get upgrade -y -qq
+    print_success "System updated successfully."
+fi
 
 # ============================================
 # Step 2: Install Essential Tools
 # ============================================
-print_header "Installing essential tools"
+if [ "$PART2_MODE" = false ]; then
+    print_header "Installing essential tools"
 
-apt-get install -y -qq \
-    curl \
-    wget \
-    git \
-    vim \
-    nano \
-    htop \
-    net-tools \
-    ncdu \
-    ufw \
-    ca-certificates \
-    gnupg \
-    lsb-release \
-    software-properties-common \
-    python3 \
-    python3-pip \
-    openssl \
-    jq
+    apt-get install -y -qq \
+        curl \
+        wget \
+        git \
+        vim \
+        nano \
+        htop \
+        net-tools \
+        ncdu \
+        ufw \
+        ca-certificates \
+        gnupg \
+        lsb-release \
+        software-properties-common \
+        python3 \
+        python3-pip \
+        openssl \
+        jq
 
-print_success "Essential tools installed."
+    print_success "Essential tools installed."
+fi
 
 # ============================================
 # Step 3: Install Docker
 # ============================================
-print_header "Installing Docker"
+if [ "$PART2_MODE" = false ]; then
+    print_header "Installing Docker"
 
-if ! command -v docker &> /dev/null; then
-    print_info "Installing Docker..."
-    
-    # Remove old versions
-    apt-get remove -y docker docker-engine docker.io containerd runc 2>/dev/null || true
-    
-    # Add Docker's official GPG key
-    mkdir -p /etc/apt/keyrings
-    
-    # Try to get GPG key from cache server first, fallback to internet
-    if curl -fsSL http://10.10.10.111/keys/docker.gpg 2>/dev/null | gpg --dearmor -o /etc/apt/keyrings/docker.gpg; then
-        print_success "Docker GPG key downloaded from cache server and converted to binary format"
-    else
-        print_warning "Cache server unavailable, downloading GPG key from internet..."
-        curl -fsSL https://download.docker.com/linux/$ID/gpg | gpg --dearmor -o /etc/apt/keyrings/docker.gpg
-    fi
-    
-    # Set up repository
-    echo \
-      "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/$ID \
-      $(lsb_release -cs) stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null
-    
-    # Install Docker
-    apt-get update -qq
-    apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
-    
-    # Configure Docker daemon for cache server
-    print_info "Configuring Docker daemon for cache server..."
-    
-    cat > /etc/docker/daemon.json << 'DOCKER_DAEMON_JSON'
-{
-  "registry-mirrors": ["http://10.10.10.111:5001"],
-  "insecure-registries": [
-    "10.10.10.111:5001",
-    "10.10.10.111:5002",
-    "10.10.10.111:5003",
-    "10.10.10.111:5004",
-    "10.10.10.111:5005"
-  ]
-}
-DOCKER_DAEMON_JSON
-    
-    print_success "Docker daemon configured for cache server"
-    
-    # Start Docker
-    systemctl start docker
-    systemctl enable docker
-    
-    # Restart Docker to apply daemon.json configuration
-    print_info "Restarting Docker to apply insecure-registries configuration..."
-    systemctl restart docker
-    sleep 2
-    
-    # Add current user to docker group
-    usermod -aG docker $SUDO_USER 2>/dev/null || true
-    
-    print_success "Docker installed."
-else
-    print_success "Docker is already installed ($(docker --version))."
-    
-    # Configure Docker daemon for cache server even if Docker is already installed
-    DAEMON_JSON_NEEDS_UPDATE=false
-    
-    if [ ! -f /etc/docker/daemon.json ]; then
+    if ! command -v docker &> /dev/null; then
+        print_info "Installing Docker..."
+        
+        # Remove old versions
+        apt-get remove -y docker docker-engine docker.io containerd runc 2>/dev/null || true
+        
+        # Add Docker's official GPG key
+        mkdir -p /etc/apt/keyrings
+        
+        # Try to get GPG key from cache server first, fallback to internet
+        if curl -fsSL http://10.10.10.111/keys/docker.gpg 2>/dev/null | gpg --dearmor -o /etc/apt/keyrings/docker.gpg; then
+            print_success "Docker GPG key downloaded from cache server and converted to binary format"
+        else
+            print_warning "Cache server unavailable, downloading GPG key from internet..."
+            curl -fsSL https://download.docker.com/linux/$ID/gpg | gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+        fi
+        
+        # Set up repository
+        echo \
+          "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/$ID \
+          $(lsb_release -cs) stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null
+        
+        # Install Docker
+        apt-get update -qq
+        apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+        
+        # Configure Docker daemon for cache server
         print_info "Configuring Docker daemon for cache server..."
-        DAEMON_JSON_NEEDS_UPDATE=true
         
         cat > /etc/docker/daemon.json << 'DOCKER_DAEMON_JSON'
 {
@@ -295,111 +278,168 @@ else
 }
 DOCKER_DAEMON_JSON
         
-        print_success "Docker daemon.json created"
-    else
-        print_info "Docker daemon.json already exists, verifying configuration..."
+        print_success "Docker daemon configured for cache server"
         
-        # Check if insecure-registries are configured
-        if ! docker info 2>/dev/null | grep -q "10.10.10.111:5001"; then
-            print_warning "Insecure registries not applied, will restart Docker..."
+        # Start Docker
+        systemctl start docker
+        systemctl enable docker
+        
+        # Add current user to docker group
+        usermod -aG docker $SUDO_USER 2>/dev/null || true
+        
+        print_success "Docker installed."
+        print_info "Docker configuration updated. Manual restart required."
+        print_warning "⚠️  IMPORTANT: Docker must be restarted manually to apply insecure-registries configuration!"
+        echo ""
+        print_info "Please run this command manually:"
+        echo "  sudo systemctl restart docker"
+        echo ""
+        print_info "After restarting Docker, run the second part of installation:"
+        echo "  sudo ./start.sh --part2"
+        echo ""
+        print_success "Part 1 of installation completed successfully."
+        exit 0
+    else
+        print_success "Docker is already installed ($(docker --version))."
+        
+        # Configure Docker daemon for cache server even if Docker is already installed
+        DAEMON_JSON_NEEDS_UPDATE=false
+        
+        if [ ! -f /etc/docker/daemon.json ]; then
+            print_info "Configuring Docker daemon for cache server..."
             DAEMON_JSON_NEEDS_UPDATE=true
+            
+            cat > /etc/docker/daemon.json << 'DOCKER_DAEMON_JSON'
+{
+  "registry-mirrors": ["http://10.10.10.111:5001"],
+  "insecure-registries": [
+    "10.10.10.111:5001",
+    "10.10.10.111:5002",
+    "10.10.10.111:5003",
+    "10.10.10.111:5004",
+    "10.10.10.111:5005"
+  ]
+}
+DOCKER_DAEMON_JSON
+            
+            print_success "Docker daemon.json created"
         else
-            print_success "Docker daemon.json is correctly configured"
+            print_info "Docker daemon.json already exists, verifying configuration..."
+            
+            # Check if insecure-registries are configured
+            if ! docker info 2>/dev/null | grep -q "10.10.10.111:5001"; then
+                print_warning "Insecure registries not applied, will restart Docker..."
+                DAEMON_JSON_NEEDS_UPDATE=true
+            else
+                print_success "Docker daemon.json is correctly configured"
+            fi
         fi
-    fi
-    
-    # Always restart Docker if daemon.json was created or needs update
-    if [ "$DAEMON_JSON_NEEDS_UPDATE" = true ]; then
-        print_info "Restarting Docker to apply configuration..."
-        systemctl restart docker
-        sleep 2
-        print_success "Docker restarted and configuration applied"
+        
+        # Always restart Docker if daemon.json was created or needs update
+        if [ "$DAEMON_JSON_NEEDS_UPDATE" = true ]; then
+            print_info "Docker configuration updated. Manual restart required."
+            print_warning "⚠️  IMPORTANT: Docker must be restarted manually to apply insecure-registries configuration!"
+            echo ""
+            print_info "Please run this command manually:"
+            echo "  sudo systemctl restart docker"
+            echo ""
+            print_info "After restarting Docker, run the second part of installation:"
+            echo "  sudo ./start.sh --part2"
+            echo ""
+            print_success "Part 1 of installation completed successfully."
+            exit 0
+        else
+            print_success "Docker configuration is up to date."
+        fi
     fi
 fi
 
 # ============================================
 # Step 4: Install Docker Compose
 # ============================================
-print_header "Installing Docker Compose"
+if [ "$PART2_MODE" = false ]; then
+    print_header "Installing Docker Compose"
 
-if ! command -v docker-compose &> /dev/null; then
-    print_info "Installing Docker Compose..."
-    
-    # Create symbolic link for docker compose plugin
-    ln -sf /usr/libexec/docker/cli-plugins/docker-compose /usr/local/bin/docker-compose 2>/dev/null || \
-    ln -sf /usr/bin/docker-compose /usr/local/bin/docker-compose 2>/dev/null || true
-    
-    print_success "Docker Compose installed."
-else
-    print_success "Docker Compose is already installed ($(docker-compose --version))."
+    if ! command -v docker compose &> /dev/null; then
+        print_info "Installing Docker Compose..."
+        
+        # Create symbolic link for docker compose plugin
+        ln -sf /usr/libexec/docker/cli-plugins/docker-compose /usr/local/bin/docker-compose 2>/dev/null || \
+        ln -sf /usr/bin/docker-compose /usr/local/bin/docker-compose 2>/dev/null || true
+        
+        print_success "Docker Compose installed."
+    else
+        print_success "Docker Compose is already installed ($(docker compose --version))."
+    fi
 fi
 
 # ============================================
 # Step 5: Configure UFW Firewall (Security Hardened)
 # ============================================
-print_header "Configuring UFW firewall with security hardening"
+if [ "$PART2_MODE" = false ]; then
+    print_header "Configuring UFW firewall with security hardening"
 
-# Detect network configuration
-detect_networks
+    # Detect network configuration
+    detect_networks
 
-print_info "Applying advanced firewall rules..."
+    print_info "Applying advanced firewall rules..."
 
-# Backup existing UFW rules
-if [ -f /etc/ufw/after.rules ]; then
-    cp /etc/ufw/after.rules /etc/ufw/after.rules.backup.$(date +%Y%m%d_%H%M%S) 2>/dev/null || true
-fi
+    # Backup existing UFW rules
+    if [ -f /etc/ufw/after.rules ]; then
+        cp /etc/ufw/after.rules /etc/ufw/after.rules.backup.$(date +%Y%m%d_%H%M%S) 2>/dev/null || true
+    fi
 
-# Reset UFW to default (no backups)
-ufw --force disable 2>/dev/null || true
-echo "y" | ufw --force reset --no-backup 2>/dev/null || true
+    # Reset UFW to default (no backups)
+    ufw --force disable 2>/dev/null || true
+    echo "y" | ufw --force reset --no-backup 2>/dev/null || true
 
-# Default policies
-ufw default deny incoming
-ufw default allow outgoing
-ufw default deny routed
+    # Default policies
+    ufw default deny incoming
+    ufw default allow outgoing
+    ufw default deny routed
 
-# Allow SSH (Critical - never block!)
-ufw allow 22/tcp comment 'SSH'
+    # Allow SSH (Critical - never block!)
+    ufw allow 22/tcp comment 'SSH'
 
-# Allow HTTP and HTTPS from anywhere
-ufw allow 80/tcp comment 'HTTP'
-ufw allow 443/tcp comment 'HTTPS'
+    # Allow HTTP and HTTPS from anywhere
+    ufw allow 80/tcp comment 'HTTP'
+    ufw allow 443/tcp comment 'HTTPS'
 
-# Restrict NPM Admin Panel to LAN/DMZ only
-if [ -n "$LAN_SUBNET" ]; then
-    ufw allow from "$LAN_SUBNET" to any port 81 proto tcp comment 'NPM Admin - LAN only'
-    print_success "NPM Admin (port 81) restricted to LAN: $LAN_SUBNET"
-fi
+    # Restrict NPM Admin Panel to LAN/DMZ only
+    if [ -n "$LAN_SUBNET" ]; then
+        ufw allow from "$LAN_SUBNET" to any port 81 proto tcp comment 'NPM Admin - LAN only'
+        print_success "NPM Admin (port 81) restricted to LAN: $LAN_SUBNET"
+    fi
 
-if [ -n "$DMZ_SUBNET" ]; then
-    ufw allow from "$DMZ_SUBNET" to any port 81 proto tcp comment 'NPM Admin - DMZ only'
-    print_success "NPM Admin (port 81) restricted to DMZ: $DMZ_SUBNET"
-fi
+    if [ -n "$DMZ_SUBNET" ]; then
+        ufw allow from "$DMZ_SUBNET" to any port 81 proto tcp comment 'NPM Admin - DMZ only'
+        print_success "NPM Admin (port 81) restricted to DMZ: $DMZ_SUBNET"
+    fi
 
-if [ -z "$LAN_SUBNET" ] && [ -z "$DMZ_SUBNET" ]; then
-    print_warning "No LAN/DMZ detected - NPM Admin will be accessible from internet!"
-    print_warning "Manually restrict later: sudo ufw allow from YOUR_LAN_SUBNET to any port 81"
-    ufw allow 81/tcp comment 'NPM Admin Panel - RESTRICT THIS!'
-fi
+    if [ -z "$LAN_SUBNET" ] && [ -z "$DMZ_SUBNET" ]; then
+        print_warning "No LAN/DMZ detected - NPM Admin will be accessible from internet!"
+        print_warning "Manually restrict later: sudo ufw allow from YOUR_LAN_SUBNET to any port 81"
+        ufw allow 81/tcp comment 'NPM Admin Panel - RESTRICT THIS!'
+    fi
 
-# Allow Prometheus server (10.10.10.40) to access monitoring exporters
-print_info "Configuring monitoring exporters access for Prometheus server..."
-PROMETHEUS_SERVER="10.10.10.40"
+    # Allow Prometheus server (10.10.10.40) to access monitoring exporters
+    print_info "Configuring monitoring exporters access for Prometheus server..."
+    PROMETHEUS_SERVER="10.10.10.40"
 
-ufw allow from "$PROMETHEUS_SERVER" to any port 9100 proto tcp comment 'Prometheus Node Exporter'
-ufw allow from "$PROMETHEUS_SERVER" to any port 8080 proto tcp comment 'Prometheus cAdvisor'
-ufw allow from "$PROMETHEUS_SERVER" to any port 9187 proto tcp comment 'Prometheus PostgreSQL'
-ufw allow from "$PROMETHEUS_SERVER" to any port 9121 proto tcp comment 'Prometheus Redis'
-ufw allow from "$PROMETHEUS_SERVER" to any port 9419 proto tcp comment 'Prometheus RabbitMQ'
-ufw allow from "$PROMETHEUS_SERVER" to any port 9080 proto tcp comment 'Promtail'
+    ufw allow from "$PROMETHEUS_SERVER" to any port 9100 proto tcp comment 'Prometheus Node Exporter'
+    ufw allow from "$PROMETHEUS_SERVER" to any port 8080 proto tcp comment 'Prometheus cAdvisor'
+    ufw allow from "$PROMETHEUS_SERVER" to any port 9187 proto tcp comment 'Prometheus PostgreSQL'
+    ufw allow from "$PROMETHEUS_SERVER" to any port 9121 proto tcp comment 'Prometheus Redis'
+    ufw allow from "$PROMETHEUS_SERVER" to any port 9419 proto tcp comment 'Prometheus RabbitMQ'
+    ufw allow from "$PROMETHEUS_SERVER" to any port 9080 proto tcp comment 'Promtail'
 
-print_success "Monitoring ports configured for Prometheus server ($PROMETHEUS_SERVER)"
+    print_success "Monitoring ports configured for Prometheus server ($PROMETHEUS_SERVER)"
 
-# Configure DOCKER-USER iptables chain to prevent Docker bypassing UFW
-print_info "Configuring DOCKER-USER iptables chain..."
+    # Configure DOCKER-USER iptables chain to prevent Docker bypassing UFW
+    print_info "Configuring DOCKER-USER iptables chain..."
 
-# Add DOCKER-USER rules to /etc/ufw/after.rules
-cat >> /etc/ufw/after.rules << 'DOCKER_USER_RULES'
+    # Add DOCKER-USER rules to /etc/ufw/after.rules
+    cat >> /etc/ufw/after.rules << 'DOCKER_USER_RULES'
 
 # DOCKER-USER chain rules to prevent Docker from bypassing UFW
 *filter
@@ -413,20 +453,20 @@ cat >> /etc/ufw/after.rules << 'DOCKER_USER_RULES'
 
 DOCKER_USER_RULES
 
-# Add LAN subnet if detected
-if [ -n "$LAN_SUBNET" ]; then
-    echo "# Allow from LAN subnet" >> /etc/ufw/after.rules
-    echo "-A DOCKER-USER -s $LAN_SUBNET -j RETURN" >> /etc/ufw/after.rules
-fi
+    # Add LAN subnet if detected
+    if [ -n "$LAN_SUBNET" ]; then
+        echo "# Allow from LAN subnet" >> /etc/ufw/after.rules
+        echo "-A DOCKER-USER -s $LAN_SUBNET -j RETURN" >> /etc/ufw/after.rules
+    fi
 
-# Add DMZ subnet if detected
-if [ -n "$DMZ_SUBNET" ]; then
-    echo "# Allow from DMZ subnet" >> /etc/ufw/after.rules
-    echo "-A DOCKER-USER -s $DMZ_SUBNET -j RETURN" >> /etc/ufw/after.rules
-fi
+    # Add DMZ subnet if detected
+    if [ -n "$DMZ_SUBNET" ]; then
+        echo "# Allow from DMZ subnet" >> /etc/ufw/after.rules
+        echo "-A DOCKER-USER -s $DMZ_SUBNET -j RETURN" >> /etc/ufw/after.rules
+    fi
 
-# Complete DOCKER-USER rules
-cat >> /etc/ufw/after.rules << 'DOCKER_USER_RULES_END'
+    # Complete DOCKER-USER rules
+    cat >> /etc/ufw/after.rules << 'DOCKER_USER_RULES_END'
 
 # Allow localhost
 -A DOCKER-USER -s 127.0.0.0/8 -j RETURN
@@ -441,12 +481,12 @@ cat >> /etc/ufw/after.rules << 'DOCKER_USER_RULES_END'
 COMMIT
 DOCKER_USER_RULES_END
 
-print_success "DOCKER-USER iptables chain configured in /etc/ufw/after.rules"
+    print_success "DOCKER-USER iptables chain configured in /etc/ufw/after.rules"
 
-# Create systemd service to persist DOCKER-USER rules after Docker restart
-print_info "Creating systemd service for persistent DOCKER-USER rules..."
+    # Create systemd service to persist DOCKER-USER rules after Docker restart
+    print_info "Creating systemd service for persistent DOCKER-USER rules..."
 
-cat > /etc/systemd/system/docker-user-iptables.service << 'SYSTEMD_SERVICE'
+    cat > /etc/systemd/system/docker-user-iptables.service << 'SYSTEMD_SERVICE'
 [Unit]
 Description=Docker DOCKER-USER iptables rules
 After=docker.service
@@ -462,29 +502,30 @@ ExecStart=/bin/bash -c 'iptables -F DOCKER-USER && iptables -A DOCKER-USER -m co
 WantedBy=multi-user.target
 SYSTEMD_SERVICE
 
-# Enable and start the service
-systemctl daemon-reload
-systemctl enable docker-user-iptables.service
-systemctl start docker-user-iptables.service
+    # Enable and start the service
+    systemctl daemon-reload
+    systemctl enable docker-user-iptables.service
+    systemctl start docker-user-iptables.service
 
-print_success "DOCKER-USER systemd service created and enabled"
+    print_success "DOCKER-USER systemd service created and enabled"
 
-# Enable UFW
-echo "y" | ufw --force enable
+    # Enable UFW
+    echo "y" | ufw --force enable
 
-# Reload UFW to apply DOCKER-USER rules
-ufw reload
+    # Reload UFW to apply DOCKER-USER rules
+    ufw reload
 
-print_success "UFW firewall enabled with security hardening."
-print_info "Firewall status:"
-ufw status numbered
+    print_success "UFW firewall enabled with security hardening."
+    print_info "Firewall status:"
+    ufw status numbered
 
-# Verify DOCKER-USER chain
-print_info "Verifying DOCKER-USER iptables chain..."
-if iptables -L DOCKER-USER -n | grep -q "DROP"; then
-    print_success "DOCKER-USER chain is active and blocking unauthorized access"
-else
-    print_warning "DOCKER-USER chain may not be fully active yet (will activate after Docker starts)"
+    # Verify DOCKER-USER chain
+    print_info "Verifying DOCKER-USER iptables chain..."
+    if iptables -L DOCKER-USER -n | grep -q "DROP"; then
+        print_success "DOCKER-USER chain is active and blocking unauthorized access"
+    else
+        print_warning "DOCKER-USER chain may not be fully active yet (will activate after Docker starts)"
+    fi
 fi
 
 # ============================================
@@ -505,10 +546,13 @@ if [ ! -f "$ENV_FILE" ]; then
         print_info "Creating .env from .env.example..."
         cp "$ENV_EXAMPLE" "$ENV_FILE"
         
-        # Ask for domain name
-        echo ""
-        print_info "Domain configuration"
-        read -p "Enter your domain (e.g. example.com): " DOMAIN_NAME
+        # Loop until user confirms the configuration
+        USER_CONFIRMED=false
+        while [ "$USER_CONFIRMED" = false ]; do
+            # Ask for domain name
+            echo ""
+            print_info "Domain configuration"
+            read -p "Enter your domain (e.g. tejarat.chat): " DOMAIN_NAME
         if [ -z "$DOMAIN_NAME" ]; then
             DOMAIN_NAME="localhost"
             print_info "Using 'localhost' as the default domain."
@@ -556,7 +600,10 @@ if [ ! -f "$ENV_FILE" ]; then
         echo ""
         print_info "S3/MinIO configuration (برای آپلود فایل)"
         print_warning "اگر S3/MinIO ندارید، Enter بزنید. بعداً در .env اضافه کنید."
-        read -p "S3_ENDPOINT_URL (e.g. https://s3.yourdomain.com) [press Enter to skip]: " S3_ENDPOINT_URL
+        read -p "S3_ENDPOINT_URL [http://10.10.10.50:9000]: " S3_ENDPOINT_URL
+        if [ -z "$S3_ENDPOINT_URL" ]; then
+            S3_ENDPOINT_URL="http://10.10.10.50:9000"
+        fi
         if [ -n "$S3_ENDPOINT_URL" ]; then
             read -p "S3_ACCESS_KEY_ID: " S3_ACCESS_KEY_ID
             read -p "S3_SECRET_ACCESS_KEY: " S3_SECRET_ACCESS_KEY
@@ -564,19 +611,19 @@ if [ ! -f "$ENV_FILE" ]; then
             if [ -z "$S3_TEMP_BUCKET" ]; then
                 S3_TEMP_BUCKET="temp-userfile"
             fi
-            read -p "S3_USE_SSL (true/false) [true]: " S3_USE_SSL
+            read -p "S3_USE_SSL (true/false) [false]: " S3_USE_SSL
             if [ -z "$S3_USE_SSL" ]; then
-                S3_USE_SSL="true"
+                S3_USE_SSL="false"
             fi
             S3_REGION="us-east-1"
             print_success "S3/MinIO configuration saved."
         else
             print_info "S3/MinIO skipped. Add these to .env later:"
-            print_info "  S3_ENDPOINT_URL=https://s3.yourdomain.com"
+            print_info "  S3_ENDPOINT_URL=http://10.10.10.50:9000"
             print_info "  S3_ACCESS_KEY_ID=your_access_key"
             print_info "  S3_SECRET_ACCESS_KEY=your_secret_key"
             print_info "  S3_TEMP_BUCKET=temp-userfile"
-            print_info "  S3_USE_SSL=true"
+            print_info "  S3_USE_SSL=false"
             print_info "  S3_REGION=us-east-1"
         fi
         
@@ -689,40 +736,36 @@ if [ ! -f "$ENV_FILE" ]; then
         
         print_success ".env file created with secure passwords."
         
+        # Ask user to confirm critical values
+        print_info ""
+        print_info "⚠️  Please review the configuration you just entered:"
+        echo "  1. DOMAIN: ${DOMAIN_NAME}"
+        echo "  2. RAG_CORE_BASE_URL: ${RAG_CORE_BASE_URL}"
+        echo "  3. RAG_CORE_API_KEY: ${RAG_CORE_API_KEY:0:20}..." 
+        echo "  4. S3_ENDPOINT_URL: ${S3_ENDPOINT_URL}"
+        echo "  5. Kavenegar API Key: ${KAVENEGAR_API_KEY:0:20}..."
+        echo "  6. Bale Username: ${BALE_USERNAME}"
+        echo ""
+        if [ -z "$S3_ENDPOINT_URL" ]; then
+            print_warning "⚠️  S3/MinIO was not configured!"
+        fi
+        echo ""
+        read -p "Are these values correct? (y/n): " -r
+        if [[ $REPLY =~ ^[Yy]$ ]]; then
+            USER_CONFIRMED=true
+            print_success "Configuration confirmed!"
+        else
+            print_warning "Let's re-enter the configuration values..."
+            echo ""
+        fi
+        
+        done  # End of while loop
+        
     else
         print_critical_error ".env.example file not found!"
     fi
 else
     print_success ".env file already exists."
-fi
-
-# Ask user to confirm critical values
-print_info ""
-print_info "⚠️  Please make sure the following values are correctly set in ${ENV_FILE}:"
-echo "  1. DOMAIN (your domain)"
-echo "  2. RAG_CORE_BASE_URL and RAG_CORE_API_KEY (central system API)"
-echo "  3. MinIO configuration (MINIO_ENDPOINT, MINIO_ACCESS_KEY, etc.)"
-echo "     → Location in .env: Search for 'MinIO Configuration'"
-echo "  4. Email settings (SMTP configuration)"
-echo "  5. Payment gateways (e.g. Zarinpal/Stripe)"
-echo "  6. SMS (Kavenegar) and Bale messenger settings"
-echo ""
-if [ -z "$S3_ENDPOINT_URL" ]; then
-    print_warning "⚠️  S3/MinIO was not configured during installation!"
-    print_info "To add S3/MinIO later, edit ${ENV_FILE} and add:"
-    print_info "  S3_ENDPOINT_URL=https://s3.yourdomain.com"
-    print_info "  S3_ACCESS_KEY_ID=your_access_key"
-    print_info "  S3_SECRET_ACCESS_KEY=your_secret_key"
-    print_info "  S3_TEMP_BUCKET=temp-userfile"
-    print_info "  S3_USE_SSL=true"
-    print_info "  S3_REGION=us-east-1"
-    print_info "Then restart: cd $DEPLOYMENT_DIR && docker-compose restart backend"
-    echo ""
-fi
-read -p "Have you reviewed and confirmed these values? (y/n): " -r
-if [[ ! $REPLY =~ ^[Yy]$ ]]; then
-    print_warning "Continuing without confirmation. You can edit ${ENV_FILE} later and restart services."
-    print_info "To restart: cd $DEPLOYMENT_DIR && docker-compose restart"
 fi
 
 # ============================================
@@ -752,28 +795,28 @@ cd "$DEPLOYMENT_DIR"
 
 # Stop existing containers
 print_info "Stopping existing containers (if any)..."
-docker-compose down 2>/dev/null || true
+docker compose down 2>/dev/null || true
 
 # Pull latest images
 print_info "Pulling latest images..."
-if ! docker-compose pull; then
+if ! docker compose pull; then
     print_warning "Failed to pull some images, continuing with existing images..."
 fi
 
 # Build custom images
 print_info "Building custom images..."
-if ! docker-compose build --no-cache; then
+if ! docker compose build --no-cache; then
     print_error "Failed to build images"
     print_info "Trying to use existing images..."
 fi
 
 # Start services in order with resilient error handling
 print_info "Starting databases (PostgreSQL and NPM DB)..."
-docker-compose up -d postgres npm_db
+docker compose up -d postgres npm_db
 sleep 15
 
 print_info "Starting Redis and RabbitMQ..."
-docker-compose up -d redis rabbitmq
+docker compose up -d redis rabbitmq
 sleep 10
 
 # Check if Redis is actually working (not just running)
@@ -797,13 +840,13 @@ fi
 
 print_info "Starting backend service..."
 # Use --no-deps to avoid re-checking dependencies that may have healthcheck issues
-if ! docker-compose up -d --no-deps backend; then
+if ! docker compose up -d --no-deps backend; then
     print_error "Backend failed to start with --no-deps, trying with dependency checks..."
     # Try one more time with a longer timeout
     sleep 10
-    if ! docker-compose up -d backend 2>&1 | tee /tmp/backend_start.log; then
-        print_error "Backend startup failed. Check logs with: docker-compose logs backend"
-        print_info "You can manually fix issues and restart with: docker-compose up -d backend"
+    if ! docker compose up -d backend 2>&1 | tee /tmp/backend_start.log; then
+        print_error "Backend startup failed. Check logs with: docker compose logs backend"
+        print_info "You can manually fix issues and restart with: docker compose up -d backend"
         # Don't exit - continue with other setup steps
     fi
 fi
@@ -812,7 +855,7 @@ fi
 print_info "Waiting for backend to be ready (this may take up to 90 seconds)..."
 BACKEND_READY=false
 for i in $(seq 1 18); do
-    if docker-compose exec -T backend python -c "import django" 2>/dev/null; then
+    if docker compose exec -T backend python -c "import django" 2>/dev/null; then
         BACKEND_READY=true
         break
     fi
@@ -823,12 +866,12 @@ if [ "$BACKEND_READY" = true ]; then
     print_success "Backend is ready"
 else
     print_warning "Backend may not be fully ready yet. Checking logs..."
-    docker-compose logs backend --tail=10 2>&1
+    docker compose logs backend --tail=10 2>&1
 fi
 
 # Start Celery services
 print_info "Starting Celery worker and beat..."
-docker-compose up -d celery_worker celery_beat
+docker compose up -d celery_worker celery_beat
 
 # Fix celerybeat volume permissions
 print_info "Fixing Celery Beat volume permissions..."
@@ -840,16 +883,90 @@ fi
 
 # Run migrations (also runs inside container command, but run explicitly to ensure)
 print_info "Running database migrations..."
-if docker-compose exec -T backend python manage.py migrate --noinput 2>&1; then
-    print_success "Database migrations completed"
+
+# First, fix PostgreSQL sequences to prevent duplicate key errors
+print_info "Fixing PostgreSQL sequences to prevent duplicate key errors..."
+if docker compose exec -T backend python manage.py shell << 'PYTHON_SCRIPT' 2>/dev/null; then
+    print_success "PostgreSQL sequences fixed successfully"
 else
-    print_warning "Migration failed - backend may not be ready yet. You can run migrations later with:"
-    print_info "  cd $DEPLOYMENT_DIR && docker-compose exec backend python manage.py migrate"
+    print_warning "Could not auto-fix sequences - will attempt migrate anyway"
+fi
+
+from django.db import connection
+from django.core.management.color import no_style
+
+def reset_sequences():
+    """Reset all sequences to max(id) + 1"""
+    style = no_style()
+    sql_list = connection.ops.sequence_reset_sql(style, [
+        connection.introspection.django_table_names(only_existing=True)
+    ])
+    
+    if sql_list:
+        with connection.cursor() as cursor:
+            for sql in sql_list:
+                try:
+                    cursor.execute(sql)
+                    print(f"Reset sequence: {sql[:50]}...")
+                except Exception as e:
+                    print(f"Warning: Could not reset sequence: {e}")
+        print("All sequences have been reset")
+    else:
+        print("No sequences to reset")
+
+reset_sequences()
+PYTHON_SCRIPT
+
+# Now run migrations with retry logic
+MIGRATION_SUCCESS=false
+for attempt in {1..3}; do
+    print_info "Migration attempt $attempt of 3..."
+    if docker compose exec -T backend python manage.py migrate --noinput 2>&1; then
+        print_success "Database migrations completed successfully"
+        MIGRATION_SUCCESS=true
+        break
+    else
+        if echo "$?" | grep -q "duplicate key value"; then
+            print_warning "Duplicate key error detected - fixing sequences..."
+            # Try to fix specific sequence issues
+            docker compose exec -T backend python manage.py shell << 'PYTHON_SCRIPT_FIX' 2>/dev/null || true
+from django.db import connection
+
+# Fix common sequence issues
+with connection.cursor() as cursor:
+    # Fix pg_type sequence if that's the issue
+    try:
+        cursor.execute("""
+            SELECT setval('pg_type_oid_seq', 
+                (SELECT COALESCE(MAX(oid), 1) FROM pg_type) + 1);
+        """)
+        print("Fixed pg_type_oid_seq")
+    except Exception as e:
+        print(f"Could not fix pg_type_oid_seq: {e}")
+PYTHON_SCRIPT_FIX
+        fi
+        
+        if [ $attempt -lt 3 ]; then
+            print_info "Waiting 5 seconds before retry..."
+            sleep 5
+        fi
+    fi
+done
+
+if [ "$MIGRATION_SUCCESS" = false ]; then
+    print_error "Migration failed after 3 attempts"
+    print_warning "You may need to fix database manually:"
+    print_info "  1. Connect to database: docker compose exec backend python manage.py dbshell"
+    print_info "  2. Check sequences: \\ds"
+    print_info "  3. Reset problematic sequences manually"
+    print_info "  4. Then run: docker compose exec backend python manage.py migrate"
+else
+    print_success "All migrations completed successfully"
 fi
 
 # Collect static files
 print_info "Collecting static files..."
-if docker-compose exec -T backend python manage.py collectstatic --noinput 2>&1; then
+if docker compose exec -T backend python manage.py collectstatic --noinput --clear 2>&1; then
     print_success "Static files collected"
 else
     print_warning "Static file collection failed - you can run it later"
@@ -861,18 +978,18 @@ DJANGO_ADMIN_PASSWORD=$(grep '^DJANGO_ADMIN_PASSWORD=' "$ENV_FILE" | cut -d'=' -
 if [ -z "$DJANGO_ADMIN_PASSWORD" ]; then
     DJANGO_ADMIN_PASSWORD="admin123"
 fi
-if docker-compose exec -T backend python manage.py setup_initial_data --admin-password="$DJANGO_ADMIN_PASSWORD" 2>&1; then
+if docker compose exec -T backend python manage.py setup_initial_data --admin-password="$DJANGO_ADMIN_PASSWORD" 2>&1; then
     print_success "Initial data setup completed"
     print_info "  Superadmin: 09121082690 / admin@${DOMAIN_NAME}"
     print_info "  Password: $DJANGO_ADMIN_PASSWORD"
 else
     print_warning "Initial data setup failed - you can run it later with:"
-    print_info "  cd $DEPLOYMENT_DIR && docker-compose exec backend python manage.py setup_initial_data --admin-password=YOUR_PASSWORD"
+    print_info "  cd $DEPLOYMENT_DIR && docker compose exec backend python manage.py setup_initial_data --admin-password=YOUR_PASSWORD"
 fi
 
 # Start remaining services
 print_info "Starting frontend and Nginx Proxy Manager..."
-docker-compose up -d frontend nginx_proxy_manager
+docker compose up -d frontend nginx_proxy_manager
 
 print_success "All services have been started."
 
@@ -902,7 +1019,7 @@ if [ "$EXPORTERS_OK" = true ]; then
     print_info "  Promtail:            Shipping logs to Loki (10.10.10.40:3100)"
 else
     print_warning "Some monitoring exporters may not be responding yet"
-    print_info "They will start automatically with docker-compose up -d"
+    print_info "They will start automatically with docker compose up -d"
 fi
 
 # ============================================
@@ -944,7 +1061,7 @@ if [ "$SECURITY_ISSUE" = false ]; then
     print_success "All monitoring ports are properly secured (localhost-only)"
 else
     print_warning "Some monitoring ports may be exposed - this is expected on first run"
-    print_info "Ports will be secured after docker-compose configuration is applied"
+    print_info "Ports will be secured after docker compose configuration is applied"
 fi
 
 # Verify Redis security
@@ -1059,7 +1176,9 @@ if [ -f "/srv/frontend/next.config.js" ]; then
         # Add domain to allowed image domains if not already present
         if ! grep -q "$DOMAIN_NAME" "/srv/frontend/next.config.js"; then
             print_info "Adding $DOMAIN_NAME to Next.js image domains..."
-            sed -i "s/domains: \[/domains: ['$DOMAIN_NAME', 'www.$DOMAIN_NAME', /" "/srv/frontend/next.config.js" 2>/dev/null || \
+            # Use safer sed with escaped variables
+            DOMAIN_ESCAPED=$(escape_sed_replacement "$DOMAIN_NAME")
+            sed -i "s#domains: \[#domains: ['${DOMAIN_ESCAPED}', 'www.${DOMAIN_ESCAPED}', #" "/srv/frontend/next.config.js" 2>/dev/null || \
             print_warning "Could not auto-update next.config.js domains"
             print_success "Domain configuration updated"
         else
@@ -1075,7 +1194,7 @@ if [ -f "/srv/backend/chat/signals.py" ]; then
     if grep -q "from .core_service import RAGCoreService" "/srv/backend/chat/signals.py" 2>/dev/null; then
         print_warning "Found potential import error in signals.py"
         print_info "Commenting out problematic import..."
-        sed -i 's/^from \.core_service import RAGCoreService/# from .core_service import CoreAPIService  # TODO: Enable when delete endpoint is ready/' "/srv/backend/chat/signals.py" 2>/dev/null
+        sed -i 's/^from \.core_service import RAGCoreService/# from .core_service import RAGCoreService  # TODO: Fix import error when ready/' "/srv/backend/chat/signals.py" 2>/dev/null
         print_success "Signal import fixed"
     else
         print_success "Backend signals configuration OK"
@@ -1084,7 +1203,7 @@ fi
 
 # Fix 4: Restart frontend to apply changes
 print_info "Restarting frontend to apply configuration changes..."
-docker-compose restart frontend
+docker compose restart frontend
 sleep 5
 print_success "Frontend restarted with updated configuration"
 
@@ -1099,7 +1218,7 @@ RAG_CORE_API_KEY=$(grep '^RAG_CORE_API_KEY=' "$ENV_FILE" | cut -d'=' -f2-)
 if [ -n "$RAG_CORE_BASE_URL" ] && [ -n "$RAG_CORE_API_KEY" ]; then
 	print_info "Testing connectivity to RAG Core at: $RAG_CORE_BASE_URL"
 	# Simple HTTP check via backend container (if an endpoint exists, it can be updated later)
-	docker-compose exec -T backend python - << PYCODE || print_info "RAG Core connectivity check failed (this does not stop deployment)."
+	docker compose exec -T backend python - << PYCODE || print_info "RAG Core connectivity check failed (this does not stop deployment)."
 import os
 import requests
 
@@ -1117,8 +1236,6 @@ else:
     except Exception as e:
         print(f"Error contacting RAG Core: {e}")
 PYCODE
-else
-	print_info "RAG Core URL or API key not set; skipping connectivity check."
 fi
 
 # ============================================
@@ -1198,7 +1315,7 @@ print_success "Automatic backup configured (daily at 2 AM)."
 # ============================================
 print_header "System status"
 
-docker-compose ps
+docker compose ps
 
 # ============================================
 # Step 13: Display Access Information
@@ -1296,10 +1413,10 @@ echo "  Cleanup tokens:     docker exec app_backend python manage.py cleanup_tok
 echo "  Cleanup files:      ${DEPLOYMENT_DIR}/cron/cleanup-files.sh"
 echo ""
 echo "Quick commands:"
-echo "  View logs:          cd ${DEPLOYMENT_DIR} && docker-compose logs -f [service]"
-echo "  Restart service:    cd ${DEPLOYMENT_DIR} && docker-compose restart [service]"
-echo "  Stop all:           cd ${DEPLOYMENT_DIR} && docker-compose down"
-echo "  Start all:          cd ${DEPLOYMENT_DIR} && docker-compose up -d"
+echo "  View logs:          cd ${DEPLOYMENT_DIR} && docker compose logs -f [service]"
+echo "  Restart service:    cd ${DEPLOYMENT_DIR} && docker compose restart [service]"
+echo "  Stop all:           cd ${DEPLOYMENT_DIR} && docker compose down"
+echo "  Start all:          cd ${DEPLOYMENT_DIR} && docker compose up -d"
 echo ""
 echo "Security verification commands:"
 echo "────────────────────────────────────"
@@ -1337,10 +1454,10 @@ echo "  6. Backend won't start (import error)"
 echo "     → Fixed! Signals.py import issue has been resolved."
 echo ""
 echo "  7. Need to check service status"
-echo "     → Run: cd ${DEPLOYMENT_DIR} && docker-compose ps"
+echo "     → Run: cd ${DEPLOYMENT_DIR} && docker compose ps"
 echo ""
 echo "  8. Need to view specific service logs"
-echo "     → Run: cd ${DEPLOYMENT_DIR} && docker-compose logs -f [service_name]"
+echo "     → Run: cd ${DEPLOYMENT_DIR} && docker compose logs -f [service_name]"
 echo "     → Services: backend, frontend, postgres, redis, rabbitmq, nginx_proxy_manager"
 echo ""
 echo "  9. Monitoring ports exposed to internet (security issue)"
