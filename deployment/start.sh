@@ -699,6 +699,8 @@ if [ ! -f "$ENV_FILE" ]; then
             RAG_CORE_API_KEY_SED=$(escape_sed_replacement "$RAG_CORE_API_KEY")
             sed -i "s|RAG_CORE_API_KEY=.*|RAG_CORE_API_KEY=${RAG_CORE_API_KEY_SED}|g" "$ENV_FILE"
         fi
+        # Set RAG_CORE_TIMEOUT to 300 seconds (5 minutes) for file processing
+        sed -i "s|RAG_CORE_TIMEOUT=.*|RAG_CORE_TIMEOUT=300|g" "$ENV_FILE"
         if [ -n "$KAVENEGAR_API_KEY" ]; then
             KAVENEGAR_API_KEY_SED=$(escape_sed_replacement "$KAVENEGAR_API_KEY")
             sed -i "s|KAVENEGAR_API_KEY=.*|KAVENEGAR_API_KEY=${KAVENEGAR_API_KEY_SED}|g" "$ENV_FILE"
