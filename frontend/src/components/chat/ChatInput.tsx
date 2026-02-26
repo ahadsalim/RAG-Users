@@ -257,7 +257,7 @@ export function ChatInput({ onSendMessage, isLoading, disabled }: ChatInputProps
           if (progress && progress.uploaded && progress.objectKey) {
             return {
               filename: file.name,
-              minio_url: progress.objectKey,
+              object_key: progress.objectKey,
               file_type: file.type,
               size_bytes: file.size
             }

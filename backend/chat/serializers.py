@@ -137,7 +137,7 @@ class SharedConversationSerializer(serializers.ModelSerializer):
 class FileAttachmentSerializer(serializers.Serializer):
     """Serializer برای فایل‌های ضمیمه"""
     filename = serializers.CharField(required=True)
-    minio_url = serializers.CharField(required=True)  # object_key از MinIO
+    object_key = serializers.CharField(required=True)  # object_key از MinIO
     file_type = serializers.CharField(required=True)
     size_bytes = serializers.IntegerField(required=False)
 
