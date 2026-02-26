@@ -56,7 +56,7 @@ export function ChatInput({ onSendMessage, isLoading, disabled }: ChatInputProps
     const formData = new FormData()
     formData.append('file', file)
     
-    const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'
+    const API_URL = process.env.NEXT_PUBLIC_API_URL || ''
     const token = accessToken
     
     // بررسی وجود token
