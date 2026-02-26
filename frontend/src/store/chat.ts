@@ -203,12 +203,12 @@ export const useChatStore = create<ChatState>((set, get) => ({
         payload.file_attachments = fileAttachments
       }
       
-      // Send to API with 2 minute timeout
+      // Send to API with 5 minute timeout
       const response = await axiosInstance.post<QueryResponse>(
         `${API_URL}/api/v1/chat/query/`, 
         payload,
         {
-          timeout: 120000  // 2 minutes (120 seconds)
+          timeout: 300000  // 5 minutes (300 seconds)
         }
       )
       

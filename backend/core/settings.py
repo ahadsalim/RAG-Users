@@ -577,4 +577,4 @@ STORAGES = {
 # RAG Core Configuration
 RAG_CORE_BASE_URL = config('RAG_CORE_BASE_URL', default='')
 RAG_CORE_API_KEY = config('RAG_CORE_API_KEY', default='')
-RAG_CORE_TIMEOUT = config('RAG_CORE_TIMEOUT', default=60, cast=int)  # seconds
+RAG_CORE_TIMEOUT = config('RAG_CORE_TIMEOUT', default=300, cast=int)  # seconds (5 minutes for file processing)
