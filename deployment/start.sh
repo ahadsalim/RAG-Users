@@ -684,13 +684,12 @@ if [ ! -f "$ENV_FILE" ]; then
         sed -i "s|ALLOWED_HOSTS=.*|ALLOWED_HOSTS=${ALLOWED_HOSTS_SED}|g" "$ENV_FILE"
         # Domain-dependent settings
         FRONTEND_URL_SED=$(escape_sed_replacement "https://${DOMAIN_NAME}")
-        NEXT_PUBLIC_API_URL_SED=$(escape_sed_replacement "https://${DOMAIN_NAME}")
         DEFAULT_FROM_EMAIL_SED=$(escape_sed_replacement "noreply@${DOMAIN_NAME}")
         CORS_ORIGINS_SED=$(escape_sed_replacement "https://${DOMAIN_NAME},https://www.${DOMAIN_NAME}")
         sed -i "s|FRONTEND_URL=.*|FRONTEND_URL=${FRONTEND_URL_SED}|g" "$ENV_FILE"
-        sed -i "s|NEXT_PUBLIC_API_URL=.*|NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL_SED}|g" "$ENV_FILE"
         sed -i "s|DEFAULT_FROM_EMAIL=.*|DEFAULT_FROM_EMAIL=${DEFAULT_FROM_EMAIL_SED}|g" "$ENV_FILE"
         sed -i "s|CORS_ALLOWED_ORIGINS=.*|CORS_ALLOWED_ORIGINS=${CORS_ORIGINS_SED}|g" "$ENV_FILE"
+        # NEXT_PUBLIC_API_URL should remain empty for relative paths in production (NPM handles routing)
         # Optional and external integrations
         if [ -n "$RAG_CORE_BASE_URL" ]; then
             RAG_CORE_BASE_URL_SED=$(escape_sed_replacement "$RAG_CORE_BASE_URL")
