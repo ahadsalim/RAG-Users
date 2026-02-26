@@ -887,11 +887,6 @@ print_info "Running database migrations..."
 # First, fix PostgreSQL sequences to prevent duplicate key errors
 print_info "Fixing PostgreSQL sequences to prevent duplicate key errors..."
 if docker compose exec -T backend python manage.py shell << 'PYTHON_SCRIPT' 2>/dev/null; then
-    print_success "PostgreSQL sequences fixed successfully"
-else
-    print_warning "Could not auto-fix sequences - will attempt migrate anyway"
-fi
-
 from django.db import connection
 from django.core.management.color import no_style
 
@@ -916,6 +911,10 @@ def reset_sequences():
 
 reset_sequences()
 PYTHON_SCRIPT
+    print_success "PostgreSQL sequences fixed successfully"
+else
+    print_warning "Could not auto-fix sequences - will attempt migrate anyway"
+fi
 
 # Now run migrations with retry logic
 MIGRATION_SUCCESS=false
@@ -1218,7 +1217,7 @@ RAG_CORE_API_KEY=$(grep '^RAG_CORE_API_KEY=' "$ENV_FILE" | cut -d'=' -f2-)
 if [ -n "$RAG_CORE_BASE_URL" ] && [ -n "$RAG_CORE_API_KEY" ]; then
 	print_info "Testing connectivity to RAG Core at: $RAG_CORE_BASE_URL"
 	# Simple HTTP check via backend container (if an endpoint exists, it can be updated later)
-	docker compose exec -T backend python - << PYCODE || print_info "RAG Core connectivity check failed (this does not stop deployment)."
+	docker compose exec -T backend python - << 'PYCODE' || print_info "RAG Core connectivity check failed (this does not stop deployment)."
 import os
 import requests
 
