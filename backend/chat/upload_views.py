@@ -164,7 +164,7 @@ def upload_multiple_files(request):
             file_content = file.read()
             
             # Upload to MinIO
-            result = minio_service.upload_file(
+            result = s3_service.upload_file(
                 file_content=file_content,
                 filename=file.name,
                 user_id=str(request.user.id),
