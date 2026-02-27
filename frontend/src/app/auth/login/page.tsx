@@ -868,87 +868,500 @@ export default function LoginPage() {
           backdropFilter: 'blur(10px)'
         }}>
           <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
-            <h2 style={{
-              textAlign: 'center',
-              fontSize: '32px',
-              fontWeight: 'bold',
-              color: '#fff',
-              marginBottom: '40px'
-            }}>
-              ویژگی‌های سامانه
-            </h2>
             
+            {/* Hero Section */}
             <div style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
-              gap: '30px',
-              marginBottom: '60px'
+              textAlign: 'center',
+              marginBottom: '60px',
+              padding: '40px 20px',
+              background: theme === 'light' 
+                ? 'linear-gradient(135deg, rgba(255, 255, 255, 0.2) 0%, rgba(255, 255, 255, 0.1) 100%)'
+                : 'linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%)',
+              borderRadius: '16px',
+              border: '1px solid rgba(255, 255, 255, 0.3)'
             }}>
-              {[
-                { icon: '🤖', title: 'هوش مصنوعی پیشرفته', desc: 'پاسخگویی دقیق و سریع به سوالات حقوقی و کسب‌وکار' },
-                { icon: '📚', title: 'پایگاه دانش جامع', desc: 'دسترسی به قوانین، مقررات و اسناد حقوقی ایران' },
-                { icon: '⚡', title: 'پردازش سریع', desc: 'دریافت پاسخ در کمتر از چند ثانیه' },
-                { icon: '🔒', title: 'امنیت بالا', desc: 'حفاظت کامل از اطلاعات و حریم خصوصی شما' },
-                { icon: '💼', title: 'مشاوره تخصصی', desc: 'پاسخ‌های تخصصی برای مسائل حقوقی و کسب‌وکار' },
-                { icon: '📊', title: 'گزارش‌گیری', desc: 'ذخیره و مدیریت تاریخچه گفتگوها' }
-              ].map((feature, idx) => (
-                <div key={idx} style={{
-                  background: theme === 'light' ? 'rgba(255, 255, 255, 0.15)' : 'rgba(255, 255, 255, 0.05)',
-                  padding: '30px',
-                  borderRadius: '12px',
-                  textAlign: 'center',
-                  border: '1px solid rgba(255, 255, 255, 0.2)',
-                  transition: 'transform 0.3s ease'
-                }}>
-                  <div style={{ fontSize: '48px', marginBottom: '15px' }}>{feature.icon}</div>
-                  <h3 style={{ fontSize: '20px', fontWeight: 'bold', color: '#fff', marginBottom: '10px' }}>
-                    {feature.title}
-                  </h3>
-                  <p style={{ fontSize: '14px', color: 'rgba(255, 255, 255, 0.8)', lineHeight: '1.6' }}>
-                    {feature.desc}
-                  </p>
-                </div>
-              ))}
+              <h1 style={{
+                fontSize: '42px',
+                fontWeight: 'bold',
+                color: '#fff',
+                marginBottom: '20px',
+                textShadow: '0 2px 10px rgba(0,0,0,0.3)'
+              }}>
+                مشاور هوشمند کسب‌وکار شما
+              </h1>
+              <p style={{
+                fontSize: '22px',
+                color: 'rgba(255, 255, 255, 0.95)',
+                marginBottom: '15px',
+                fontWeight: '500'
+              }}>
+                پاسخ دقیق، مستند و به‌روز به سؤالات مالیاتی، بیمه‌ای، گمرکی و بانکی — در چند ثانیه
+              </p>
+              <p style={{
+                fontSize: '16px',
+                color: 'rgba(255, 255, 255, 0.85)',
+                lineHeight: '1.8',
+                maxWidth: '800px',
+                margin: '0 auto'
+              }}>
+                در دنیای پیچیده قوانین و بخشنامه‌ها، یک سؤال ساده می‌تواند ساعت‌ها وقت، هزینه و استرس به شما تحمیل کند.<br/>
+                <strong style={{ color: '#fff', fontSize: '18px' }}>ما این مشکل را حل کرده‌ایم.</strong>
+              </p>
             </div>
 
+            {/* What We Do Section */}
             <div style={{
-              textAlign: 'center',
-              padding: '40px 20px',
+              marginBottom: '60px',
+              padding: '40px 30px',
               background: theme === 'light' ? 'rgba(255, 255, 255, 0.15)' : 'rgba(255, 255, 255, 0.05)',
-              borderRadius: '12px',
+              borderRadius: '16px',
               border: '1px solid rgba(255, 255, 255, 0.2)'
             }}>
-              <h3 style={{ fontSize: '24px', fontWeight: 'bold', color: '#fff', marginBottom: '15px' }}>
-                آماده شروع هستید؟
+              <h2 style={{
+                fontSize: '32px',
+                fontWeight: 'bold',
+                color: '#fff',
+                marginBottom: '20px',
+                textAlign: 'center'
+              }}>
+                این سامانه چیست؟
+              </h2>
+              <p style={{
+                fontSize: '17px',
+                color: 'rgba(255, 255, 255, 0.9)',
+                lineHeight: '2',
+                textAlign: 'center',
+                maxWidth: '900px',
+                margin: '0 auto 30px'
+              }}>
+                این سامانه یک <strong>مشاور هوشمند تخصصی کسب‌وکار</strong> است که با تکیه بر هزاران متن قانونی، آراء رسمی و منابع آموزشی معتبر، به سؤالات واقعی شما پاسخ می‌دهد؛ دقیق، مستند و منطبق با آخرین مقررات.
+              </p>
+              
+              <h3 style={{
+                fontSize: '24px',
+                fontWeight: 'bold',
+                color: '#fff',
+                marginBottom: '20px',
+                marginTop: '40px',
+                textAlign: 'center'
+              }}>
+                ما دقیقاً چه کاری انجام می‌دهیم؟
               </h3>
-              <p style={{ fontSize: '16px', color: 'rgba(255, 255, 255, 0.9)', marginBottom: '20px' }}>
-                پس از ورود و استفاده رایگان، می‌توانید لیست قیمت پلن‌های اشتراک را مشاهده کنید
+              <p style={{
+                fontSize: '16px',
+                color: 'rgba(255, 255, 255, 0.9)',
+                lineHeight: '2',
+                textAlign: 'center',
+                marginBottom: '30px'
+              }}>
+                ما یک سیستم مبتنی بر هوش مصنوعی و RAG ساخته‌ایم که نقش یک مشاور باتجربه مالیاتی، بیمه‌ای و گمرکی را برای شما ایفا می‌کند.
+              </p>
+
+              <div style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
+                gap: '20px',
+                marginTop: '30px'
+              }}>
+                {[
+                  { icon: '💰', title: 'مالیات', desc: 'اظهارنامه، رسیدگی، جرایم، معافیت‌ها، ارزش افزوده، مالیات حقوق و …' },
+                  { icon: '🏥', title: 'بیمه تأمین اجتماعی', desc: 'لیست، حق بیمه، قراردادها، بازرسی، بدهی و اعتراض' },
+                  { icon: '🚢', title: 'گمرک و تجارت', desc: 'تعرفه، ارزش، ترخیص، صادرات، واردات، مقررات و بخشنامه‌ها' },
+                  { icon: '🏦', title: 'امور پولی و بانکی', desc: 'دستورالعمل‌ها، مقررات بانک مرکزی، الزامات بانکی' },
+                  { icon: '💼', title: 'سؤالات کسب‌وکار', desc: 'سؤالات روزمره و عملیاتی کسب‌وکار شما' }
+                ].map((item, idx) => (
+                  <div key={idx} style={{
+                    background: theme === 'light' ? 'rgba(255, 255, 255, 0.2)' : 'rgba(255, 255, 255, 0.08)',
+                    padding: '25px',
+                    borderRadius: '12px',
+                    border: '1px solid rgba(255, 255, 255, 0.25)',
+                    textAlign: 'center'
+                  }}>
+                    <div style={{ fontSize: '40px', marginBottom: '12px' }}>{item.icon}</div>
+                    <h4 style={{ fontSize: '18px', fontWeight: 'bold', color: '#fff', marginBottom: '10px' }}>
+                      {item.title}
+                    </h4>
+                    <p style={{ fontSize: '14px', color: 'rgba(255, 255, 255, 0.85)', lineHeight: '1.6' }}>
+                      {item.desc}
+                    </p>
+                  </div>
+                ))}
+              </div>
+
+              <p style={{
+                fontSize: '17px',
+                color: 'rgba(255, 255, 255, 0.95)',
+                lineHeight: '2',
+                textAlign: 'center',
+                marginTop: '30px',
+                fontWeight: '500'
+              }}>
+                و پاسخ خود را نه بر اساس حدس یا تجربه شخصی، بلکه <strong style={{ color: '#fff' }}>مستند به قانون، بخشنامه و رأی رسمی</strong> دریافت کنید.
+              </p>
+            </div>
+
+            {/* Target Audience */}
+            <div style={{
+              marginBottom: '60px',
+              padding: '40px 30px',
+              background: theme === 'light' 
+                ? 'linear-gradient(135deg, rgba(72, 187, 120, 0.2) 0%, rgba(56, 161, 105, 0.15) 100%)'
+                : 'linear-gradient(135deg, rgba(72, 187, 120, 0.15) 0%, rgba(56, 161, 105, 0.1) 100%)',
+              borderRadius: '16px',
+              border: '1px solid rgba(72, 187, 120, 0.3)'
+            }}>
+              <h2 style={{
+                fontSize: '32px',
+                fontWeight: 'bold',
+                color: '#fff',
+                marginBottom: '25px',
+                textAlign: 'center'
+              }}>
+                مناسب چه کسانی است؟
+              </h2>
+              <p style={{
+                fontSize: '17px',
+                color: 'rgba(255, 255, 255, 0.95)',
+                lineHeight: '2',
+                textAlign: 'center',
+                marginBottom: '30px'
+              }}>
+                فرقی نمی‌کند که شما:
+              </p>
+              <div style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
+                gap: '20px'
+              }}>
+                {[
+                  { icon: '🏪', text: 'یک مغازه‌دار یا کاسب' },
+                  { icon: '🏢', text: 'صاحب کسب‌وکار کوچک یا متوسط' },
+                  { icon: '📊', text: 'کارشناس یا مدیر مالی، حسابداری یا بازرگانی' },
+                  { icon: '👔', text: 'مشاور که نیاز به پاسخ سریع و مستند دارد' }
+                ].map((item, idx) => (
+                  <div key={idx} style={{
+                    background: 'rgba(255, 255, 255, 0.15)',
+                    padding: '20px',
+                    borderRadius: '12px',
+                    textAlign: 'center',
+                    border: '1px solid rgba(255, 255, 255, 0.3)'
+                  }}>
+                    <div style={{ fontSize: '36px', marginBottom: '10px' }}>{item.icon}</div>
+                    <p style={{ fontSize: '15px', color: '#fff', fontWeight: '500' }}>{item.text}</p>
+                  </div>
+                ))}
+              </div>
+              <p style={{
+                fontSize: '18px',
+                color: '#fff',
+                fontWeight: 'bold',
+                textAlign: 'center',
+                marginTop: '30px'
+              }}>
+                این سامانه برای شما طراحی شده است.
+              </p>
+            </div>
+
+            {/* Data Power Section */}
+            <div style={{
+              marginBottom: '60px',
+              padding: '40px 30px',
+              background: theme === 'light' 
+                ? 'linear-gradient(135deg, rgba(66, 153, 225, 0.2) 0%, rgba(49, 130, 206, 0.15) 100%)'
+                : 'linear-gradient(135deg, rgba(66, 153, 225, 0.15) 0%, rgba(49, 130, 206, 0.1) 100%)',
+              borderRadius: '16px',
+              border: '1px solid rgba(66, 153, 225, 0.3)'
+            }}>
+              <h2 style={{
+                fontSize: '32px',
+                fontWeight: 'bold',
+                color: '#fff',
+                marginBottom: '20px',
+                textAlign: 'center'
+              }}>
+                قدرت واقعی سامانه در داده‌های آن است
+              </h2>
+              <p style={{
+                fontSize: '17px',
+                color: 'rgba(255, 255, 255, 0.95)',
+                lineHeight: '2',
+                textAlign: 'center',
+                marginBottom: '35px'
+              }}>
+                این سیستم بر پایه حجم عظیم و کاملی از قوانین و مقررات کسب‌وکار در ایران ساخته شده است:
+              </p>
+              
+              <div style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
+                gap: '25px'
+              }}>
+                {[
+                  { icon: '📘', number: '۹۳', title: 'قانون مصوب', desc: 'مجلس شورای اسلامی، مجلس شورای ملی و شورای انقلاب' },
+                  { icon: '⚖️', number: '۶۰۱', title: 'رأی هیئت عمومی', desc: 'دیوان عدالت اداری' },
+                  { icon: '🧾', number: '۱۱۳۵', title: 'بخشنامه', desc: 'گمرک (۱۰ سال اخیر)، سازمان امور مالیاتی، تأمین اجتماعی، بانک مرکزی' },
+                  { icon: '📋', number: '۴۵', title: 'دستورالعمل تخصصی', desc: 'راهنماهای عملیاتی و اجرایی' },
+                  { icon: '🎓', number: '۵۲۸', title: 'متن آموزشی', desc: 'منابع معتبر و کاربردی' }
+                ].map((item, idx) => (
+                  <div key={idx} style={{
+                    background: 'rgba(255, 255, 255, 0.15)',
+                    padding: '30px',
+                    borderRadius: '12px',
+                    textAlign: 'center',
+                    border: '1px solid rgba(255, 255, 255, 0.3)',
+                    transition: 'transform 0.3s ease'
+                  }}>
+                    <div style={{ fontSize: '48px', marginBottom: '15px' }}>{item.icon}</div>
+                    <div style={{ fontSize: '36px', fontWeight: 'bold', color: '#fff', marginBottom: '10px' }}>
+                      {item.number}
+                    </div>
+                    <h4 style={{ fontSize: '18px', fontWeight: 'bold', color: '#fff', marginBottom: '10px' }}>
+                      {item.title}
+                    </h4>
+                    <p style={{ fontSize: '14px', color: 'rgba(255, 255, 255, 0.85)', lineHeight: '1.6' }}>
+                      {item.desc}
+                    </p>
+                  </div>
+                ))}
+              </div>
+
+              <div style={{
+                marginTop: '40px',
+                padding: '25px',
+                background: 'rgba(255, 255, 255, 0.1)',
+                borderRadius: '12px',
+                border: '1px solid rgba(255, 255, 255, 0.25)'
+              }}>
+                <p style={{
+                  fontSize: '18px',
+                  color: '#fff',
+                  fontWeight: 'bold',
+                  textAlign: 'center',
+                  marginBottom: '15px'
+                }}>
+                  این یعنی پاسخ‌هایی که می‌گیرید:
+                </p>
+                <div style={{
+                  display: 'flex',
+                  flexWrap: 'wrap',
+                  justifyContent: 'center',
+                  gap: '20px'
+                }}>
+                  {['✅ دقیق', '✅ مستند', '✅ به‌روز', '✅ قابل استناد در عمل'].map((item, idx) => (
+                    <div key={idx} style={{
+                      fontSize: '17px',
+                      color: '#fff',
+                      fontWeight: '500',
+                      padding: '10px 20px',
+                      background: 'rgba(72, 187, 120, 0.3)',
+                      borderRadius: '8px'
+                    }}>
+                      {item}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* Why Valuable */}
+            <div style={{
+              marginBottom: '60px',
+              padding: '40px 30px',
+              background: theme === 'light' ? 'rgba(255, 255, 255, 0.15)' : 'rgba(255, 255, 255, 0.05)',
+              borderRadius: '16px',
+              border: '1px solid rgba(255, 255, 255, 0.2)'
+            }}>
+              <h2 style={{
+                fontSize: '32px',
+                fontWeight: 'bold',
+                color: '#fff',
+                marginBottom: '30px',
+                textAlign: 'center'
+              }}>
+                چرا این سامانه ارزشمند است؟
+              </h2>
+              <div style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))',
+                gap: '25px'
+              }}>
+                {[
+                  { icon: '⏱️', title: 'صرفه‌جویی چشمگیر در زمان', color: 'rgba(237, 137, 54, 0.3)' },
+                  { icon: '💰', title: 'کاهش هزینه مشاوره‌های تکراری', color: 'rgba(72, 187, 120, 0.3)' },
+                  { icon: '📑', title: 'دسترسی سریع به قوانین و بخشنامه‌های پراکنده', color: 'rgba(66, 153, 225, 0.3)' },
+                  { icon: '🤝', title: 'نقش یک مشاور حرفه‌ای، همیشه در دسترس شما', color: 'rgba(159, 122, 234, 0.3)' }
+                ].map((item, idx) => (
+                  <div key={idx} style={{
+                    background: item.color,
+                    padding: '30px',
+                    borderRadius: '12px',
+                    textAlign: 'center',
+                    border: '1px solid rgba(255, 255, 255, 0.3)'
+                  }}>
+                    <div style={{ fontSize: '48px', marginBottom: '15px' }}>{item.icon}</div>
+                    <p style={{ fontSize: '17px', color: '#fff', fontWeight: 'bold', lineHeight: '1.6' }}>
+                      {item.title}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Pricing Section */}
+            <div style={{
+              marginBottom: '60px',
+              padding: '40px 30px',
+              background: theme === 'light' 
+                ? 'linear-gradient(135deg, rgba(159, 122, 234, 0.2) 0%, rgba(128, 90, 213, 0.15) 100%)'
+                : 'linear-gradient(135deg, rgba(159, 122, 234, 0.15) 0%, rgba(128, 90, 213, 0.1) 100%)',
+              borderRadius: '16px',
+              border: '1px solid rgba(159, 122, 234, 0.3)'
+            }}>
+              <h2 style={{
+                fontSize: '32px',
+                fontWeight: 'bold',
+                color: '#fff',
+                marginBottom: '20px',
+                textAlign: 'center'
+              }}>
+                ثبت‌نام رایگان + اشتراک انعطاف‌پذیر
+              </h2>
+              <div style={{
+                background: 'rgba(255, 255, 255, 0.15)',
+                padding: '30px',
+                borderRadius: '12px',
+                border: '1px solid rgba(255, 255, 255, 0.3)',
+                marginBottom: '25px'
+              }}>
+                <p style={{
+                  fontSize: '24px',
+                  color: '#fff',
+                  fontWeight: 'bold',
+                  textAlign: 'center',
+                  marginBottom: '15px'
+                }}>
+                  ✅ ثبت‌نام کاملاً رایگان است
+                </p>
+                <p style={{
+                  fontSize: '17px',
+                  color: 'rgba(255, 255, 255, 0.95)',
+                  lineHeight: '2',
+                  textAlign: 'center'
+                }}>
+                  شما می‌توانید سامانه را امتحان کنید و کیفیت پاسخ‌ها را ببینید.
+                </p>
+              </div>
+
+              <p style={{
+                fontSize: '18px',
+                color: 'rgba(255, 255, 255, 0.95)',
+                lineHeight: '2',
+                textAlign: 'center',
+                marginBottom: '25px'
+              }}>
+                در صورت نیاز بیشتر:
+              </p>
+
+              <div style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))',
+                gap: '20px',
+                marginBottom: '25px'
+              }}>
+                {[
+                  { icon: '📦', text: 'پلن‌های اشتراک متناسب با حجم استفاده' },
+                  { icon: '👤', text: 'مخصوص اشخاص حقیقی یا حقوقی' },
+                  { icon: '📊', text: 'بر اساس تعداد سؤال روزانه و ماهانه' }
+                ].map((item, idx) => (
+                  <div key={idx} style={{
+                    background: 'rgba(255, 255, 255, 0.15)',
+                    padding: '20px',
+                    borderRadius: '12px',
+                    textAlign: 'center',
+                    border: '1px solid rgba(255, 255, 255, 0.3)'
+                  }}>
+                    <div style={{ fontSize: '36px', marginBottom: '10px' }}>{item.icon}</div>
+                    <p style={{ fontSize: '15px', color: '#fff', fontWeight: '500', lineHeight: '1.6' }}>
+                      {item.text}
+                    </p>
+                  </div>
+                ))}
+              </div>
+
+              <p style={{
+                fontSize: '18px',
+                color: '#fff',
+                fontWeight: 'bold',
+                textAlign: 'center'
+              }}>
+                شما فقط به اندازه‌ای که استفاده می‌کنید، هزینه می‌پردازید.
+              </p>
+            </div>
+
+            {/* Final CTA */}
+            <div style={{
+              textAlign: 'center',
+              padding: '50px 30px',
+              background: theme === 'light' 
+                ? 'linear-gradient(135deg, rgba(72, 187, 120, 0.25) 0%, rgba(56, 161, 105, 0.2) 100%)'
+                : 'linear-gradient(135deg, rgba(72, 187, 120, 0.2) 0%, rgba(56, 161, 105, 0.15) 100%)',
+              borderRadius: '16px',
+              border: '2px solid rgba(72, 187, 120, 0.4)'
+            }}>
+              <h2 style={{
+                fontSize: '36px',
+                fontWeight: 'bold',
+                color: '#fff',
+                marginBottom: '20px'
+              }}>
+                یک سؤال بپرسید، تفاوت را احساس کنید
+              </h2>
+              <p style={{
+                fontSize: '18px',
+                color: 'rgba(255, 255, 255, 0.95)',
+                lineHeight: '2',
+                marginBottom: '15px',
+                maxWidth: '700px',
+                margin: '0 auto 30px'
+              }}>
+                اگر با قوانین، بخشنامه‌ها و ابهام‌های اداری سروکار دارید،<br/>
+                <strong style={{ fontSize: '20px', color: '#fff' }}>این سامانه می‌تواند اولین و اصلی‌ترین مرجع پاسخ‌گویی شما باشد.</strong>
               </p>
               <button
                 onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
                 style={{
                   background: 'linear-gradient(135deg, #48bb78 0%, #38a169 100%)',
                   color: '#fff',
-                  padding: '12px 40px',
-                  borderRadius: '8px',
+                  padding: '18px 50px',
+                  borderRadius: '12px',
                   border: 'none',
-                  fontSize: '16px',
+                  fontSize: '20px',
                   fontWeight: 'bold',
                   cursor: 'pointer',
-                  transition: 'all 0.3s ease'
+                  transition: 'all 0.3s ease',
+                  boxShadow: '0 4px 15px rgba(72, 187, 120, 0.4)'
                 }}
                 onMouseOver={(e) => {
-                  e.currentTarget.style.transform = 'translateY(-2px)'
-                  e.currentTarget.style.boxShadow = '0 10px 20px rgba(0,0,0,0.3)'
+                  e.currentTarget.style.transform = 'translateY(-3px)'
+                  e.currentTarget.style.boxShadow = '0 10px 25px rgba(72, 187, 120, 0.5)'
                 }}
                 onMouseOut={(e) => {
                   e.currentTarget.style.transform = 'translateY(0)'
-                  e.currentTarget.style.boxShadow = 'none'
+                  e.currentTarget.style.boxShadow = '0 4px 15px rgba(72, 187, 120, 0.4)'
                 }}
               >
-                بازگشت به بالا و ورود
+                همین حالا ثبت‌نام کنید
               </button>
+              <p style={{
+                fontSize: '16px',
+                color: 'rgba(255, 255, 255, 0.9)',
+                marginTop: '20px',
+                fontStyle: 'italic'
+              }}>
+                و مشاور هوشمند کسب‌وکار خود را همیشه در کنار داشته باشید.
+              </p>
             </div>
+
           </div>
         </div>
       </div>
