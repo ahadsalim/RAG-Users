@@ -47,6 +47,35 @@ export default function LoginPage() {
   const [otpTimer, setOtpTimer] = useState(0)
   const [canResend, setCanResend] = useState(true)
   
+  // Site settings for licenses
+  const [licenses, setLicenses] = useState<Array<{name: string, url: string}>>([])
+  
+  // Fetch site settings for licenses
+  useEffect(() => {
+    const fetchLicenses = async () => {
+      try {
+        const response = await fetch(`${API_URL}/api/core/settings/`)
+        if (response.ok) {
+          const data = await response.json()
+          const licensesData = []
+          if (data.license_1_name && data.license_1_logo_url) {
+            licensesData.push({ name: data.license_1_name, url: data.license_1_logo_url })
+          }
+          if (data.license_2_name && data.license_2_logo_url) {
+            licensesData.push({ name: data.license_2_name, url: data.license_2_logo_url })
+          }
+          if (data.license_3_name && data.license_3_logo_url) {
+            licensesData.push({ name: data.license_3_name, url: data.license_3_logo_url })
+          }
+          setLicenses(licensesData)
+        }
+      } catch (error) {
+        console.error('Failed to fetch licenses:', error)
+      }
+    }
+    fetchLicenses()
+  }, [])
+  
   // Timer countdown effect
   useEffect(() => {
     if (otpTimer > 0) {
@@ -1361,6 +1390,68 @@ export default function LoginPage() {
                 و مشاور هوشمند کسب‌وکار خود را همیشه در کنار داشته باشید.
               </p>
             </div>
+
+            {/* Licenses Section */}
+            {licenses.length > 0 && (
+              <div style={{
+                marginTop: '60px',
+                padding: '40px 30px',
+                background: theme === 'light' ? 'rgba(255, 255, 255, 0.1)' : 'rgba(255, 255, 255, 0.05)',
+                borderRadius: '16px',
+                border: '1px solid rgba(255, 255, 255, 0.2)',
+                textAlign: 'center'
+              }}>
+                <h3 style={{
+                  fontSize: '24px',
+                  fontWeight: 'bold',
+                  color: '#fff',
+                  marginBottom: '30px'
+                }}>
+                  مجوزها و گواهینامه‌ها
+                </h3>
+                <div style={{
+                  display: 'flex',
+                  flexWrap: 'wrap',
+                  justifyContent: 'center',
+                  alignItems: 'center',
+                  gap: '30px'
+                }}>
+                  {licenses.map((license, idx) => (
+                    <div key={idx} style={{
+                      background: 'rgba(255, 255, 255, 0.15)',
+                      padding: '20px',
+                      borderRadius: '12px',
+                      border: '1px solid rgba(255, 255, 255, 0.3)',
+                      minWidth: '200px',
+                      maxWidth: '250px'
+                    }}>
+                      <img 
+                        src={license.url}
+                        alt={license.name}
+                        style={{
+                          maxWidth: '100%',
+                          height: 'auto',
+                          maxHeight: '120px',
+                          objectFit: 'contain',
+                          marginBottom: '15px'
+                        }}
+                        onError={(e) => {
+                          e.currentTarget.style.display = 'none'
+                        }}
+                      />
+                      <p style={{
+                        fontSize: '14px',
+                        color: 'rgba(255, 255, 255, 0.9)',
+                        fontWeight: '500',
+                        marginTop: '10px'
+                      }}>
+                        {license.name}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
 
           </div>
         </div>

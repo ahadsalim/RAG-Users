@@ -74,6 +74,17 @@ class SiteSettingsAdmin(admin.ModelAdmin):
                 'sms_signature',
             )
         }),
+        (_('مجوزها و گواهینامه‌ها'), {
+            'fields': (
+                'license_1_name',
+                'license_1_logo_url',
+                'license_2_name',
+                'license_2_logo_url',
+                'license_3_name',
+                'license_3_logo_url',
+            ),
+            'description': _('لوگوهای مجوز و گواهینامه‌هایی که در صفحه اول سایت نمایش داده می‌شوند')
+        }),
     )
     
     def save_model(self, request, obj, form, change):

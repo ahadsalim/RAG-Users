@@ -52,6 +52,43 @@ class SiteSettings(models.Model):
         help_text=_('این متن به انتهای تمام پیامک‌ها (به جز OTP) اضافه می‌شود')
     )
     
+    # License/Certificate Badges
+    license_1_name = models.CharField(
+        max_length=200,
+        blank=True,
+        verbose_name=_('نام مجوز 1'),
+        help_text=_('مثال: نماد اعتماد الکترونیک')
+    )
+    license_1_logo_url = models.URLField(
+        blank=True,
+        verbose_name=_('URL لوگو مجوز 1'),
+        help_text=_('آدرس لوگو یا بَج مجوز اول')
+    )
+    
+    license_2_name = models.CharField(
+        max_length=200,
+        blank=True,
+        verbose_name=_('نام مجوز 2'),
+        help_text=_('مثال: مجوز وزارت ارتباطات')
+    )
+    license_2_logo_url = models.URLField(
+        blank=True,
+        verbose_name=_('URL لوگو مجوز 2'),
+        help_text=_('آدرس لوگو یا بَج مجوز دوم')
+    )
+    
+    license_3_name = models.CharField(
+        max_length=200,
+        blank=True,
+        verbose_name=_('نام مجوز 3'),
+        help_text=_('مثال: گواهینامه ISO')
+    )
+    license_3_logo_url = models.URLField(
+        blank=True,
+        verbose_name=_('URL لوگو مجوز 3'),
+        help_text=_('آدرس لوگو یا بَج مجوز سوم')
+    )
+    
     # Timestamps
     updated_at = models.DateTimeField(auto_now=True)
     updated_by = models.ForeignKey(
