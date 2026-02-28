@@ -901,47 +901,47 @@ export default function LoginPage() {
             {/* Hero Section */}
             <div style={{
               textAlign: 'center',
-              marginBottom: '60px',
-              padding: '40px 20px',
+              marginBottom: '40px',
+              padding: '30px 20px',
               background: theme === 'light' 
                 ? 'linear-gradient(135deg, rgba(255, 255, 255, 0.2) 0%, rgba(255, 255, 255, 0.1) 100%)'
                 : 'linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%)',
-              borderRadius: '16px',
+              borderRadius: '12px',
               border: '1px solid rgba(255, 255, 255, 0.3)'
             }}>
               <h1 style={{
-                fontSize: '42px',
+                fontSize: '32px',
                 fontWeight: 'bold',
                 color: '#fff',
-                marginBottom: '20px',
+                marginBottom: '15px',
                 textShadow: '0 2px 10px rgba(0,0,0,0.3)'
               }}>
                 مشاور هوشمند کسب‌وکار شما
               </h1>
               <p style={{
-                fontSize: '22px',
+                fontSize: '18px',
                 color: 'rgba(255, 255, 255, 0.95)',
-                marginBottom: '15px',
+                marginBottom: '12px',
                 fontWeight: '500'
               }}>
                 پاسخ دقیق، مستند و به‌روز به سؤالات مالیاتی، بیمه‌ای، گمرکی و بانکی — در چند ثانیه
               </p>
               <p style={{
-                fontSize: '16px',
+                fontSize: '15px',
                 color: 'rgba(255, 255, 255, 0.85)',
-                lineHeight: '1.8',
-                maxWidth: '800px',
+                lineHeight: '1.7',
+                maxWidth: '700px',
                 margin: '0 auto'
               }}>
                 در دنیای پیچیده قوانین و بخشنامه‌ها، یک سؤال ساده می‌تواند ساعت‌ها وقت، هزینه و استرس به شما تحمیل کند.<br/>
-                <strong style={{ color: '#fff', fontSize: '18px' }}>ما این مشکل را حل کرده‌ایم.</strong>
+                <strong style={{ color: '#fff', fontSize: '16px' }}>ما این مشکل را حل کرده‌ایم.</strong>
               </p>
             </div>
 
             {/* What We Do Section */}
             <div style={{
-              marginBottom: '60px',
-              padding: '40px 30px',
+              marginBottom: '40px',
+              padding: '30px 25px',
               background: theme === 'light' ? 'rgba(255, 255, 255, 0.15)' : 'rgba(255, 255, 255, 0.05)',
               borderRadius: '16px',
               border: '1px solid rgba(255, 255, 255, 0.2)'
@@ -956,41 +956,41 @@ export default function LoginPage() {
                 این سامانه چیست؟
               </h2>
               <p style={{
-                fontSize: '17px',
+                fontSize: '15px',
                 color: 'rgba(255, 255, 255, 0.9)',
-                lineHeight: '2',
+                lineHeight: '1.8',
                 textAlign: 'center',
-                maxWidth: '900px',
-                margin: '0 auto 30px'
+                maxWidth: '800px',
+                margin: '0 auto 20px'
               }}>
                 این سامانه یک <strong>مشاور هوشمند تخصصی کسب‌وکار</strong> است که با تکیه بر هزاران متن قانونی، آراء رسمی و منابع آموزشی معتبر، به سؤالات واقعی شما پاسخ می‌دهد؛ دقیق، مستند و منطبق با آخرین مقررات.
               </p>
               
               <h3 style={{
-                fontSize: '24px',
+                fontSize: '20px',
                 fontWeight: 'bold',
                 color: '#fff',
-                marginBottom: '20px',
-                marginTop: '40px',
+                marginBottom: '15px',
+                marginTop: '25px',
                 textAlign: 'center'
               }}>
                 ما دقیقاً چه کاری انجام می‌دهیم؟
               </h3>
               <p style={{
-                fontSize: '16px',
+                fontSize: '14px',
                 color: 'rgba(255, 255, 255, 0.9)',
-                lineHeight: '2',
+                lineHeight: '1.7',
                 textAlign: 'center',
-                marginBottom: '30px'
+                marginBottom: '20px'
               }}>
                 ما یک سیستم مبتنی بر هوش مصنوعی و RAG ساخته‌ایم که نقش یک مشاور باتجربه مالیاتی، بیمه‌ای و گمرکی را برای شما ایفا می‌کند.
               </p>
 
               <div style={{
                 display: 'grid',
-                gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
-                gap: '20px',
-                marginTop: '30px'
+                gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+                gap: '15px',
+                marginTop: '20px'
               }}>
                 {[
                   { icon: '💰', title: 'مالیات', desc: 'اظهارنامه، رسیدگی، جرایم، معافیت‌ها، ارزش افزوده، مالیات حقوق و …' },
@@ -1001,13 +1001,13 @@ export default function LoginPage() {
                 ].map((item, idx) => (
                   <div key={idx} style={{
                     background: theme === 'light' ? 'rgba(255, 255, 255, 0.2)' : 'rgba(255, 255, 255, 0.08)',
-                    padding: '25px',
-                    borderRadius: '12px',
+                    padding: '18px',
+                    borderRadius: '10px',
                     border: '1px solid rgba(255, 255, 255, 0.25)',
                     textAlign: 'center'
                   }}>
-                    <div style={{ fontSize: '40px', marginBottom: '12px' }}>{item.icon}</div>
-                    <h4 style={{ fontSize: '18px', fontWeight: 'bold', color: '#fff', marginBottom: '10px' }}>
+                    <div style={{ fontSize: '32px', marginBottom: '10px' }}>{item.icon}</div>
+                    <h4 style={{ fontSize: '16px', fontWeight: 'bold', color: '#fff', marginBottom: '8px' }}>
                       {item.title}
                     </h4>
                     <p style={{ fontSize: '14px', color: 'rgba(255, 255, 255, 0.85)', lineHeight: '1.6' }}>
@@ -1018,21 +1018,21 @@ export default function LoginPage() {
               </div>
 
               <p style={{
-                fontSize: '17px',
+                fontSize: '15px',
                 color: 'rgba(255, 255, 255, 0.95)',
-                lineHeight: '2',
+                lineHeight: '1.8',
                 textAlign: 'center',
-                marginTop: '30px',
+                marginTop: '20px',
                 fontWeight: '500'
               }}>
-                و پاسخ خود را نه بر اساس حدس یا تجربه شخصی، بلکه <strong style={{ color: '#fff' }}>مستند به قانون، بخشنامه و رأی رسمی</strong> دریافت کنید.
+                و پاسخ خود را نه بر اساس حدس یا تجربه شخصی، بلکه <strong style={{ color: '#fff' }}>مستند به قانون، بخشنامه و رأی دیوان عدالت اداری</strong> دریافت کنید.
               </p>
             </div>
 
             {/* Target Audience */}
             <div style={{
-              marginBottom: '60px',
-              padding: '40px 30px',
+              marginBottom: '40px',
+              padding: '30px 25px',
               background: theme === 'light' 
                 ? 'linear-gradient(135deg, rgba(72, 187, 120, 0.2) 0%, rgba(56, 161, 105, 0.15) 100%)'
                 : 'linear-gradient(135deg, rgba(72, 187, 120, 0.15) 0%, rgba(56, 161, 105, 0.1) 100%)',
@@ -1040,27 +1040,27 @@ export default function LoginPage() {
               border: '1px solid rgba(72, 187, 120, 0.3)'
             }}>
               <h2 style={{
-                fontSize: '32px',
+                fontSize: '26px',
                 fontWeight: 'bold',
                 color: '#fff',
-                marginBottom: '25px',
+                marginBottom: '18px',
                 textAlign: 'center'
               }}>
                 مناسب چه کسانی است؟
               </h2>
               <p style={{
-                fontSize: '17px',
+                fontSize: '15px',
                 color: 'rgba(255, 255, 255, 0.95)',
-                lineHeight: '2',
+                lineHeight: '1.7',
                 textAlign: 'center',
-                marginBottom: '30px'
+                marginBottom: '20px'
               }}>
                 فرقی نمی‌کند که شما:
               </p>
               <div style={{
                 display: 'grid',
-                gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
-                gap: '20px'
+                gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
+                gap: '15px'
               }}>
                 {[
                   { icon: '🏪', text: 'یک مغازه‌دار یا کاسب' },
@@ -1075,17 +1075,17 @@ export default function LoginPage() {
                     textAlign: 'center',
                     border: '1px solid rgba(255, 255, 255, 0.3)'
                   }}>
-                    <div style={{ fontSize: '36px', marginBottom: '10px' }}>{item.icon}</div>
-                    <p style={{ fontSize: '15px', color: '#fff', fontWeight: '500' }}>{item.text}</p>
+                    <div style={{ fontSize: '28px', marginBottom: '8px' }}>{item.icon}</div>
+                    <p style={{ fontSize: '14px', color: '#fff', fontWeight: '500' }}>{item.text}</p>
                   </div>
                 ))}
               </div>
               <p style={{
-                fontSize: '18px',
+                fontSize: '16px',
                 color: '#fff',
                 fontWeight: 'bold',
                 textAlign: 'center',
-                marginTop: '30px'
+                marginTop: '20px'
               }}>
                 این سامانه برای شما طراحی شده است.
               </p>
@@ -1093,61 +1093,63 @@ export default function LoginPage() {
 
             {/* Data Power Section */}
             <div style={{
-              marginBottom: '60px',
-              padding: '40px 30px',
+              marginBottom: '40px',
+              padding: '30px 25px',
               background: theme === 'light' 
                 ? 'linear-gradient(135deg, rgba(66, 153, 225, 0.2) 0%, rgba(49, 130, 206, 0.15) 100%)'
                 : 'linear-gradient(135deg, rgba(66, 153, 225, 0.15) 0%, rgba(49, 130, 206, 0.1) 100%)',
-              borderRadius: '16px',
+              borderRadius: '12px',
               border: '1px solid rgba(66, 153, 225, 0.3)'
             }}>
               <h2 style={{
-                fontSize: '32px',
+                fontSize: '26px',
                 fontWeight: 'bold',
                 color: '#fff',
-                marginBottom: '20px',
+                marginBottom: '15px',
                 textAlign: 'center'
               }}>
                 قدرت واقعی سامانه در داده‌های آن است
               </h2>
               <p style={{
-                fontSize: '17px',
+                fontSize: '15px',
                 color: 'rgba(255, 255, 255, 0.95)',
-                lineHeight: '2',
+                lineHeight: '1.7',
                 textAlign: 'center',
-                marginBottom: '35px'
+                marginBottom: '25px'
               }}>
                 این سیستم بر پایه حجم عظیم و کاملی از قوانین و مقررات کسب‌وکار در ایران ساخته شده است:
               </p>
               
               <div style={{
                 display: 'grid',
-                gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
-                gap: '25px'
+                gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+                gap: '15px'
               }}>
                 {[
                   { icon: '📘', number: '۹۳', title: 'قانون مصوب', desc: 'مجلس شورای اسلامی، مجلس شورای ملی و شورای انقلاب' },
-                  { icon: '⚖️', number: '۶۰۱', title: 'رأی هیئت عمومی', desc: 'دیوان عدالت اداری' },
-                  { icon: '🧾', number: '۱۱۳۵', title: 'بخشنامه', desc: 'گمرک (۱۰ سال اخیر)، سازمان امور مالیاتی، تأمین اجتماعی، بانک مرکزی' },
+                  { icon: '⚖️', number: '۶۰۱', title: 'رأی هیئت عمومی', desc: 'دیوان عدالت اداری (از سال 1330 تاکنون)' },
+                  { icon: '🧾', number: '۱۱۳۵', title: 'بخشنامه', desc: 'گمرک و بانک مرکزی (۱۰ سال اخیر)، سازمان امور مالیاتی، تأمین اجتماعی' },
                   { icon: '📋', number: '۴۵', title: 'دستورالعمل تخصصی', desc: 'راهنماهای عملیاتی و اجرایی' },
+                  { icon: '📜', title: 'مصوبات هیات دولت', desc: 'آیین‌نامه، تصویب‌نامه و سایر مصوبات' },
                   { icon: '🎓', number: '۵۲۸', title: 'متن آموزشی', desc: 'منابع معتبر و کاربردی' }
                 ].map((item, idx) => (
                   <div key={idx} style={{
                     background: 'rgba(255, 255, 255, 0.15)',
-                    padding: '30px',
-                    borderRadius: '12px',
+                    padding: '20px',
+                    borderRadius: '10px',
                     textAlign: 'center',
-                    border: '1px solid rgba(255, 255, 255, 0.3)',
-                    transition: 'transform 0.3s ease'
+                    border: '1px solid rgba(255, 255, 255, 0.3)'
                   }}>
-                    <div style={{ fontSize: '48px', marginBottom: '15px' }}>{item.icon}</div>
-                    <div style={{ fontSize: '36px', fontWeight: 'bold', color: '#fff', marginBottom: '10px' }}>
-                      {item.number}
-                    </div>
-                    <h4 style={{ fontSize: '18px', fontWeight: 'bold', color: '#fff', marginBottom: '10px' }}>
+                    <div style={{ fontSize: '36px', marginBottom: '10px' }}>{item.icon}</div>
+                    {item.number && (
+                      <div style={{ fontSize: '28px', fontWeight: 'bold', color: '#fff', marginBottom: '8px' }}>
+                        {item.number}
+                      </div>
+                    )}
+                    <h4 style={{ fontSize: '15px', fontWeight: 'bold', color: '#fff', marginBottom: '8px' }}>
                       {item.title}
                     </h4>
-                    <p style={{ fontSize: '14px', color: 'rgba(255, 255, 255, 0.85)', lineHeight: '1.6' }}>
+                    <p style={{ fontSize: '13px', color: 'rgba(255, 255, 255, 0.85)', lineHeight: '1.5' }}>
                       {item.desc}
                     </p>
                   </div>
@@ -1155,18 +1157,18 @@ export default function LoginPage() {
               </div>
 
               <div style={{
-                marginTop: '40px',
-                padding: '25px',
+                marginTop: '25px',
+                padding: '20px',
                 background: 'rgba(255, 255, 255, 0.1)',
-                borderRadius: '12px',
+                borderRadius: '10px',
                 border: '1px solid rgba(255, 255, 255, 0.25)'
               }}>
                 <p style={{
-                  fontSize: '18px',
+                  fontSize: '16px',
                   color: '#fff',
                   fontWeight: 'bold',
                   textAlign: 'center',
-                  marginBottom: '15px'
+                  marginBottom: '12px'
                 }}>
                   این یعنی پاسخ‌هایی که می‌گیرید:
                 </p>
@@ -1178,12 +1180,12 @@ export default function LoginPage() {
                 }}>
                   {['✅ دقیق', '✅ مستند', '✅ به‌روز', '✅ قابل استناد در عمل'].map((item, idx) => (
                     <div key={idx} style={{
-                      fontSize: '17px',
+                      fontSize: '14px',
                       color: '#fff',
                       fontWeight: '500',
-                      padding: '10px 20px',
+                      padding: '8px 16px',
                       background: 'rgba(72, 187, 120, 0.3)',
-                      borderRadius: '8px'
+                      borderRadius: '6px'
                     }}>
                       {item}
                     </div>
@@ -1194,25 +1196,25 @@ export default function LoginPage() {
 
             {/* Why Valuable */}
             <div style={{
-              marginBottom: '60px',
-              padding: '40px 30px',
+              marginBottom: '40px',
+              padding: '30px 25px',
               background: theme === 'light' ? 'rgba(255, 255, 255, 0.15)' : 'rgba(255, 255, 255, 0.05)',
-              borderRadius: '16px',
+              borderRadius: '12px',
               border: '1px solid rgba(255, 255, 255, 0.2)'
             }}>
               <h2 style={{
-                fontSize: '32px',
+                fontSize: '26px',
                 fontWeight: 'bold',
                 color: '#fff',
-                marginBottom: '30px',
+                marginBottom: '20px',
                 textAlign: 'center'
               }}>
                 چرا این سامانه ارزشمند است؟
               </h2>
               <div style={{
                 display: 'grid',
-                gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))',
-                gap: '25px'
+                gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+                gap: '15px'
               }}>
                 {[
                   { icon: '⏱️', title: 'صرفه‌جویی چشمگیر در زمان', color: 'rgba(237, 137, 54, 0.3)' },
@@ -1222,13 +1224,13 @@ export default function LoginPage() {
                 ].map((item, idx) => (
                   <div key={idx} style={{
                     background: item.color,
-                    padding: '30px',
-                    borderRadius: '12px',
+                    padding: '20px',
+                    borderRadius: '10px',
                     textAlign: 'center',
                     border: '1px solid rgba(255, 255, 255, 0.3)'
                   }}>
-                    <div style={{ fontSize: '48px', marginBottom: '15px' }}>{item.icon}</div>
-                    <p style={{ fontSize: '17px', color: '#fff', fontWeight: 'bold', lineHeight: '1.6' }}>
+                    <div style={{ fontSize: '36px', marginBottom: '12px' }}>{item.icon}</div>
+                    <p style={{ fontSize: '14px', color: '#fff', fontWeight: 'bold', lineHeight: '1.5' }}>
                       {item.title}
                     </p>
                   </div>
@@ -1238,43 +1240,43 @@ export default function LoginPage() {
 
             {/* Pricing Section */}
             <div style={{
-              marginBottom: '60px',
-              padding: '40px 30px',
+              marginBottom: '40px',
+              padding: '30px 25px',
               background: theme === 'light' 
                 ? 'linear-gradient(135deg, rgba(159, 122, 234, 0.2) 0%, rgba(128, 90, 213, 0.15) 100%)'
                 : 'linear-gradient(135deg, rgba(159, 122, 234, 0.15) 0%, rgba(128, 90, 213, 0.1) 100%)',
-              borderRadius: '16px',
+              borderRadius: '12px',
               border: '1px solid rgba(159, 122, 234, 0.3)'
             }}>
               <h2 style={{
-                fontSize: '32px',
+                fontSize: '26px',
                 fontWeight: 'bold',
                 color: '#fff',
-                marginBottom: '20px',
+                marginBottom: '15px',
                 textAlign: 'center'
               }}>
                 ثبت‌نام رایگان + اشتراک انعطاف‌پذیر
               </h2>
               <div style={{
                 background: 'rgba(255, 255, 255, 0.15)',
-                padding: '30px',
-                borderRadius: '12px',
+                padding: '25px',
+                borderRadius: '10px',
                 border: '1px solid rgba(255, 255, 255, 0.3)',
-                marginBottom: '25px'
+                marginBottom: '20px'
               }}>
                 <p style={{
-                  fontSize: '24px',
+                  fontSize: '20px',
                   color: '#fff',
                   fontWeight: 'bold',
                   textAlign: 'center',
-                  marginBottom: '15px'
+                  marginBottom: '12px'
                 }}>
                   ✅ ثبت‌نام کاملاً رایگان است
                 </p>
                 <p style={{
-                  fontSize: '17px',
+                  fontSize: '15px',
                   color: 'rgba(255, 255, 255, 0.95)',
-                  lineHeight: '2',
+                  lineHeight: '1.7',
                   textAlign: 'center'
                 }}>
                   شما می‌توانید سامانه را امتحان کنید و کیفیت پاسخ‌ها را ببینید.
@@ -1282,20 +1284,19 @@ export default function LoginPage() {
               </div>
 
               <p style={{
-                fontSize: '18px',
+                fontSize: '16px',
                 color: 'rgba(255, 255, 255, 0.95)',
-                lineHeight: '2',
+                lineHeight: '1.7',
                 textAlign: 'center',
-                marginBottom: '25px'
+                marginBottom: '20px'
               }}>
                 در صورت نیاز بیشتر:
               </p>
 
               <div style={{
                 display: 'grid',
-                gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))',
-                gap: '20px',
-                marginBottom: '25px'
+                gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+                gap: '15px'
               }}>
                 {[
                   { icon: '📦', text: 'پلن‌های اشتراک متناسب با حجم استفاده' },
@@ -1304,67 +1305,58 @@ export default function LoginPage() {
                 ].map((item, idx) => (
                   <div key={idx} style={{
                     background: 'rgba(255, 255, 255, 0.15)',
-                    padding: '20px',
-                    borderRadius: '12px',
+                    padding: '18px',
+                    borderRadius: '10px',
                     textAlign: 'center',
                     border: '1px solid rgba(255, 255, 255, 0.3)'
                   }}>
-                    <div style={{ fontSize: '36px', marginBottom: '10px' }}>{item.icon}</div>
-                    <p style={{ fontSize: '15px', color: '#fff', fontWeight: '500', lineHeight: '1.6' }}>
+                    <div style={{ fontSize: '32px', marginBottom: '8px' }}>{item.icon}</div>
+                    <p style={{ fontSize: '14px', color: '#fff', fontWeight: '500', lineHeight: '1.5' }}>
                       {item.text}
                     </p>
                   </div>
                 ))}
               </div>
-
-              <p style={{
-                fontSize: '18px',
-                color: '#fff',
-                fontWeight: 'bold',
-                textAlign: 'center'
-              }}>
-                شما فقط به اندازه‌ای که استفاده می‌کنید، هزینه می‌پردازید.
-              </p>
             </div>
 
             {/* Final CTA */}
             <div style={{
               textAlign: 'center',
-              padding: '50px 30px',
+              padding: '35px 25px',
               background: theme === 'light' 
                 ? 'linear-gradient(135deg, rgba(72, 187, 120, 0.25) 0%, rgba(56, 161, 105, 0.2) 100%)'
                 : 'linear-gradient(135deg, rgba(72, 187, 120, 0.2) 0%, rgba(56, 161, 105, 0.15) 100%)',
-              borderRadius: '16px',
+              borderRadius: '12px',
               border: '2px solid rgba(72, 187, 120, 0.4)'
             }}>
               <h2 style={{
-                fontSize: '36px',
+                fontSize: '28px',
                 fontWeight: 'bold',
                 color: '#fff',
-                marginBottom: '20px'
+                marginBottom: '15px'
               }}>
                 یک سؤال بپرسید، تفاوت را احساس کنید
               </h2>
               <p style={{
-                fontSize: '18px',
+                fontSize: '16px',
                 color: 'rgba(255, 255, 255, 0.95)',
-                lineHeight: '2',
-                marginBottom: '15px',
-                maxWidth: '700px',
-                margin: '0 auto 30px'
+                lineHeight: '1.7',
+                marginBottom: '12px',
+                maxWidth: '650px',
+                margin: '0 auto 25px'
               }}>
                 اگر با قوانین، بخشنامه‌ها و ابهام‌های اداری سروکار دارید،<br/>
-                <strong style={{ fontSize: '20px', color: '#fff' }}>این سامانه می‌تواند اولین و اصلی‌ترین مرجع پاسخ‌گویی شما باشد.</strong>
+                <strong style={{ fontSize: '17px', color: '#fff' }}>این سامانه می‌تواند اولین و اصلی‌ترین مرجع پاسخ‌گویی شما باشد.</strong>
               </p>
               <button
                 onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
                 style={{
                   background: 'linear-gradient(135deg, #48bb78 0%, #38a169 100%)',
                   color: '#fff',
-                  padding: '18px 50px',
-                  borderRadius: '12px',
+                  padding: '14px 40px',
+                  borderRadius: '10px',
                   border: 'none',
-                  fontSize: '20px',
+                  fontSize: '18px',
                   fontWeight: 'bold',
                   cursor: 'pointer',
                   transition: 'all 0.3s ease',
@@ -1382,9 +1374,9 @@ export default function LoginPage() {
                 همین حالا ثبت‌نام کنید
               </button>
               <p style={{
-                fontSize: '16px',
+                fontSize: '14px',
                 color: 'rgba(255, 255, 255, 0.9)',
-                marginTop: '20px',
+                marginTop: '15px',
                 fontStyle: 'italic'
               }}>
                 و مشاور هوشمند کسب‌وکار خود را همیشه در کنار داشته باشید.
@@ -1394,18 +1386,18 @@ export default function LoginPage() {
             {/* Licenses Section */}
             {licenses.length > 0 && (
               <div style={{
-                marginTop: '60px',
-                padding: '40px 30px',
+                marginTop: '40px',
+                padding: '30px 25px',
                 background: theme === 'light' ? 'rgba(255, 255, 255, 0.1)' : 'rgba(255, 255, 255, 0.05)',
-                borderRadius: '16px',
+                borderRadius: '12px',
                 border: '1px solid rgba(255, 255, 255, 0.2)',
                 textAlign: 'center'
               }}>
                 <h3 style={{
-                  fontSize: '24px',
+                  fontSize: '22px',
                   fontWeight: 'bold',
                   color: '#fff',
-                  marginBottom: '30px'
+                  marginBottom: '25px'
                 }}>
                   مجوزها و گواهینامه‌ها
                 </h3>
@@ -1414,16 +1406,16 @@ export default function LoginPage() {
                   flexWrap: 'wrap',
                   justifyContent: 'center',
                   alignItems: 'center',
-                  gap: '30px'
+                  gap: '20px'
                 }}>
                   {licenses.map((license, idx) => (
                     <div key={idx} style={{
                       background: 'rgba(255, 255, 255, 0.15)',
-                      padding: '20px',
-                      borderRadius: '12px',
+                      padding: '18px',
+                      borderRadius: '10px',
                       border: '1px solid rgba(255, 255, 255, 0.3)',
-                      minWidth: '200px',
-                      maxWidth: '250px'
+                      minWidth: '160px',
+                      maxWidth: '200px'
                     }}>
                       <img 
                         src={license.url}
@@ -1431,19 +1423,19 @@ export default function LoginPage() {
                         style={{
                           maxWidth: '100%',
                           height: 'auto',
-                          maxHeight: '120px',
+                          maxHeight: '100px',
                           objectFit: 'contain',
-                          marginBottom: '15px'
+                          marginBottom: '12px'
                         }}
                         onError={(e) => {
                           e.currentTarget.style.display = 'none'
                         }}
                       />
                       <p style={{
-                        fontSize: '14px',
+                        fontSize: '13px',
                         color: 'rgba(255, 255, 255, 0.9)',
                         fontWeight: '500',
-                        marginTop: '10px'
+                        marginTop: '8px'
                       }}>
                         {license.name}
                       </p>
