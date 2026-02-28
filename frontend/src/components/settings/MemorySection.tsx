@@ -90,6 +90,7 @@ export default function MemorySection() {
     
     try {
       setSaving(true)
+      setError(null)
       await axiosInstance.post('/api/v1/chat/memory/', {
         content: newContent.trim(),
         category: newCategory
@@ -98,9 +99,10 @@ export default function MemorySection() {
       setNewCategory('other')
       setIsAdding(false)
       await fetchMemories()
-    } catch (err) {
+    } catch (err: any) {
       console.error('Error adding memory:', err)
-      setError('خطا در افزودن حافظه')
+      const errorMsg = err.response?.data?.error || err.response?.data?.detail || 'خطا در افزودن حافظه. لطفاً دوباره تلاش کنید.'
+      setError(errorMsg)
     } finally {
       setSaving(false)
     }
@@ -112,15 +114,17 @@ export default function MemorySection() {
     
     try {
       setSaving(true)
+      setError(null)
       await axiosInstance.put(`/api/v1/chat/memory/${id}/`, {
         content: editContent.trim(),
         category: editCategory
       })
       setEditingId(null)
       await fetchMemories()
-    } catch (err) {
+    } catch (err: any) {
       console.error('Error updating memory:', err)
-      setError('خطا در ویرایش حافظه')
+      const errorMsg = err.response?.data?.error || err.response?.data?.detail || 'خطا در ویرایش حافظه'
+      setError(errorMsg)
     } finally {
       setSaving(false)
     }
@@ -260,7 +264,8 @@ export default function MemorySection() {
                           <select
                             value={editCategory}
                             onChange={(e) => setEditCategory(e.target.value)}
-                            className="text-sm border dark:border-gray-600 rounded-lg p-1 bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+                            className="text-sm border dark:border-gray-600 rounded-lg p-1 pl-8 bg-white dark:bg-gray-800 text-gray-900 dark:text-white text-right"
+                            dir="rtl"
                           >
                             {Object.entries(MEMORY_CATEGORIES).map(([key, val]) => (
                               <option key={key} value={key}>{val.label}</option>
@@ -341,7 +346,8 @@ export default function MemorySection() {
                 <select
                   value={newCategory}
                   onChange={(e) => setNewCategory(e.target.value)}
-                  className="text-sm border dark:border-gray-600 rounded-lg p-1 bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+                  className="text-sm border dark:border-gray-600 rounded-lg p-1 pl-8 bg-white dark:bg-gray-800 text-gray-900 dark:text-white text-right"
+                  dir="rtl"
                 >
                   {Object.entries(MEMORY_CATEGORIES).map(([key, val]) => (
                     <option key={key} value={key}>{val.label}</option>
