@@ -106,8 +106,9 @@ export const useChatStore = create<ChatState>((set, get) => ({
       const conversation = (state.conversations || []).find(c => c.id === conversationId)
       const isArchived = conversation?.is_archived || false
       
-      // Toggle archive status
-      await axiosInstance.post(`${API_URL}/api/v1/chat/conversations/${conversationId}/archive/`)
+      // Use correct endpoint based on current archive status
+      const endpoint = isArchived ? 'unarchive' : 'archive'
+      await axiosInstance.post(`${API_URL}/api/v1/chat/conversations/${conversationId}/${endpoint}/`)
       
       // Update local state - toggle the archive status
       set(state => ({

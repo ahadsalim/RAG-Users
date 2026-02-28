@@ -231,24 +231,21 @@ class QueryView(APIView):
             return Response(response_data, status=status.HTTP_200_OK)
             
         except RateLimitException as e:
-            assistant_message.status = 'failed'
-            assistant_message.error_message = str(e)
-            assistant_message.save()
+            # حذف پیام assistant چون خطا رخ داده
+            assistant_message.delete()
             return Response(
                 {'error': str(e), 'code': 'rate_limit_exceeded'},
                 status=status.HTTP_429_TOO_MANY_REQUESTS
             )
         except RAGCoreException as e:
-            assistant_message.status = 'failed'
-            assistant_message.error_message = str(e)
-            assistant_message.save()
+            # حذف پیام assistant چون خطا رخ داده
+            assistant_message.delete()
             return Response(
                 {'error': str(e), 'code': 'rag_core_error'},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
         except httpx.HTTPStatusError as e:
             logger.error(f"RAG Core HTTP error: {e.response.status_code} - {e.response.text}")
-            assistant_message.status = 'failed'
             
             # پیام خطای کاربرپسند
             if e.response.status_code == 500:
@@ -258,35 +255,32 @@ class QueryView(APIView):
             else:
                 error_msg = f'خطا در پردازش درخواست (کد {e.response.status_code})'
             
-            assistant_message.error_message = error_msg
-            assistant_message.save()
+            # حذف پیام assistant چون خطا رخ داده
+            assistant_message.delete()
             return Response(
                 {'error': error_msg, 'code': 'rag_core_http_error'},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
         except httpx.TimeoutException as e:
             logger.error(f"RAG Core timeout: {str(e)}")
-            assistant_message.status = 'failed'
-            assistant_message.error_message = 'زمان پردازش تمام شد. لطفاً دوباره تلاش کنید.'
-            assistant_message.save()
+            # حذف پیام assistant چون خطا رخ داده
+            assistant_message.delete()
             return Response(
                 {'error': 'زمان پردازش تمام شد. لطفاً دوباره تلاش کنید.', 'code': 'timeout'},
                 status=status.HTTP_504_GATEWAY_TIMEOUT
             )
         except httpx.ConnectError as e:
             logger.error(f"Cannot connect to RAG Core: {str(e)}")
-            assistant_message.status = 'failed'
-            assistant_message.error_message = 'خطا در اتصال به سرور پردازش'
-            assistant_message.save()
+            # حذف پیام assistant چون خطا رخ داده
+            assistant_message.delete()
             return Response(
                 {'error': 'خطا در اتصال به سرور پردازش', 'code': 'connection_error'},
                 status=status.HTTP_503_SERVICE_UNAVAILABLE
             )
         except Exception as e:
             logger.error(f"Unexpected error in query: {str(e)}", exc_info=True)
-            assistant_message.status = 'failed'
-            assistant_message.error_message = str(e)
-            assistant_message.save()
+            # حذف پیام assistant چون خطا رخ داده
+            assistant_message.delete()
             return Response(
                 {'error': 'خطای غیرمنتظره در پردازش سوال'},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
